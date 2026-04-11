@@ -62,3 +62,55 @@ export const adminRecoverySchema = z.object({
 })
 
 export type AdminRecoveryInput = z.infer<typeof adminRecoverySchema>
+
+// ─── Fixture Management ───────────────────────────────────────────────────────
+
+const FIXTURE_STATUSES = [
+  'SCHEDULED', 'TIMED', 'IN_PLAY', 'PAUSED',
+  'FINISHED', 'POSTPONED', 'SUSPENDED', 'CANCELLED', 'AWARDED',
+] as const
+
+export const addFixtureSchema = z.object({
+  home_team_id: z.string().uuid('Invalid home team ID'),
+  away_team_id: z
+    .string()
+    .uuid('Invalid away team ID'),
+  kickoff_time: z
+    .string()
+    .min(1, 'Kickoff time is required')
+    .refine((val) => !isNaN(Date.parse(val)), 'Kickoff time must be a valid ISO 8601 date'),
+  gameweek_number: z.coerce
+    .number()
+    .int('Gameweek must be a whole number')
+    .min(1, 'Gameweek must be between 1 and 38')
+    .max(38, 'Gameweek must be between 1 and 38'),
+}).refine(
+  (data) => data.home_team_id !== data.away_team_id,
+  { message: 'Home team and away team must be different', path: ['away_team_id'] }
+)
+
+export type AddFixtureInput = z.infer<typeof addFixtureSchema>
+
+export const editFixtureSchema = z.object({
+  fixture_id: z.string().uuid('Invalid fixture ID'),
+  kickoff_time: z
+    .string()
+    .refine((val) => !isNaN(Date.parse(val)), 'Kickoff time must be a valid ISO 8601 date')
+    .optional(),
+  status: z.enum(FIXTURE_STATUSES).optional(),
+  home_score: z.coerce.number().int().min(0, 'Score cannot be negative').optional(),
+  away_score: z.coerce.number().int().min(0, 'Score cannot be negative').optional(),
+})
+
+export type EditFixtureInput = z.infer<typeof editFixtureSchema>
+
+export const moveFixtureSchema = z.object({
+  fixture_id: z.string().uuid('Invalid fixture ID'),
+  target_gameweek_number: z.coerce
+    .number()
+    .int('Gameweek must be a whole number')
+    .min(1, 'Gameweek must be between 1 and 38')
+    .max(38, 'Gameweek must be between 1 and 38'),
+})
+
+export type MoveFixtureInput = z.infer<typeof moveFixtureSchema>
