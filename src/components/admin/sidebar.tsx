@@ -45,7 +45,7 @@ export function AdminSidebar({ adminEmail }: SidebarProps) {
     },
     {
       href: '/admin/predictions',
-      label: 'My Predictions',
+      label: 'All Predictions',
       icon: Trophy,
     },
     {
