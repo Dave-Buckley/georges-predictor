@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node __TRACKED_VAR__/.claude/get-shit-done/bin/gsd-tools.cjs commit 'docs: initialize project' --files .planning/PROJECT.md)",
+      "Bash(node:*)",
+      "Skill(gsd:discuss-phase)",
+      "WebSearch",
+      "Skill(gsd:execute-phase)",
+      "Bash(openssl rand:*)",
+      "Bash(gh auth:*)",
+      "Bash(gh repo:*)",
+      "Bash(npx vercel:*)",
+      "Bash(npm run:*)",
+      "Bash(mkdir -p src/app/admin/login)",
+      "Bash(mv \"src/app/\\(admin\\)/admin/login/page.tsx\" src/app/admin/login/page.tsx)"
+    ]
+  }
+}
