@@ -72,7 +72,7 @@ Plans:
   3. A member cannot see any other member's predictions until that fixture has kicked off
   4. George can view all members' predictions for any fixture at any time
   5. A member who submits late can still predict remaining fixtures that have not yet kicked off
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 Plans:
 - [ ] 03-01-PLAN.md — Predictions DB migration, types, Zod validators, submitPredictions server action, unit tests
 - [ ] 03-02-PLAN.md — Member prediction form (stepper inputs on fixture cards, PredictionForm wrapper, gameweek page integration)
@@ -187,7 +187,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 |-------|----------------|--------|-----------|
 | 1. Foundation | 4/5 | In Progress|  |
 | 2. Fixture Layer | 3/3 | Complete   | 2026-04-11 |
-| 3. Predictions | 1/3 | In Progress|  |
+| 3. Predictions | 2/3 | In Progress|  |
 | 4. Scoring Engine | 0/TBD | Not started | - |
 | 5. Admin Panel | 0/TBD | Not started | - |
 | 6. Bonus System | 0/TBD | Not started | - |

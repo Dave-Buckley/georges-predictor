@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 03-predictions-03-01-PLAN.md
-last_updated: "2026-04-11T20:12:47.425Z"
+stopped_at: Completed 03-predictions-03-03-PLAN.md
+last_updated: "2026-04-11T20:17:23.566Z"
 last_activity: 2026-04-11 — Roadmap created, 11 phases derived from 71 v1 requirements
 progress:
   total_phases: 11
   completed_phases: 2
   total_plans: 11
-  completed_plans: 9
+  completed_plans: 10
   percent: 0
 ---
 
@@ -58,6 +58,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 02-fixture-layer P03 | 5 | 2 tasks | 11 files |
 | Phase 02-fixture-layer P02 | 8 | 2 tasks | 9 files |
 | Phase 03-predictions P01 | 3 | 2 tasks | 6 files |
+| Phase 03-predictions P03 | 4 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -95,6 +96,8 @@ Recent decisions affecting current work:
 - [Phase 03-predictions]: Prediction visibility at kick-off per CONTEXT.md override of PRED-03 — predictions_select_member RLS policy uses kickoff_time <= now() threshold
 - [Phase 03-predictions]: member_id resolved server-side from auth.uid() — never trusted from client in submitPredictions action
 - [Phase 03-predictions]: Session client (not admin client) for prediction upserts so RLS enforces two-layer lockout at DB level
+- [Phase 03-predictions]: createAdminClient() used on admin predictions page to bypass RLS — George sees all predictions regardless of kick-off status
+- [Phase 03-predictions]: Admin predictions tab renamed to All Predictions per CONTEXT.md locked decision — George monitors all members from admin panel
 
 ### Pending Todos
 
@@ -109,6 +112,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-11T20:12:47.419Z
-Stopped at: Completed 03-predictions-03-01-PLAN.md
+Last session: 2026-04-11T20:17:23.559Z
+Stopped at: Completed 03-predictions-03-03-PLAN.md
 Resume file: None

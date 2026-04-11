@@ -32,7 +32,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **PRED-01**: Member can submit score predictions (home/away goals) for all fixtures in a gameweek
 - [x] **PRED-02**: Member can edit predictions any time before that fixture's kick-off
 - [x] **PRED-03**: Predictions hidden from all other members until all fixtures in the gameweek are complete
-- [ ] **PRED-04**: George can view all members' predictions at any time
+- [x] **PRED-04**: George can view all members' predictions at any time
 - [x] **PRED-05**: Late submissions accepted for remaining un-kicked-off fixtures only
 
 ### Scoring & Results
@@ -174,7 +174,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PRED-01 | Phase 3 | Complete |
 | PRED-02 | Phase 3 | Complete |
 | PRED-03 | Phase 3 | Complete |
-| PRED-04 | Phase 3 | Pending |
+| PRED-04 | Phase 3 | Complete |
 | PRED-05 | Phase 3 | Complete |
 | SCORE-01 | Phase 4 | Pending |
 | SCORE-02 | Phase 4 | Pending |
