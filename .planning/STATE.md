@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Phase 3 context gathered
-last_updated: "2026-04-11T19:51:18.445Z"
+stopped_at: Completed 03-predictions-03-01-PLAN.md
+last_updated: "2026-04-11T20:12:47.425Z"
 last_activity: 2026-04-11 — Roadmap created, 11 phases derived from 71 v1 requirements
 progress:
   total_phases: 11
   completed_phases: 2
-  total_plans: 8
-  completed_plans: 8
+  total_plans: 11
+  completed_plans: 9
   percent: 0
 ---
 
@@ -57,6 +57,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 02-fixture-layer P01 | 7 | 2 tasks | 14 files |
 | Phase 02-fixture-layer P03 | 5 | 2 tasks | 11 files |
 | Phase 02-fixture-layer P02 | 8 | 2 tasks | 9 files |
+| Phase 03-predictions P01 | 3 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -91,6 +92,9 @@ Recent decisions affecting current work:
 - [Phase 02-fixture-layer]: All-fixtures filter state stored in URL search params (?team=id) for shareability
 - [Phase 02-fixture-layer]: editFixture kickoff guard: blocks time/team changes after kickoff server-side unless admin_override=true in FormData; scores/status always editable
 - [Phase 02-fixture-layer]: Negative external_id for manually added fixtures (-Date.now()) prevents collision with football-data.org positive integer IDs
+- [Phase 03-predictions]: Prediction visibility at kick-off per CONTEXT.md override of PRED-03 — predictions_select_member RLS policy uses kickoff_time <= now() threshold
+- [Phase 03-predictions]: member_id resolved server-side from auth.uid() — never trusted from client in submitPredictions action
+- [Phase 03-predictions]: Session client (not admin client) for prediction upserts so RLS enforces two-layer lockout at DB level
 
 ### Pending Todos
 
@@ -105,6 +109,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-11T19:51:18.442Z
-Stopped at: Phase 3 context gathered
-Resume file: .planning/phases/03-predictions/03-CONTEXT.md
+Last session: 2026-04-11T20:12:47.419Z
+Stopped at: Completed 03-predictions-03-01-PLAN.md
+Resume file: None
