@@ -105,7 +105,7 @@ Plans:
   4. George can toggle Double Bubble on or off for a specific gameweek
   5. George can manually close a gameweek (e.g., when a postponed fixture is voided) and the system finalises standings
   6. Additional prizes are surfaced in the admin view and only applied when George explicitly confirms them
-**Plans:** 1/4 plans executed
+**Plans:** 2/4 plans executed
 Plans:
 - [ ] 05-01-PLAN.md — Migration 005 (bonus_types, bonus_schedule, bonus_awards, additional_prizes, prize_awards, admin_settings), TypeScript types, Zod validators
 - [ ] 05-02-PLAN.md — Bonus management: server actions, admin Bonuses page, set-bonus dialog, Double Bubble toggle, bonus award confirmation
@@ -198,7 +198,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 2. Fixture Layer | 3/3 | Complete   | 2026-04-11 |
 | 3. Predictions | 2/3 | In Progress|  |
 | 4. Scoring Engine | 3/3 | Complete   | 2026-04-11 |
-| 5. Admin Panel | 1/4 | In Progress|  |
+| 5. Admin Panel | 2/4 | In Progress|  |
 | 6. Bonus System | 0/TBD | Not started | - |
 | 7. Mid-Season Import | 0/TBD | Not started | - |
 | 8. Last One Standing & H2H | 0/TBD | Not started | - |

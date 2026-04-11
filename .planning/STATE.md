@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 05-admin-panel-01-PLAN.md
-last_updated: "2026-04-11T22:20:47.315Z"
+stopped_at: Completed 05-admin-panel-02-PLAN.md
+last_updated: "2026-04-11T22:27:19.949Z"
 last_activity: 2026-04-11 — Roadmap created, 11 phases derived from 71 v1 requirements
 progress:
   total_phases: 11
   completed_phases: 4
   total_plans: 18
-  completed_plans: 15
+  completed_plans: 16
   percent: 0
 ---
 
@@ -64,6 +64,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 04-scoring-engine P03 | 6 | 2 tasks | 4 files |
 | Phase 04-scoring-engine P02 | 8 | 2 tasks | 6 files |
 | Phase 05-admin-panel P01 | 3 | 2 tasks | 5 files |
+| Phase 05-admin-panel P02 | 4 | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -117,6 +118,8 @@ Recent decisions affecting current work:
 - [Phase 05-admin-panel]: bonus_awards.awarded uses tri-state boolean (NULL=pending, true=confirmed, false=rejected)
 - [Phase 05-admin-panel]: admin_notifications type CHECK dropped and re-added in migration 005 with all Phase 5 types included
 - [Phase 05-admin-panel]: bonus_types and additional_prizes grant SELECT to authenticated users so members can see names/prize list
+- [Phase 05-admin-panel]: SetBonusDialog existingPickCount passed as prop from server (not fetched client-side) — avoids client DB round-trip
+- [Phase 05-admin-panel]: Bonuses page Double Bubble toggle uses toggleDoubleBubble imported directly as form action — no inline 'use server' needed in server components
 
 ### Pending Todos
 
@@ -131,6 +134,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-11T22:20:47.313Z
-Stopped at: Completed 05-admin-panel-01-PLAN.md
+Last session: 2026-04-11T22:27:19.947Z
+Stopped at: Completed 05-admin-panel-02-PLAN.md
 Resume file: None
