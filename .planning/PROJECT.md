@@ -45,10 +45,12 @@ Accurate, automated point calculation that removes all manual load from George w
 - [ ] Season reset — archive previous season data and start fresh
 - [ ] Local backup tool — George can export all data so he can continue manually if the site goes down
 - [ ] Scalable to 100 users on free-tier infrastructure
+- [ ] Polished UI with Premier League branding — team badges, photos, professional look and feel
 
 ### Out of Scope
 
 - WhatsApp integration / bot — members use the website, George updates WhatsApp manually
+- Ugly/plain UI — should look polished with Premier League branding, team badges, and photos
 - Mobile app — web-first, responsive design for mobile browsers
 - Payment collection — George handles fees outside the tool
 - Real-time chat or messaging within the tool
