@@ -41,6 +41,7 @@ export function createMockSupabaseClient() {
         updateUserById: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
         deleteUser: vi.fn().mockResolvedValue({ data: null, error: null }),
         inviteUserByEmail: vi.fn().mockResolvedValue({ data: null, error: null }),
+        listUsers: vi.fn().mockResolvedValue({ data: { users: [] }, error: null }),
       },
     },
     ...chainable,
