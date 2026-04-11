@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 01-foundation/01-03-PLAN.md
-last_updated: "2026-04-11T16:12:30.974Z"
+stopped_at: Completed 01-foundation/01-04-PLAN.md
+last_updated: "2026-04-11T16:15:45.393Z"
 last_activity: 2026-04-11 — Roadmap created, 11 phases derived from 71 v1 requirements
 progress:
   total_phases: 11
   completed_phases: 0
   total_plans: 5
-  completed_plans: 3
+  completed_plans: 4
   percent: 0
 ---
 
@@ -53,6 +53,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01-foundation P01 | 6 | 3 tasks | 19 files |
 | Phase 01-foundation P02 | 8 | 2 tasks | 14 files |
 | Phase 01-foundation P03 | 9 | 2 tasks | 18 files |
+| Phase 01-foundation P04 | 13 | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -77,6 +78,8 @@ Recent decisions affecting current work:
 - [Phase 01-foundation]: Security question answers hashed with SHA-256 (Web Crypto API), normalised to lowercase+trimmed — no bcrypt needed since personal questions, not passwords
 - [Phase 01-foundation]: zodResolver excluded — @hookform/resolvers not installed; client forms use react-hook-form native validation; Zod validation happens in server actions
 - [Phase 01-foundation]: Zod v4 uses .issues[] not .errors[] for validation errors — fixed across all admin server actions
+- [Phase 01-foundation]: AUTH-04 coverage via magic link re-request — no separate reset page, requesting new link IS the recovery flow
+- [Phase 01-foundation]: Database type set to any placeholder — unblocks TypeScript until supabase gen types runs against real project
 
 ### Pending Todos
 
@@ -91,6 +94,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-11T16:12:30.970Z
-Stopped at: Completed 01-foundation/01-03-PLAN.md
+Last session: 2026-04-11T16:15:45.390Z
+Stopped at: Completed 01-foundation/01-04-PLAN.md
 Resume file: None

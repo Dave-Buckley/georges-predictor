@@ -10,9 +10,9 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Authentication & Members
 
 - [x] **AUTH-01**: User can sign up with email and password
-- [ ] **AUTH-02**: George must approve each registration before member can access the tool (invite-only)
-- [ ] **AUTH-03**: User session persists across browser refresh
-- [ ] **AUTH-04**: User can reset password via email link
+- [x] **AUTH-02**: George must approve each registration before member can access the tool (invite-only)
+- [x] **AUTH-03**: User session persists across browser refresh
+- [x] **AUTH-04**: User can reset password via email link
 - [x] **AUTH-05**: George can add new members manually (late joiners) with starting points
 - [x] **AUTH-06**: Two admin accounts — George (primary) and Dave (backup) — both with full admin access
 - [x] **AUTH-07**: Separate admin login page and member login page
@@ -158,9 +158,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | AUTH-01 | Phase 1 | Complete |
-| AUTH-02 | Phase 1 | Pending |
-| AUTH-03 | Phase 1 | Pending |
-| AUTH-04 | Phase 1 | Pending |
+| AUTH-02 | Phase 1 | Complete |
+| AUTH-03 | Phase 1 | Complete |
+| AUTH-04 | Phase 1 | Complete |
 | AUTH-05 | Phase 1 | Complete |
 | AUTH-06 | Phase 1 | Complete |
 | AUTH-07 | Phase 1 | Complete |
