@@ -26,15 +26,15 @@ export default function PendingNotice() {
           </div>
           <div className="space-y-2">
             <h2 className="text-lg font-semibold text-amber-300">
-              Your account is awaiting approval
+              Account Pending Approval
             </h2>
             <p className="text-amber-200/80">
-              Your account is waiting for George&apos;s approval. You can browse the
-              site but can&apos;t submit predictions yet.
+              Your registration is being reviewed. You can browse the site in the
+              meantime, but predictions will be available once your account is approved.
             </p>
             <p className="text-amber-200/60 text-sm">
-              If you haven&apos;t already, send George a WhatsApp message to let him
-              know you&apos;ve signed up.
+              Please contact George via WhatsApp to confirm your registration if
+              you haven&apos;t already.
             </p>
           </div>
         </div>

@@ -18,7 +18,7 @@ export default function DashboardOverview({ member }: DashboardOverviewProps) {
         <h1 className="text-2xl font-bold text-white">
           Welcome back, {member.display_name}
         </h1>
-        <p className="text-slate-400 mt-1">Here&apos;s your competition overview.</p>
+        <p className="text-slate-400 mt-1">Your competition overview at a glance.</p>
       </div>
 
       {/* Card grid */}
@@ -49,8 +49,8 @@ export default function DashboardOverview({ member }: DashboardOverviewProps) {
             </p>
             <p className="text-slate-500 text-sm mt-1">
               {member.starting_points > 0
-                ? 'Starting points (full table coming in Phase 4)'
-                : 'Season not started yet'}
+                ? 'Points carried forward'
+                : 'Awaiting season start'}
             </p>
           </div>
         </div>
@@ -80,7 +80,7 @@ export default function DashboardOverview({ member }: DashboardOverviewProps) {
               No upcoming deadlines
             </p>
             <p className="text-slate-500 text-sm mt-1">
-              Prediction deadlines will appear here once fixtures are loaded.
+              Deadlines will appear here once the season is underway.
             </p>
           </div>
         </div>
@@ -107,7 +107,7 @@ export default function DashboardOverview({ member }: DashboardOverviewProps) {
           </div>
           <div>
             <p className="text-slate-400 text-sm">
-              Fixtures will appear here once the season begins.
+              Upcoming matches will be listed here automatically.
             </p>
           </div>
         </div>
@@ -134,7 +134,7 @@ export default function DashboardOverview({ member }: DashboardOverviewProps) {
           </div>
           <div>
             <p className="text-slate-400 text-sm">
-              Results will appear here as fixtures complete.
+              Match results and your scores will appear here.
             </p>
           </div>
         </div>

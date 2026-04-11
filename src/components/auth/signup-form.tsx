@@ -78,23 +78,23 @@ export default function SignupForm({ importedNames }: SignupFormProps) {
           </div>
 
           <div className="space-y-2">
-            <h2 className="text-2xl font-bold text-white">You&apos;re registered!</h2>
+            <h2 className="text-2xl font-bold text-white">Registration Received</h2>
             <p className="text-slate-300 text-lg leading-relaxed">
-              Confirm with George via WhatsApp so he can approve your account.
+              Please confirm with George via WhatsApp to complete your registration.
             </p>
           </div>
 
           <div className="rounded-xl bg-slate-700/50 border border-slate-600 px-4 py-3 space-y-1">
             <p className="text-slate-400 text-sm">
-              Once George approves you, you&apos;ll get an email with a link to log in.
+              Once your account has been approved, you will receive an email with a secure login link.
             </p>
             <p className="text-slate-400 text-sm">
-              In the meantime, you can{' '}
+              In the meantime, feel free to{' '}
               <Link
                 href="/"
                 className="text-purple-400 hover:text-purple-300 underline transition"
               >
-                browse the league table
+                view the league standings
               </Link>
               .
             </p>

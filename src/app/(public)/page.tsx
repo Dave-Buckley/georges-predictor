@@ -141,13 +141,15 @@ export default async function LandingPage() {
               </table>
             ) : (
               <div className="flex flex-col items-center justify-center py-12 px-4 text-center space-y-3">
-                <div className="w-14 h-14 rounded-full bg-purple-500/10 flex items-center justify-center text-2xl">
-                  ??
+                <div className="w-14 h-14 rounded-full bg-purple-500/10 flex items-center justify-center">
+                  <svg className="w-7 h-7 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
                 </div>
-                <p className="text-white font-semibold text-lg">Season starting soon</p>
+                <p className="text-white font-semibold text-lg">Season Starting Soon</p>
                 <p className="text-slate-400 text-sm max-w-xs">
-                  The league table will appear here once the season kicks off.
-                  Sign up now to secure your spot!
+                  The league table will update automatically once the competition is underway.
+                  Register now to secure your place.
                 </p>
               </div>
             )}
@@ -196,7 +198,7 @@ export default async function LandingPage() {
       <section className="px-4 py-16 text-center">
         <div className="max-w-lg mx-auto space-y-6">
           <h2 className="text-3xl font-bold text-white">Ready to compete?</h2>
-          <p className="text-slate-400 text-lg">Join the group and prove you know football.</p>
+          <p className="text-slate-400 text-lg">Put your Premier League knowledge to the test.</p>
           <Link
             href="/signup"
             className="inline-flex items-center justify-center rounded-2xl bg-purple-600 hover:bg-purple-500 px-10 py-5 text-white font-bold text-xl shadow-lg shadow-purple-500/30 transition-all focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 focus:ring-offset-slate-950"

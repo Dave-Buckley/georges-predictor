@@ -16,10 +16,10 @@ export default function LoginPage() {
             Welcome back
           </h1>
           <p className="text-slate-400 text-lg">
-            Enter your email and we&apos;ll send you a link to log in.
+            Enter your registered email address to receive a secure login link.
           </p>
           <p className="text-slate-500 text-sm">
-            No password needed — just click the link in your email.
+            No password required. A one-time login link will be sent to your inbox.
           </p>
         </div>
 
