@@ -40,7 +40,19 @@ export interface BlockedEmailRow {
 /** Row shape for the public.admin_notifications table */
 export interface AdminNotificationRow {
   id: string
-  type: 'new_signup' | 'approval_needed' | 'system' | 'sync_failure' | 'fixture_rescheduled' | 'fixture_moved' | 'result_override' | 'scoring_complete'
+  type:
+    | 'new_signup'
+    | 'approval_needed'
+    | 'system'
+    | 'sync_failure'
+    | 'fixture_rescheduled'
+    | 'fixture_moved'
+    | 'result_override'
+    | 'scoring_complete'
+    | 'bonus_reminder'
+    | 'gw_complete'
+    | 'prize_triggered'
+    | 'bonus_award_needed'
   title: string
   message: string | null
   is_read: boolean
@@ -82,6 +94,9 @@ export interface GameweekRow {
   number: number
   season: number
   status: GameweekStatus
+  double_bubble: boolean
+  closed_at: string | null
+  closed_by: string | null
   created_at: string
 }
 
@@ -165,6 +180,93 @@ export interface ResultOverrideRow {
   new_away: number
   predictions_recalculated: number
   created_at: string
+}
+
+// ─── Admin Panel Types ────────────────────────────────────────────────────────
+
+/** Row shape for the public.bonus_types table */
+export interface BonusTypeRow {
+  id: string
+  name: string
+  description: string
+  is_custom: boolean
+  created_at: string
+}
+
+/** Row shape for the public.bonus_schedule table */
+export interface BonusScheduleRow {
+  id: string
+  gameweek_id: string
+  bonus_type_id: string
+  confirmed: boolean
+  confirmed_at: string | null
+  confirmed_by: string | null
+  created_at: string
+}
+
+/** Row shape for the public.bonus_awards table */
+export interface BonusAwardRow {
+  id: string
+  gameweek_id: string
+  member_id: string
+  bonus_type_id: string
+  fixture_id: string | null
+  /** null = pending, true = confirmed, false = rejected */
+  awarded: boolean | null
+  confirmed_by: string | null
+  confirmed_at: string | null
+  created_at: string
+}
+
+/** Row shape for the public.additional_prizes table */
+export interface AdditionalPrizeRow {
+  id: string
+  name: string
+  emoji: string | null
+  description: string
+  trigger_type: 'auto' | 'date' | 'manual'
+  trigger_config: Record<string, unknown> | null
+  points_value: number
+  /** Cash value stored in pence (1000 = £10) */
+  cash_value: number
+  is_custom: boolean
+  created_at: string
+}
+
+/** Row shape for the public.prize_awards table */
+export interface PrizeAwardRow {
+  id: string
+  prize_id: string
+  member_id: string | null
+  gameweek_id: string | null
+  triggered_at: string
+  snapshot_data: Record<string, unknown> | null
+  status: 'pending' | 'confirmed' | 'rejected'
+  confirmed_by: string | null
+  confirmed_at: string | null
+  notes: string | null
+}
+
+/** Row shape for the public.admin_settings table */
+export interface AdminSettingsRow {
+  id: string
+  admin_user_id: string
+  email_bonus_reminders: boolean
+  email_gw_complete: boolean
+  email_prize_triggered: boolean
+  created_at: string
+  updated_at: string
+}
+
+/** BonusSchedule joined with bonus type info */
+export interface BonusScheduleWithType extends BonusScheduleRow {
+  bonus_type: BonusTypeRow
+}
+
+/** PrizeAward joined with prize info and member */
+export interface PrizeAwardWithDetails extends PrizeAwardRow {
+  prize: AdditionalPrizeRow
+  member: Pick<MemberRow, 'id' | 'display_name'> | null
 }
 
 // ─── Database Type (placeholder until `supabase gen types` is run) ────────────
