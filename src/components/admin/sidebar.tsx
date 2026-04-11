@@ -11,6 +11,7 @@ import {
   Bell,
   Calendar,
   Star,
+  Award,
   BarChart3,
   Menu,
   X,
@@ -62,6 +63,11 @@ export function AdminSidebar({ adminEmail }: SidebarProps) {
       href: '/admin/bonuses',
       label: 'Bonuses',
       icon: Star,
+    },
+    {
+      href: '/admin/prizes',
+      label: 'Prizes',
+      icon: Award,
     },
     {
       href: '/admin/reports',

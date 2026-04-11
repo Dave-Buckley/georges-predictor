@@ -108,6 +108,12 @@ export default async function MemberLayout({ children }: MemberLayoutProps) {
             <span className="px-4 py-3 text-sm text-slate-600 whitespace-nowrap cursor-not-allowed">
               My Predictions
             </span>
+            <Link
+              href="/bonuses"
+              className="px-4 py-3 text-sm font-medium text-slate-300 hover:text-white whitespace-nowrap border-b-2 border-transparent hover:border-purple-500 transition"
+            >
+              Bonuses &amp; Prizes
+            </Link>
             <span className="px-4 py-3 text-sm text-slate-600 whitespace-nowrap cursor-not-allowed">
               League Table
             </span>
