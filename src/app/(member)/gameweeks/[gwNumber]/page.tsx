@@ -193,6 +193,38 @@ export default async function GameweekPage({ params }: PageProps) {
     totalMembers = Number(countData[0].total_members ?? 0)
   }
 
+  // ── Fetch active bonus for this gameweek ────────────────────────────────────
+  const { data: bonusScheduleData } = await supabase
+    .from('bonus_schedule')
+    .select('*, bonus_type:bonus_types!bonus_type_id(*)')
+    .eq('gameweek_id', gameweek.id)
+    .eq('confirmed', true)
+    .single()
+
+  const activeBonusType = bonusScheduleData
+    ? {
+        id: bonusScheduleData.bonus_type.id as string,
+        name: bonusScheduleData.bonus_type.name as string,
+        description: bonusScheduleData.bonus_type.description as string,
+      }
+    : null
+
+  // ── Fetch member's existing bonus pick for this gameweek ────────────────────
+  let existingBonusPick: string | null = null
+
+  if (memberData?.id) {
+    const { data: bonusAwardData } = await supabase
+      .from('bonus_awards')
+      .select('fixture_id, awarded, points_awarded')
+      .eq('gameweek_id', gameweek.id)
+      .eq('member_id', memberData.id)
+      .single()
+
+    if (bonusAwardData) {
+      existingBonusPick = bonusAwardData.fixture_id as string | null
+    }
+  }
+
   return (
     <PredictionForm
       fixtures={fixtures}
@@ -205,6 +237,8 @@ export default async function GameweekPage({ params }: PageProps) {
       scoreBreakdowns={scoreBreakdowns}
       totalPoints={totalPoints}
       scoredFixtureCount={scoredFixtureCount}
+      activeBonusType={activeBonusType}
+      existingBonusPick={existingBonusPick}
     />
   )
 }

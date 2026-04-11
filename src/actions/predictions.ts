@@ -1,5 +1,6 @@
 'use server'
 
+import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { canSubmitPrediction } from '@/lib/fixtures/lockout'
@@ -16,7 +17,8 @@ import { submitPredictionsSchema } from '@/lib/validators/predictions'
  *  3. Validate input with Zod (rejects negative scores, invalid UUIDs, empty array)
  *  4. For each entry: check canSubmitPrediction() — skip locked fixtures
  *  5. Upsert prediction row (member_id + fixture_id as unique key)
- *  6. Revalidate the gameweek page cache
+ *  6. If bonusFixtureId provided: verify not locked, upsert bonus_awards row (RLS enforced)
+ *  7. Revalidate the gameweek page cache
  *
  * IMPORTANT: member_id is resolved server-side from auth.uid() via the members table.
  * A client-passed member_id is NEVER trusted.
@@ -25,8 +27,9 @@ import { submitPredictionsSchema } from '@/lib/validators/predictions'
  */
 export async function submitPredictions(
   gameweekNumber: number,
-  entries: Array<{ fixture_id: string; home_score: number; away_score: number }>
-): Promise<{ success?: boolean; saved: number; skipped: number; error?: string }> {
+  entries: Array<{ fixture_id: string; home_score: number; away_score: number }>,
+  bonusFixtureId: string | null = null,
+): Promise<{ success?: boolean; saved: number; skipped: number; bonusSaved: boolean; error?: string }> {
   const supabase = await createServerSupabaseClient()
 
   // ── Step 1: Authenticate ─────────────────────────────────────────────────────
@@ -36,7 +39,7 @@ export async function submitPredictions(
   } = await supabase.auth.getUser()
 
   if (authError || !user) {
-    return { error: 'Not authenticated', saved: 0, skipped: 0 }
+    return { error: 'Not authenticated', saved: 0, skipped: 0, bonusSaved: false }
   }
 
   // ── Step 2: Look up approved member ──────────────────────────────────────────
@@ -47,14 +50,19 @@ export async function submitPredictions(
     .single()
 
   if (memberError || !member) {
-    return { error: 'Member not found', saved: 0, skipped: 0 }
+    return { error: 'Member not found', saved: 0, skipped: 0, bonusSaved: false }
   }
 
   if (member.approval_status !== 'approved') {
-    return { error: 'Member not approved', saved: 0, skipped: 0 }
+    return { error: 'Member not approved', saved: 0, skipped: 0, bonusSaved: false }
   }
 
   // ── Step 3: Validate input ────────────────────────────────────────────────────
+  // Optional UUID guard for bonusFixtureId
+  if (bonusFixtureId && !z.string().uuid().safeParse(bonusFixtureId).success) {
+    return { error: 'Invalid bonus fixture ID', saved: 0, skipped: 0, bonusSaved: false }
+  }
+
   const validation = submitPredictionsSchema.safeParse({
     gameweek_number: gameweekNumber,
     entries,
@@ -62,7 +70,7 @@ export async function submitPredictions(
 
   if (!validation.success) {
     const firstError = validation.error.issues[0]?.message ?? 'Invalid input'
-    return { error: firstError, saved: 0, skipped: 0 }
+    return { error: firstError, saved: 0, skipped: 0, bonusSaved: false }
   }
 
   const { gameweek_number, entries: validatedEntries } = validation.data
@@ -101,8 +109,53 @@ export async function submitPredictions(
     }
   }
 
-  // ── Step 6: Revalidate gameweek page ─────────────────────────────────────────
+  // ── Step 6: Handle bonus pick if provided ────────────────────────────────────
+  let bonusSaved = false
+
+  if (bonusFixtureId) {
+    // Verify the chosen fixture hasn't kicked off (same lockout check as predictions)
+    const bonusLockout = await canSubmitPrediction(bonusFixtureId)
+
+    if (bonusLockout.canSubmit) {
+      // Fetch the gameweek row to get gameweek_id
+      const { data: gwRow } = await supabase
+        .from('gameweeks')
+        .select('id')
+        .eq('number', gameweek_number)
+        .single()
+
+      if (gwRow) {
+        // Fetch the confirmed bonus schedule for this gameweek
+        const { data: bonusSchedule } = await supabase
+          .from('bonus_schedule')
+          .select('bonus_type_id')
+          .eq('gameweek_id', gwRow.id)
+          .eq('confirmed', true)
+          .single()
+
+        if (bonusSchedule) {
+          // Upsert bonus_awards row — RLS enforces member_id matches auth.uid()
+          const { error: bonusError } = await supabase
+            .from('bonus_awards')
+            .upsert(
+              {
+                gameweek_id: gwRow.id,
+                member_id: member.id,
+                bonus_type_id: bonusSchedule.bonus_type_id,
+                fixture_id: bonusFixtureId,
+                awarded: null, // always pending until George confirms
+                points_awarded: 0,
+              },
+              { onConflict: 'gameweek_id,member_id' }
+            )
+          if (!bonusError) bonusSaved = true
+        }
+      }
+    }
+  }
+
+  // ── Step 7: Revalidate gameweek page ─────────────────────────────────────────
   revalidatePath('/gameweeks/' + gameweek_number)
 
-  return { success: true, saved, skipped }
+  return { success: true, saved, skipped, bonusSaved }
 }
