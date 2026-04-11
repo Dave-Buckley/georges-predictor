@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 01-foundation/01-02-PLAN.md
-last_updated: "2026-04-11T16:10:41.019Z"
+stopped_at: Completed 01-foundation/01-03-PLAN.md
+last_updated: "2026-04-11T16:12:30.974Z"
 last_activity: 2026-04-11 — Roadmap created, 11 phases derived from 71 v1 requirements
 progress:
   total_phases: 11
   completed_phases: 0
   total_plans: 5
-  completed_plans: 2
+  completed_plans: 3
   percent: 0
 ---
 
@@ -52,6 +52,7 @@ Progress: [░░░░░░░░░░] 0%
 *Updated after each plan completion*
 | Phase 01-foundation P01 | 6 | 3 tasks | 19 files |
 | Phase 01-foundation P02 | 8 | 2 tasks | 14 files |
+| Phase 01-foundation P03 | 9 | 2 tasks | 18 files |
 
 ## Accumulated Context
 
@@ -73,6 +74,9 @@ Recent decisions affecting current work:
 - [Phase 01-foundation]: RLS admin JWT path: (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin' (may need adjustment per Supabase project settings)
 - [Phase 01-foundation]: email_opt_in default lives in form defaultValues not Zod schema — avoids zodResolver type conflict with react-hook-form
 - [Phase 01-foundation]: Supabase clients use createClient<any> until supabase gen types is run post-deployment
+- [Phase 01-foundation]: Security question answers hashed with SHA-256 (Web Crypto API), normalised to lowercase+trimmed — no bcrypt needed since personal questions, not passwords
+- [Phase 01-foundation]: zodResolver excluded — @hookform/resolvers not installed; client forms use react-hook-form native validation; Zod validation happens in server actions
+- [Phase 01-foundation]: Zod v4 uses .issues[] not .errors[] for validation errors — fixed across all admin server actions
 
 ### Pending Todos
 
@@ -87,6 +91,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-11T16:10:30.245Z
-Stopped at: Completed 01-foundation/01-02-PLAN.md
+Last session: 2026-04-11T16:12:30.970Z
+Stopped at: Completed 01-foundation/01-03-PLAN.md
 Resume file: None

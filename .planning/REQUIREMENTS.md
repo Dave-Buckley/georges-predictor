@@ -13,10 +13,10 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **AUTH-02**: George must approve each registration before member can access the tool (invite-only)
 - [ ] **AUTH-03**: User session persists across browser refresh
 - [ ] **AUTH-04**: User can reset password via email link
-- [ ] **AUTH-05**: George can add new members manually (late joiners) with starting points
+- [x] **AUTH-05**: George can add new members manually (late joiners) with starting points
 - [x] **AUTH-06**: Two admin accounts — George (primary) and Dave (backup) — both with full admin access
-- [ ] **AUTH-07**: Separate admin login page and member login page
-- [ ] **AUTH-08**: George can submit his own predictions from the admin panel — he is both admin and participant (Dave is admin-only, not a participant)
+- [x] **AUTH-07**: Separate admin login page and member login page
+- [x] **AUTH-08**: George can submit his own predictions from the admin panel — he is both admin and participant (Dave is admin-only, not a participant)
 - [x] **AUTH-09**: During signup, member either selects their name from the existing imported list (to link to their standings) or enters a new name with a note saying username should reflect their WhatsApp name
 
 ### Fixtures & Gameweeks
@@ -80,12 +80,12 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Admin Panel
 
-- [ ] **ADMIN-01**: George can approve or reject member registrations
+- [x] **ADMIN-01**: George can approve or reject member registrations
 - [ ] **ADMIN-02**: George can set the active bonus for each gameweek before it starts
 - [ ] **ADMIN-03**: George can confirm or reject bonus point awards after gameweek
 - [ ] **ADMIN-04**: George can override match results and trigger score recalculation
 - [ ] **ADMIN-05**: George can toggle Double Bubble for specific gameweeks
-- [ ] **ADMIN-06**: George can manage members — add, remove, set starting points
+- [x] **ADMIN-06**: George can manage members — add, remove, set starting points
 - [ ] **ADMIN-07**: Additional prizes tracked and surfaced in reports — only applied when George confirms
 - [ ] **ADMIN-08**: George can import mid-season data (existing standings, pre-season picks)
 - [ ] **ADMIN-09**: George can close a gameweek manually (e.g., when postponed fixtures are voided)
@@ -161,10 +161,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AUTH-02 | Phase 1 | Pending |
 | AUTH-03 | Phase 1 | Pending |
 | AUTH-04 | Phase 1 | Pending |
-| AUTH-05 | Phase 1 | Pending |
+| AUTH-05 | Phase 1 | Complete |
 | AUTH-06 | Phase 1 | Complete |
-| AUTH-07 | Phase 1 | Pending |
-| AUTH-08 | Phase 1 | Pending |
+| AUTH-07 | Phase 1 | Complete |
+| AUTH-08 | Phase 1 | Complete |
 | AUTH-09 | Phase 1 | Complete |
 | FIX-01 | Phase 2 | Pending |
 | FIX-02 | Phase 2 | Pending |
@@ -204,12 +204,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PRE-03 | Phase 9 | Pending |
 | PRE-04 | Phase 9 | Pending |
 | PRE-05 | Phase 9 | Pending |
-| ADMIN-01 | Phase 1 | Pending |
+| ADMIN-01 | Phase 1 | Complete |
 | ADMIN-02 | Phase 5 | Pending |
 | ADMIN-03 | Phase 5 | Pending |
 | ADMIN-04 | Phase 5 | Pending |
 | ADMIN-05 | Phase 5 | Pending |
-| ADMIN-06 | Phase 1 | Pending |
+| ADMIN-06 | Phase 1 | Complete |
 | ADMIN-07 | Phase 5 | Pending |
 | ADMIN-08 | Phase 7 | Pending |
 | ADMIN-09 | Phase 5 | Pending |
