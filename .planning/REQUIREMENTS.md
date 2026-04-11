@@ -21,10 +21,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Fixtures & Gameweeks
 
-- [ ] **FIX-01**: Premier League fixtures auto-loaded from football-data.org API per gameweek
-- [ ] **FIX-02**: Fixtures clearly grouped by gameweek with midweek vs weekend distinction
-- [ ] **FIX-03**: Per-fixture lockout at kick-off time — server-enforced, no submissions or edits after kick-off
-- [ ] **FIX-04**: Postponed/rescheduled matches handled explicitly (George can void or reassign)
+- [x] **FIX-01**: Premier League fixtures auto-loaded from football-data.org API per gameweek
+- [x] **FIX-02**: Fixtures clearly grouped by gameweek with midweek vs weekend distinction
+- [x] **FIX-03**: Per-fixture lockout at kick-off time — server-enforced, no submissions or edits after kick-off
+- [x] **FIX-04**: Postponed/rescheduled matches handled explicitly (George can void or reassign)
 - [ ] **FIX-05**: George can manually add, edit, or correct fixtures as fallback
 
 ### Predictions
@@ -166,10 +166,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AUTH-07 | Phase 1 | Complete |
 | AUTH-08 | Phase 1 | Complete |
 | AUTH-09 | Phase 1 | Complete |
-| FIX-01 | Phase 2 | Pending |
-| FIX-02 | Phase 2 | Pending |
-| FIX-03 | Phase 2 | Pending |
-| FIX-04 | Phase 2 | Pending |
+| FIX-01 | Phase 2 | Complete |
+| FIX-02 | Phase 2 | Complete |
+| FIX-03 | Phase 2 | Complete |
+| FIX-04 | Phase 2 | Complete |
 | FIX-05 | Phase 2 | Pending |
 | PRED-01 | Phase 3 | Pending |
 | PRED-02 | Phase 3 | Pending |
