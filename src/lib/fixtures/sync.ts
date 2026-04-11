@@ -1,19 +1,57 @@
 // ─── Fixture Sync Engine ──────────────────────────────────────────────────────
 // Orchestrates: fetch -> upsert teams -> upsert gameweeks -> upsert fixtures
-//               -> detect reschedules -> write sync_log
+//               -> detect reschedules -> detect FINISHED transitions -> score
+//               -> write sync_log
 //
 // Always uses the admin (service role) client which bypasses RLS.
 // Never throws — always returns a result object.
 
 import { createAdminClient } from '@/lib/supabase/admin'
 import { fetchAllMatches, type FootballDataMatch } from './football-data-client'
+import { recalculateFixture } from '@/lib/scoring/recalculate'
 import type { TeamRow, GameweekRow } from '@/lib/supabase/types'
 
 export interface SyncResult {
   success: boolean
   fixtures_updated: number
+  scored_fixtures: number
   rescheduled: string[]
   errors: string[]
+}
+
+// ─── Helper: Detect newly-FINISHED fixtures (exported for testing) ────────────
+
+export interface FixtureStatusSnapshot {
+  external_id: number
+  status: string
+  home_score: number | null
+  away_score: number | null
+}
+
+export interface FixtureRow {
+  external_id: number
+  status: string
+  home_score: number | null
+  away_score: number | null
+}
+
+/**
+ * Filters fixture rows to only those transitioning to FINISHED for the first time.
+ * Fixtures already FINISHED in prevStatusMap are excluded (no double-scoring).
+ */
+export function detectNewlyFinished(
+  fixtureRows: FixtureRow[],
+  prevStatusMap: Map<number, FixtureStatusSnapshot>
+): FixtureRow[] {
+  return fixtureRows.filter((row) => {
+    const prev = prevStatusMap.get(row.external_id)
+    return (
+      row.status === 'FINISHED'
+      && prev?.status !== 'FINISHED'
+      && row.home_score !== null
+      && row.away_score !== null
+    )
+  })
 }
 
 // ─── Helper: Extract unique teams from matches ────────────────────────────────
@@ -174,7 +212,7 @@ export async function syncFixtures(): Promise<SyncResult> {
         error_message: msg,
       })
 
-      return { success: false, fixtures_updated: 0, rescheduled: [], errors: [msg] }
+      return { success: false, fixtures_updated: 0, scored_fixtures: 0, rescheduled: [], errors: [msg] }
     }
 
     // ── 2. Fetch matches ──────────────────────────────────────────────────────
@@ -183,7 +221,7 @@ export async function syncFixtures(): Promise<SyncResult> {
       const msg = 'No matches returned from football-data.org'
       errors.push(msg)
       await writeSyncLog(adminClient, false, 0, msg)
-      return { success: false, fixtures_updated: 0, rescheduled: [], errors }
+      return { success: false, fixtures_updated: 0, scored_fixtures: 0, rescheduled: [], errors }
     }
 
     // ── 3. Upsert teams ───────────────────────────────────────────────────────
@@ -219,7 +257,7 @@ export async function syncFixtures(): Promise<SyncResult> {
       const msg = `UUID resolution error: teams=${teamsDbResult.error?.message ?? 'ok'} gameweeks=${gameweeksDbResult.error?.message ?? 'ok'}`
       errors.push(msg)
       await writeSyncLog(adminClient, false, 0, msg)
-      return { success: false, fixtures_updated: 0, rescheduled, errors }
+      return { success: false, fixtures_updated: 0, scored_fixtures: 0, rescheduled, errors }
     }
 
     const teamUuidMap = new Map<number, string>()
@@ -234,6 +272,22 @@ export async function syncFixtures(): Promise<SyncResult> {
 
     // ── 6. Detect reschedules before upsert ───────────────────────────────────
     const { reschedules, gameweekMoves } = await detectReschedules(adminClient, matches)
+
+    // ── 6b. Snapshot previous statuses/scores (for FINISHED-transition detection) ─
+    const { data: previousStatuses } = await adminClient
+      .from('fixtures')
+      .select('external_id, status, home_score, away_score')
+      .in('external_id', matches.map((m) => m.id))
+
+    const prevStatusMap = new Map<number, FixtureStatusSnapshot>()
+    for (const row of (previousStatuses ?? [])) {
+      prevStatusMap.set(row.external_id, {
+        external_id: row.external_id,
+        status: row.status,
+        home_score: row.home_score,
+        away_score: row.away_score,
+      })
+    }
 
     for (const r of reschedules) {
       rescheduled.push(r.matchLabel)
@@ -291,10 +345,61 @@ export async function syncFixtures(): Promise<SyncResult> {
     if (fixturesError) {
       errors.push(`Fixtures upsert error: ${fixturesError.message}`)
       await writeSyncLog(adminClient, false, 0, fixturesError.message)
-      return { success: false, fixtures_updated: 0, rescheduled, errors }
+      return { success: false, fixtures_updated: 0, scored_fixtures: 0, rescheduled, errors }
     }
 
-    // ── 9. Create admin notifications for reschedules/moves ───────────────────
+    // ── 9. Detect FINISHED transitions and trigger scoring ────────────────────
+    let scored_fixtures = 0
+    const newlyFinished = detectNewlyFinished(fixtureRows, prevStatusMap)
+
+    if (newlyFinished.length > 0) {
+      // Resolve UUIDs for newly-finished fixtures (query by external_id)
+      const newlyFinishedExternalIds = newlyFinished.map((r) => r.external_id)
+      const { data: finishedDbRows } = await adminClient
+        .from('fixtures')
+        .select('id, external_id, home_score, away_score')
+        .in('external_id', newlyFinishedExternalIds)
+
+      if (finishedDbRows && finishedDbRows.length > 0) {
+        // Update result_source to 'api' for all newly-finished fixtures
+        await adminClient
+          .from('fixtures')
+          .update({ result_source: 'api' })
+          .in('external_id', newlyFinishedExternalIds)
+
+        // Call recalculateFixture for each newly-finished fixture
+        const scoringResults = await Promise.all(
+          finishedDbRows.map((dbRow: { id: string; external_id: number; home_score: number | null; away_score: number | null }) =>
+            recalculateFixture(dbRow.id, dbRow.home_score, dbRow.away_score)
+          )
+        )
+
+        for (const result of scoringResults) {
+          if (result.errors.length > 0) {
+            errors.push(...result.errors.map((e) => `Scoring error for ${result.fixture_id}: ${e}`))
+          } else {
+            scored_fixtures++
+          }
+        }
+
+        // Create admin notification for scoring completion
+        const fixtureLabelMap = new Map<number, string>()
+        for (const match of matches) {
+          fixtureLabelMap.set(match.id, `${match.homeTeam.shortName} vs ${match.awayTeam.shortName}`)
+        }
+        const fixtureLabelsList = newlyFinishedExternalIds
+          .map((extId) => fixtureLabelMap.get(extId) ?? `external_id:${extId}`)
+          .join(', ')
+
+        await adminClient.from('admin_notifications').insert({
+          type: 'scoring_complete',
+          title: `Scores calculated for ${scored_fixtures} fixture${scored_fixtures !== 1 ? 's' : ''}`,
+          message: fixtureLabelsList,
+        })
+      }
+    }
+
+    // ── 10. Create admin notifications for reschedules/moves ─────────────────
     const notifications: Array<{
       type: string
       title: string
@@ -321,13 +426,14 @@ export async function syncFixtures(): Promise<SyncResult> {
       await adminClient.from('admin_notifications').insert(notifications)
     }
 
-    // ── 10. Write sync log ────────────────────────────────────────────────────
+    // ── 11. Write sync log ────────────────────────────────────────────────────
     const success = errors.length === 0
     await writeSyncLog(adminClient, success, fixtureRows.length, errors.join('; ') || null)
 
     return {
       success,
       fixtures_updated: fixtureRows.length,
+      scored_fixtures,
       rescheduled,
       errors,
     }
@@ -352,7 +458,7 @@ export async function syncFixtures(): Promise<SyncResult> {
       // Best-effort — if logging itself fails, swallow the error
     }
 
-    return { success: false, fixtures_updated: 0, rescheduled, errors }
+    return { success: false, fixtures_updated: 0, scored_fixtures: 0, rescheduled, errors }
   }
 }
 
