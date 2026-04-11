@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 04-scoring-engine 04-03-PLAN.md
-last_updated: "2026-04-11T21:14:52.111Z"
+stopped_at: Completed 04-scoring-engine 04-02-PLAN.md
+last_updated: "2026-04-11T21:18:26.182Z"
 last_activity: 2026-04-11 — Roadmap created, 11 phases derived from 71 v1 requirements
 progress:
   total_phases: 11
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 14
-  completed_plans: 13
+  completed_plans: 14
   percent: 0
 ---
 
@@ -62,6 +62,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 03-predictions P02 | 4 | 2 tasks | 5 files |
 | Phase 04-scoring-engine P01 | 4 | 2 tasks | 6 files |
 | Phase 04-scoring-engine P03 | 6 | 2 tasks | 4 files |
+| Phase 04-scoring-engine P02 | 8 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -109,6 +110,9 @@ Recent decisions affecting current work:
 - [Phase 04-scoring-engine]: ScoreBreakdown interface kept local in UI components — avoids coupling to DB row type directly
 - [Phase 04-scoring-engine]: Fixed footer uses fixed not sticky positioning — avoids mobile Safari stacking issues with nested scroll containers
 - [Phase 04-scoring-engine]: scoredFixtureCount > 0 gate on total bar — ensures no provisional points shown before results arrive
+- [Phase 04-scoring-engine]: detectNewlyFinished exported as pure testable helper — avoids complex sync mocking in tests
+- [Phase 04-scoring-engine]: Pre-upsert status snapshot enables FINISHED-transition detection without re-querying after upsert
+- [Phase 04-scoring-engine]: vi.mock hoisting: use vi.mocked(import) pattern, not variables in factory functions
 
 ### Pending Todos
 
@@ -123,6 +127,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-11T21:14:52.104Z
-Stopped at: Completed 04-scoring-engine 04-03-PLAN.md
+Last session: 2026-04-11T21:18:26.172Z
+Stopped at: Completed 04-scoring-engine 04-02-PLAN.md
 Resume file: None

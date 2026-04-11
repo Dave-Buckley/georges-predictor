@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 1: Foundation** - Project scaffold, database schema, auth, George-approved registration, infrastructure setup
 - [x] **Phase 2: Fixture Layer** - Fixtures auto-loaded from API, timezone handling, per-fixture server-side lockout (completed 2026-04-11)
 - [ ] **Phase 3: Predictions** - Member prediction submission, editing, visibility gating via RLS
-- [ ] **Phase 4: Scoring Engine** - Pure function scoring library, live results, manual override, point breakdown storage
+- [x] **Phase 4: Scoring Engine** - Pure function scoring library, live results, manual override, point breakdown storage (completed 2026-04-11)
 - [ ] **Phase 5: Admin Panel** - George's control dashboard, overrides, bonus management, gameweek close
 - [ ] **Phase 6: Bonus System** - Weekly bonuses, Golden Glory, Double Bubble, two-phase confirmation
 - [ ] **Phase 7: Mid-Season Import** - Load existing standings and late joiners before members onboard (launch blocker)
@@ -88,7 +88,7 @@ Plans:
   3. A correct result prediction awards exactly 10 points; a correct exact score awards exactly 30 points
   4. Each member's prediction page shows points earned per fixture updating live as results come in, with a gameweek total at the bottom
   5. The full calculation breakdown (result points, score points, bonus points, applied formula) is stored per prediction and auditable
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 Plans:
 - [ ] 04-01-PLAN.md — Pure scoring function (TDD), DB migration (prediction_scores + result_overrides), types, validators
 - [ ] 04-02-PLAN.md — Sync pipeline FINISHED-transition scoring trigger, admin result override with audit trail
@@ -192,7 +192,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 1. Foundation | 4/5 | In Progress|  |
 | 2. Fixture Layer | 3/3 | Complete   | 2026-04-11 |
 | 3. Predictions | 2/3 | In Progress|  |
-| 4. Scoring Engine | 2/3 | In Progress|  |
+| 4. Scoring Engine | 3/3 | Complete   | 2026-04-11 |
 | 5. Admin Panel | 0/TBD | Not started | - |
 | 6. Bonus System | 0/TBD | Not started | - |
 | 7. Mid-Season Import | 0/TBD | Not started | - |

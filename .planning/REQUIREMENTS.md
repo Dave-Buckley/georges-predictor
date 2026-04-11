@@ -37,8 +37,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Scoring & Results
 
-- [ ] **SCORE-01**: Match results auto-pulled from football-data.org API
-- [ ] **SCORE-02**: George can manually enter or override match results
+- [x] **SCORE-01**: Match results auto-pulled from football-data.org API
+- [x] **SCORE-02**: George can manually enter or override match results
 - [x] **SCORE-03**: Automatic point calculation — 10pts correct result, 30pts correct score (total)
 - [x] **SCORE-04**: Live points display per prediction as results come in, with gameweek total at bottom
 - [x] **SCORE-05**: Full calculation breakdown stored per prediction (not just final totals)
@@ -176,8 +176,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PRED-03 | Phase 3 | Complete |
 | PRED-04 | Phase 3 | Complete |
 | PRED-05 | Phase 3 | Complete |
-| SCORE-01 | Phase 4 | Pending |
-| SCORE-02 | Phase 4 | Pending |
+| SCORE-01 | Phase 4 | Complete |
+| SCORE-02 | Phase 4 | Complete |
 | SCORE-03 | Phase 4 | Complete |
 | SCORE-04 | Phase 4 | Complete |
 | SCORE-05 | Phase 4 | Complete |
