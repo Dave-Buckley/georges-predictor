@@ -105,7 +105,12 @@ Plans:
   4. George can toggle Double Bubble on or off for a specific gameweek
   5. George can manually close a gameweek (e.g., when a postponed fixture is voided) and the system finalises standings
   6. Additional prizes are surfaced in the admin view and only applied when George explicitly confirms them
-**Plans**: TBD
+**Plans:** 4 plans
+Plans:
+- [ ] 05-01-PLAN.md — Migration 005 (bonus_types, bonus_schedule, bonus_awards, additional_prizes, prize_awards, admin_settings), TypeScript types, Zod validators
+- [ ] 05-02-PLAN.md — Bonus management: server actions, admin Bonuses page, set-bonus dialog, Double Bubble toggle, bonus award confirmation
+- [ ] 05-03-PLAN.md — Gameweek close/reopen workflow, dashboard expansion with action cards, settings email toggles
+- [ ] 05-04-PLAN.md — Prizes: server actions, admin prizes page, prize confirmation dialog, date-prize cron, member bonus info page
 
 ### Phase 6: Bonus System
 **Goal**: The weekly bonus system is fully operational — members pick which fixture their bonus applies to, George confirms before points are awarded, Golden Glory uses its separate formula, and Double Bubble doubles correctly.
@@ -193,7 +198,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 2. Fixture Layer | 3/3 | Complete   | 2026-04-11 |
 | 3. Predictions | 2/3 | In Progress|  |
 | 4. Scoring Engine | 3/3 | Complete   | 2026-04-11 |
-| 5. Admin Panel | 0/TBD | Not started | - |
+| 5. Admin Panel | 0/4 | Not started | - |
 | 6. Bonus System | 0/TBD | Not started | - |
 | 7. Mid-Season Import | 0/TBD | Not started | - |
 | 8. Last One Standing & H2H | 0/TBD | Not started | - |
@@ -203,4 +208,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 
 ---
 *Roadmap created: 2026-04-11*
-*Last updated: 2026-04-12 — Phase 4 plans created (3 plans in 2 waves)*
+*Last updated: 2026-04-12 — Phase 5 plans created (4 plans in 2 waves)*
