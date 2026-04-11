@@ -9,6 +9,7 @@
  */
 import { createAdminClient } from '@/lib/supabase/admin'
 import { calculatePoints } from './calculate'
+import { calculateBonusPoints } from './calculate-bonus'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -16,6 +17,7 @@ import { calculatePoints } from './calculate'
 export interface RecalcResult {
   fixture_id: string
   predictions_scored: number
+  bonus_calculated: number
   errors: string[]
 }
 
@@ -42,7 +44,7 @@ export async function recalculateFixture(
 ): Promise<RecalcResult> {
   // Guard: cannot score without an actual result
   if (homeScore === null || awayScore === null) {
-    return { fixture_id: fixtureId, predictions_scored: 0, errors: [] }
+    return { fixture_id: fixtureId, predictions_scored: 0, bonus_calculated: 0, errors: [] }
   }
 
   const adminClient = createAdminClient()
@@ -56,11 +58,11 @@ export async function recalculateFixture(
 
   if (fetchError) {
     errors.push(`Failed to fetch predictions: ${fetchError.message}`)
-    return { fixture_id: fixtureId, predictions_scored: 0, errors }
+    return { fixture_id: fixtureId, predictions_scored: 0, bonus_calculated: 0, errors }
   }
 
   if (!predictions || predictions.length === 0) {
-    return { fixture_id: fixtureId, predictions_scored: 0, errors: [] }
+    return { fixture_id: fixtureId, predictions_scored: 0, bonus_calculated: 0, errors: [] }
   }
 
   // Step 2: Calculate points for each prediction
@@ -97,12 +99,55 @@ export async function recalculateFixture(
 
   if (upsertError) {
     errors.push(`Failed to upsert prediction_scores: ${upsertError.message}`)
-    return { fixture_id: fixtureId, predictions_scored: 0, errors }
+    return { fixture_id: fixtureId, predictions_scored: 0, bonus_calculated: 0, errors }
+  }
+
+  // Step 4: Calculate bonus points for members who picked this fixture
+  let bonus_calculated = 0
+
+  const { data: bonusAwards, error: bonusQueryError } = await adminClient
+    .from('bonus_awards')
+    .select('id, member_id, bonus_type_id, awarded, bonus_type:bonus_types!bonus_type_id(name)')
+    .eq('fixture_id', fixtureId)
+
+  if (!bonusQueryError && bonusAwards && bonusAwards.length > 0) {
+    for (const award of bonusAwards) {
+      // Only recalculate for pending awards (awarded IS NULL) — George hasn't reviewed yet.
+      // Skip already-confirmed (true) or already-rejected (false) awards — don't overwrite George's decision.
+      if (award.awarded !== null) continue
+
+      const bonusTypeName = (award.bonus_type as { name: string } | null)?.name ?? ''
+
+      // Find this member's prediction_scores for the same fixture
+      const memberScore = scoreRows.find((s: { member_id: string }) => s.member_id === award.member_id)
+
+      if (memberScore) {
+        const bonusResult = calculateBonusPoints(
+          bonusTypeName,
+          { result_correct: memberScore.result_correct, score_correct: memberScore.score_correct },
+          { home: homeScore, away: awayScore },
+        )
+
+        // Update the bonus_awards row with calculated points.
+        // Never touch the `awarded` (confirmation) field — only update points_awarded.
+        const { error: bonusUpdateError } = await adminClient
+          .from('bonus_awards')
+          .update({ points_awarded: bonusResult.points_awarded })
+          .eq('id', award.id)
+
+        if (bonusUpdateError) {
+          errors.push(`Failed to update bonus for award ${award.id}: ${bonusUpdateError.message}`)
+        } else {
+          bonus_calculated++
+        }
+      }
+    }
   }
 
   return {
     fixture_id: fixtureId,
     predictions_scored: scoreRows.length,
-    errors: [],
+    bonus_calculated,
+    errors,
   }
 }

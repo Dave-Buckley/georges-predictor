@@ -84,6 +84,7 @@ describe('applyResultOverride', () => {
     vi.mocked(recalculateFixture).mockResolvedValue({
       fixture_id: FIXTURE_ID,
       predictions_scored: 0,
+      bonus_calculated: 0,
       errors: [],
     })
   })
@@ -153,6 +154,7 @@ describe('applyResultOverride', () => {
     vi.mocked(recalculateFixture).mockResolvedValue({
       fixture_id: FIXTURE_ID,
       predictions_scored: 5,
+      bonus_calculated: 0,
       errors: [],
     })
 

@@ -163,16 +163,33 @@ describe('recalculateFixture', () => {
   })
 
   it('returns correct predictions_scored count matching number of predictions', async () => {
-    const mockChain = makeMockChain()
-    mockChain.select = vi.fn().mockReturnValue({
-      eq: vi.fn().mockResolvedValue({ data: SAMPLE_PREDICTIONS, error: null }),
-    })
-    const mockClient = { from: vi.fn().mockReturnValue(mockChain) }
+    const mockFromPredictions = {
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ data: SAMPLE_PREDICTIONS, error: null }),
+      }),
+    }
+    const mockFromScores = {
+      upsert: vi.fn().mockResolvedValue({ data: null, error: null }),
+    }
+    const mockFromBonusAwards = {
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ data: [], error: null }),
+      }),
+    }
+    const mockClient = {
+      from: vi.fn().mockImplementation((table: string) => {
+        if (table === 'predictions') return mockFromPredictions
+        if (table === 'prediction_scores') return mockFromScores
+        if (table === 'bonus_awards') return mockFromBonusAwards
+        return {}
+      }),
+    }
     vi.mocked(createAdminClient).mockReturnValue(mockClient as ReturnType<typeof createAdminClient>)
 
     const result = await recalculateFixture(FIXTURE_ID, 2, 1)
 
     expect(result.predictions_scored).toBe(2)
+    expect(result.bonus_calculated).toBe(0)
     expect(result.errors).toEqual([])
     expect(result.fixture_id).toBe(FIXTURE_ID)
   })
@@ -189,10 +206,16 @@ describe('recalculateFixture', () => {
         eq: vi.fn().mockResolvedValue({ data: SAMPLE_PREDICTIONS, error: null }),
       }),
     }
+    const mockFromBonusAwards = {
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ data: [], error: null }),
+      }),
+    }
     const mockClient = {
       from: vi.fn().mockImplementation((table: string) => {
         if (table === 'predictions') return mockFromPredictions
         if (table === 'prediction_scores') return mockFromScores
+        if (table === 'bonus_awards') return mockFromBonusAwards
         return {}
       }),
     }
@@ -222,6 +245,7 @@ describe('recalculateFixture', () => {
     const result = await recalculateFixture(FIXTURE_ID, 2, 1)
 
     expect(result.predictions_scored).toBe(0)
+    expect(result.bonus_calculated).toBe(0)
     expect(result.errors).toHaveLength(1)
     expect(result.errors[0]).toContain('DB connection failed')
   })
