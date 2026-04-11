@@ -123,7 +123,11 @@ Plans:
   4. Double Bubble doubles all points for the designated gameweeks (GW10, GW20, GW30) — verified by comparing pre- and post-toggle totals
   5. No bonus points appear in a member's total until George explicitly confirms them
   6. Members can see their points both before and after bonus application to verify the confirmation step
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 06-01-PLAN.md — Migration 006 (member RLS on bonus tables, points_awarded column), calculateBonusPoints pure function (TDD), types + validators
+- [ ] 06-02-PLAN.md — Member bonus pick UI (fixture card star, bonus banner, mandatory validation), extend submitPredictions for bonus pick
+- [ ] 06-03-PLAN.md — Bonus calculation trigger in recalculateFixture, Double Bubble display logic, before/after points breakdown in sticky footer
 
 ### Phase 7: Mid-Season Import
 **Goal**: George can load all existing member standings, pre-season picks, and historical data for the current season so real members can register and continue without starting from zero.
@@ -199,7 +203,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 3. Predictions | 2/3 | In Progress|  |
 | 4. Scoring Engine | 3/3 | Complete   | 2026-04-11 |
 | 5. Admin Panel | 4/4 | Complete   | 2026-04-11 |
-| 6. Bonus System | 0/TBD | Not started | - |
+| 6. Bonus System | 0/3 | Not started | - |
 | 7. Mid-Season Import | 0/TBD | Not started | - |
 | 8. Last One Standing & H2H | 0/TBD | Not started | - |
 | 9. Pre-Season Predictions | 0/TBD | Not started | - |
@@ -208,4 +212,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 
 ---
 *Roadmap created: 2026-04-11*
-*Last updated: 2026-04-12 — Phase 5 plans created (4 plans in 2 waves)*
+*Last updated: 2026-04-12 — Phase 6 plans created (3 plans in 3 waves)*
