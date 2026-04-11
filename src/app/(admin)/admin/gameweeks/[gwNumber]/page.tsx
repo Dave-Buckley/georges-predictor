@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { formatKickoffFull, formatKickoffDate } from '@/lib/fixtures/timezone'
 import { FixtureDialog } from '@/components/admin/fixture-form'
 import { MoveFixtureDialog } from '@/components/admin/move-fixture-dialog'
+import { ResultOverrideDialog } from '@/components/admin/result-override-dialog'
 import type { FixtureWithTeams, GameweekRow, TeamRow } from '@/lib/supabase/types'
 
 export const dynamic = 'force-dynamic'
@@ -67,6 +68,11 @@ const STATUS_BADGE: Record<string, { label: string; className: string }> = {
   SUSPENDED: { label: 'Suspended', className: 'bg-orange-100 text-orange-700' },
   CANCELLED: { label: 'Cancelled', className: 'bg-red-200 text-red-800' },
   AWARDED: { label: 'Awarded', className: 'bg-purple-100 text-purple-700' },
+}
+
+const SOURCE_BADGE: Record<string, { label: string; className: string }> = {
+  api: { label: 'API', className: 'bg-blue-100 text-blue-700' },
+  manual: { label: 'Manual', className: 'bg-amber-100 text-amber-700' },
 }
 
 export default async function SingleGameweekPage({ params }: PageProps) {
@@ -176,6 +182,10 @@ export default async function SingleGameweekPage({ params }: PageProps) {
                   const hasScore =
                     fixture.home_score != null && fixture.away_score != null
 
+                  const sourceBadge = fixture.result_source
+                    ? SOURCE_BADGE[fixture.result_source] ?? null
+                    : null
+
                   return (
                     <div
                       key={fixture.id}
@@ -231,6 +241,13 @@ export default async function SingleGameweekPage({ params }: PageProps) {
                           >
                             {statusBadge.label}
                           </span>
+                          {sourceBadge && (
+                            <span
+                              className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${sourceBadge.className}`}
+                            >
+                              {sourceBadge.label}
+                            </span>
+                          )}
                           {fixture.is_rescheduled && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
                               <ArrowRightCircle className="w-3 h-3" />
@@ -242,6 +259,14 @@ export default async function SingleGameweekPage({ params }: PageProps) {
 
                       {/* Actions */}
                       <div className="flex items-center gap-2 flex-shrink-0">
+                        <ResultOverrideDialog
+                          fixtureId={fixture.id}
+                          homeTeamName={fixture.home_team.name}
+                          awayTeamName={fixture.away_team.name}
+                          currentHomeScore={fixture.home_score}
+                          currentAwayScore={fixture.away_score}
+                          currentSource={fixture.result_source}
+                        />
                         <FixtureDialog
                           mode="edit"
                           fixture={fixture}
