@@ -19,7 +19,7 @@ created: 2026-04-12
 |----------|-------|
 | **Framework** | Vitest ^4.1.4 + jsdom |
 | **Config file** | `vitest.config.ts` (root) |
-| **Quick run command** | `npx vitest run tests/lib/import.test.ts` |
+| **Quick run command** | `npx vitest run tests/lib/import-parse.test.ts` |
 | **Full suite command** | `npx vitest run` |
 | **Estimated runtime** | ~15 seconds |
 
@@ -38,14 +38,12 @@ created: 2026-04-12
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 07-xx-01 | 01 | 1 | DATA-01 | unit | `npx vitest run tests/lib/import.test.ts` | ❌ W0 | ⬜ pending |
-| 07-xx-02 | 01 | 1 | DATA-01 | unit | `npx vitest run tests/lib/import.test.ts` | ❌ W0 | ⬜ pending |
-| 07-xx-03 | 01 | 1 | DATA-01 | unit | `npx vitest run tests/lib/import.test.ts` | ❌ W0 | ⬜ pending |
-| 07-xx-04 | 01 | 1 | DATA-01 | unit | `npx vitest run tests/lib/import.test.ts` | ❌ W0 | ⬜ pending |
-| 07-xx-05 | 02 | 2 | ADMIN-08 | unit | `npx vitest run tests/actions/admin/import.test.ts` | ❌ W0 | ⬜ pending |
-| 07-xx-06 | 02 | 2 | ADMIN-08 | unit | `npx vitest run tests/actions/admin/import.test.ts` | ❌ W0 | ⬜ pending |
-| 07-xx-07 | 02 | 2 | ADMIN-08 | unit | `npx vitest run tests/actions/admin/import.test.ts` | ❌ W0 | ⬜ pending |
-| 07-xx-08 | 02 | 2 | DATA-05 | unit | `npx vitest run tests/actions/admin/members.test.ts` | Extend | ⬜ pending |
+| 07-01-01 | 01 | 1 | DATA-01 | unit | `npx vitest run tests/lib/import-parse.test.ts` | Created in task | ⬜ pending |
+| 07-01-02 | 01 | 1 | DATA-01 | unit | `npx vitest run tests/lib/import-parse.test.ts` | Created in 07-01-01 | ⬜ pending |
+| 07-02-01 | 02 | 2 | ADMIN-08 | unit | `npx vitest run tests/actions/admin/import.test.ts` | Created in task | ⬜ pending |
+| 07-02-02 | 02 | 2 | ADMIN-08 | build | `npx next build 2>&1 \| tail -20` | N/A | ⬜ pending |
+| 07-02-03 | 02 | 2 | DATA-05 | unit | `npx vitest run tests/actions/admin/members.test.ts` | Extend | ⬜ pending |
+| 07-02-04 | 02 | 2 | ALL | human | Manual verification | N/A | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -53,9 +51,9 @@ created: 2026-04-12
 
 ## Wave 0 Requirements
 
-- [ ] `tests/lib/import.test.ts` — covers parseImportText pure function (DATA-01)
-- [ ] `tests/actions/admin/import.test.ts` — covers importMembers, clearImportedMembers (ADMIN-08)
-- [ ] Extend `tests/actions/admin/members.test.ts` — DATA-05 regression check
+- [ ] `tests/lib/import-parse.test.ts` — covers parseImportText pure function (DATA-01) — created by 07-01 Task 1
+- [ ] `tests/actions/admin/import.test.ts` — covers importMembers, clearImportedMembers, importPreSeasonPicks (ADMIN-08) — created by 07-02 Task 1
+- [ ] Extend `tests/actions/admin/members.test.ts` — DATA-05 regression check — extended by 07-02 Task 3
 
 ---
 
