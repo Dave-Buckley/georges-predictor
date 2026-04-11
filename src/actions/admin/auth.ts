@@ -58,3 +58,40 @@ export async function adminLogin(
 
   redirect('/admin')
 }
+
+/**
+ * Sends a password reset email to a known admin email.
+ * Uses Supabase's built-in resetPasswordForEmail.
+ */
+export async function resetAdminPassword(
+  formData: FormData
+): Promise<{ success?: boolean; error?: string }> {
+  const email = (formData.get('email') as string)?.trim()
+
+  if (!email) {
+    return { error: 'Email is required' }
+  }
+
+  const knownAdmins = [
+    process.env.ADMIN_EMAIL_GEORGE,
+    process.env.ADMIN_EMAIL_DAVE,
+  ].filter(Boolean)
+
+  if (knownAdmins.length > 0 && !knownAdmins.includes(email)) {
+    return { error: 'Email not recognised as admin' }
+  }
+
+  const supabase = await createServerSupabaseClient()
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${appUrl}/admin/reset-password`,
+  })
+
+  if (error) {
+    console.error('[resetAdminPassword] Error:', error.message)
+    return { error: 'Failed to send reset email. Try again.' }
+  }
+
+  return { success: true }
+}
