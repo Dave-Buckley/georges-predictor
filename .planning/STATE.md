@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 02-fixture-layer/02-01-PLAN.md
-last_updated: "2026-04-11T19:16:51.300Z"
+stopped_at: Completed 02-fixture-layer/02-03-PLAN.md
+last_updated: "2026-04-11T19:25:46.848Z"
 last_activity: 2026-04-11 — Roadmap created, 11 phases derived from 71 v1 requirements
 progress:
   total_phases: 11
   completed_phases: 1
   total_plans: 8
-  completed_plans: 6
+  completed_plans: 7
   percent: 0
 ---
 
@@ -55,6 +55,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01-foundation P03 | 9 | 2 tasks | 18 files |
 | Phase 01-foundation P04 | 13 | 2 tasks | 10 files |
 | Phase 02-fixture-layer P01 | 7 | 2 tasks | 14 files |
+| Phase 02-fixture-layer P03 | 5 | 2 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -85,6 +86,8 @@ Recent decisions affecting current work:
 - [Phase 02-fixture-layer]: sync.ts UUID resolution: query DB after upsert — never generate client-side UUIDs
 - [Phase 02-fixture-layer]: Prediction lockout RLS (FIX-03) documented as commented SQL in migration 002 — Phase 3 MUST apply on predictions table
 - [Phase 02-fixture-layer]: First-sync-on-deploy: /api/sync-fixtures checks empty sync_log before auth — auto-triggers on first post-deploy request
+- [Phase 02-fixture-layer]: Team badges use plain img not next/image to avoid SVG optimization issues with football-data.org crest URLs
+- [Phase 02-fixture-layer]: All-fixtures filter state stored in URL search params (?team=id) for shareability
 
 ### Pending Todos
 
@@ -99,6 +102,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-11T19:16:51.297Z
-Stopped at: Completed 02-fixture-layer/02-01-PLAN.md
+Last session: 2026-04-11T19:25:46.845Z
+Stopped at: Completed 02-fixture-layer/02-03-PLAN.md
 Resume file: None
