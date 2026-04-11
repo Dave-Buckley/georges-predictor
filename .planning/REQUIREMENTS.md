@@ -9,7 +9,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Authentication & Members
 
-- [ ] **AUTH-01**: User can sign up with email and password
+- [x] **AUTH-01**: User can sign up with email and password
 - [ ] **AUTH-02**: George must approve each registration before member can access the tool (invite-only)
 - [ ] **AUTH-03**: User session persists across browser refresh
 - [ ] **AUTH-04**: User can reset password via email link
@@ -17,7 +17,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **AUTH-06**: Two admin accounts — George (primary) and Dave (backup) — both with full admin access
 - [ ] **AUTH-07**: Separate admin login page and member login page
 - [ ] **AUTH-08**: George can submit his own predictions from the admin panel — he is both admin and participant (Dave is admin-only, not a participant)
-- [ ] **AUTH-09**: During signup, member either selects their name from the existing imported list (to link to their standings) or enters a new name with a note saying username should reflect their WhatsApp name
+- [x] **AUTH-09**: During signup, member either selects their name from the existing imported list (to link to their standings) or enters a new name with a note saying username should reflect their WhatsApp name
 
 ### Fixtures & Gameweeks
 
@@ -157,7 +157,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | Phase 1 | Pending |
+| AUTH-01 | Phase 1 | Complete |
 | AUTH-02 | Phase 1 | Pending |
 | AUTH-03 | Phase 1 | Pending |
 | AUTH-04 | Phase 1 | Pending |
@@ -165,7 +165,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AUTH-06 | Phase 1 | Complete |
 | AUTH-07 | Phase 1 | Pending |
 | AUTH-08 | Phase 1 | Pending |
-| AUTH-09 | Phase 1 | Pending |
+| AUTH-09 | Phase 1 | Complete |
 | FIX-01 | Phase 2 | Pending |
 | FIX-02 | Phase 2 | Pending |
 | FIX-03 | Phase 2 | Pending |

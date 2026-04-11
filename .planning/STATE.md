@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 01-foundation/01-01-PLAN.md
-last_updated: "2026-04-11T15:58:53.011Z"
+stopped_at: Completed 01-foundation/01-02-PLAN.md
+last_updated: "2026-04-11T16:10:41.019Z"
 last_activity: 2026-04-11 — Roadmap created, 11 phases derived from 71 v1 requirements
 progress:
   total_phases: 11
   completed_phases: 0
   total_plans: 5
-  completed_plans: 1
+  completed_plans: 2
   percent: 0
 ---
 
@@ -51,6 +51,7 @@ Progress: [░░░░░░░░░░] 0%
 
 *Updated after each plan completion*
 | Phase 01-foundation P01 | 6 | 3 tasks | 19 files |
+| Phase 01-foundation P02 | 8 | 2 tasks | 14 files |
 
 ## Accumulated Context
 
@@ -70,6 +71,8 @@ Recent decisions affecting current work:
 - BST/GMT: Store all kick-offs as UTC; display converts to Europe/London timezone
 - [Phase 01-foundation]: Scaffold workaround: create-next-app temp subdirectory then move files to project root (directory name violates npm naming)
 - [Phase 01-foundation]: RLS admin JWT path: (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin' (may need adjustment per Supabase project settings)
+- [Phase 01-foundation]: email_opt_in default lives in form defaultValues not Zod schema — avoids zodResolver type conflict with react-hook-form
+- [Phase 01-foundation]: Supabase clients use createClient<any> until supabase gen types is run post-deployment
 
 ### Pending Todos
 
@@ -84,6 +87,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-11T15:58:53.008Z
-Stopped at: Completed 01-foundation/01-01-PLAN.md
+Last session: 2026-04-11T16:10:30.245Z
+Stopped at: Completed 01-foundation/01-02-PLAN.md
 Resume file: None

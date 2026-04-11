@@ -38,7 +38,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   5. An approved member can log in, refresh the page, and remain logged in (session persists)
   4. A member can request a password reset and receive an email link that works
   5. The application is deployed on Vercel and the Supabase database does not pause due to inactivity
-**Plans:** 1/5 plans executed
+**Plans:** 2/5 plans executed
 Plans:
 - [ ] 01-01-PLAN.md — Project scaffold, Supabase clients, middleware, DB schema, RLS, keep-alive, test infra
 - [ ] 01-02-PLAN.md — Member signup flow (magic link) and branded landing page
@@ -177,7 +177,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 1/5 | In Progress|  |
+| 1. Foundation | 2/5 | In Progress|  |
 | 2. Fixture Layer | 0/TBD | Not started | - |
 | 3. Predictions | 0/TBD | Not started | - |
 | 4. Scoring Engine | 0/TBD | Not started | - |
