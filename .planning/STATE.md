@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 05-admin-panel-02-PLAN.md
-last_updated: "2026-04-11T22:27:19.949Z"
+stopped_at: Completed 05-admin-panel-03-PLAN.md
+last_updated: "2026-04-11T22:28:53.840Z"
 last_activity: 2026-04-11 — Roadmap created, 11 phases derived from 71 v1 requirements
 progress:
   total_phases: 11
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 18
-  completed_plans: 16
+  completed_plans: 18
   percent: 0
 ---
 
@@ -65,6 +65,8 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 04-scoring-engine P02 | 8 | 2 tasks | 6 files |
 | Phase 05-admin-panel P01 | 3 | 2 tasks | 5 files |
 | Phase 05-admin-panel P02 | 4 | 2 tasks | 7 files |
+| Phase 05-admin-panel P03 | 5 | 2 tasks | 7 files |
+| Phase 05-admin-panel P04 | 5 | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -120,6 +122,11 @@ Recent decisions affecting current work:
 - [Phase 05-admin-panel]: bonus_types and additional_prizes grant SELECT to authenticated users so members can see names/prize list
 - [Phase 05-admin-panel]: SetBonusDialog existingPickCount passed as prop from server (not fetched client-side) — avoids client DB round-trip
 - [Phase 05-admin-panel]: Bonuses page Double Bubble toggle uses toggleDoubleBubble imported directly as form action — no inline 'use server' needed in server components
+- [Phase 05-admin-panel]: Server-side re-check on closeGameweek: canClose conditions re-queried from DB — client summary is display-only
+- [Phase 05-admin-panel]: Dashboard action cards ordered by urgency: approvals > set bonus > confirm awards > close GW > prizes
+- [Phase 05-admin-panel]: EmailNotificationToggles auto-saves on toggle change — no submit button, simpler UX for George
+- [Phase 05-admin-panel]: Vercel Hobby already at 2-cron limit — check-date-prizes route created but NOT added to vercel.json; merging into sync-fixtures is future work
+- [Phase 05-admin-panel]: Member bonuses page uses session client (not admin) so RLS restricts prize_awards to confirmed-only for members
 
 ### Pending Todos
 
@@ -134,6 +141,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-11T22:27:19.947Z
-Stopped at: Completed 05-admin-panel-02-PLAN.md
+Last session: 2026-04-11T22:28:45.767Z
+Stopped at: Completed 05-admin-panel-03-PLAN.md
 Resume file: None

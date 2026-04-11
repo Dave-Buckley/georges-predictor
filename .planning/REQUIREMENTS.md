@@ -87,7 +87,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **ADMIN-05**: George can toggle Double Bubble for specific gameweeks
 - [x] **ADMIN-06**: George can manage members — add, remove, set starting points
 - [x] **ADMIN-07**: Additional prizes tracked and surfaced in reports — only applied when George confirms
-- [ ] **ADMIN-08**: George can import mid-season data (existing standings, pre-season picks)
+- [x] **ADMIN-08**: George can import mid-season data (existing standings, pre-season picks)
 - [x] **ADMIN-09**: George can close a gameweek manually (e.g., when postponed fixtures are voided)
 
 ### Reports & Export
@@ -211,7 +211,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ADMIN-05 | Phase 5 | Complete |
 | ADMIN-06 | Phase 1 | Complete |
 | ADMIN-07 | Phase 5 | Complete |
-| ADMIN-08 | Phase 7 | Pending |
+| ADMIN-08 | Phase 7 | Complete |
 | ADMIN-09 | Phase 5 | Complete |
 | RPT-01 | Phase 10 | Pending |
 | RPT-02 | Phase 10 | Pending |
