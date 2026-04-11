@@ -5,10 +5,15 @@ import { Lock } from 'lucide-react'
 import type { FixtureWithTeams } from '@/lib/supabase/types'
 import { formatKickoffTime, formatKickoffDate, isToday } from '@/lib/fixtures/timezone'
 import TeamBadge from '@/components/fixtures/team-badge'
+import PredictionInputs from '@/components/predictions/prediction-inputs'
 
 interface FixtureCardProps {
   fixture: FixtureWithTeams
   showCountdown?: boolean
+  prediction?: { home_score: number | null; away_score: number | null } | null
+  onScoreChange?: (fixtureId: string, home: number | null, away: number | null) => void
+  isLocked?: boolean          // Override: when true, fixture is past kickoff
+  hasSubmitted?: boolean      // This specific fixture has a saved prediction
 }
 
 /**
@@ -25,7 +30,14 @@ interface FixtureCardProps {
  *
  * No prediction inputs — Phase 3 will populate the prediction area.
  */
-export default function FixtureCard({ fixture, showCountdown: showCountdownProp = false }: FixtureCardProps) {
+export default function FixtureCard({
+  fixture,
+  showCountdown: showCountdownProp = false,
+  prediction = null,
+  onScoreChange,
+  isLocked: isLockedProp,
+  hasSubmitted = false,
+}: FixtureCardProps) {
   const [now, setNow] = useState<Date>(() => new Date())
 
   const kickoff = new Date(fixture.kickoff_time)
@@ -52,7 +64,8 @@ export default function FixtureCard({ fixture, showCountdown: showCountdownProp 
   const msToKickoff = kickoff.getTime() - now.getTime()
   const withinWarningWindow = isScheduled && !pastKickoff && msToKickoff <= 30 * 60 * 1000
 
-  const isLocked = isScheduled && pastKickoff
+  // isLocked from prop takes precedence; fallback to internal calculation
+  const isLocked = isLockedProp !== undefined ? isLockedProp : (isScheduled && pastKickoff)
   const isGrey = isLocked || isLive || isFinished || isPostponed || isCancelled
 
   // ─── Card border / background ────────────────────────────────────────────────
@@ -177,8 +190,19 @@ export default function FixtureCard({ fixture, showCountdown: showCountdownProp 
         </div>
       </div>
 
-      {/* Phase 3 prediction area placeholder */}
-      <div className="mt-3 prediction-area" data-fixture-id={fixture.id} />
+      {/* Prediction area — populated when inside PredictionForm context */}
+      <div className="mt-3 prediction-area" data-fixture-id={fixture.id}>
+        {onScoreChange ? (
+          <PredictionInputs
+            fixtureId={fixture.id}
+            homeScore={prediction?.home_score ?? null}
+            awayScore={prediction?.away_score ?? null}
+            onChange={onScoreChange}
+            disabled={isLocked}
+            hasSubmitted={hasSubmitted}
+          />
+        ) : null}
+      </div>
     </div>
   )
 }

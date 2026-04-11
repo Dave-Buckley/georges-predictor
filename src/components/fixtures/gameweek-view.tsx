@@ -5,13 +5,25 @@ import FixtureCard from '@/components/fixtures/fixture-card'
 interface GameweekViewProps {
   fixtures: FixtureWithTeams[]
   gameweek: GameweekRow
+  predictions?: Record<string, { home_score: number | null; away_score: number | null }>
+  onScoreChange?: (fixtureId: string, home: number | null, away: number | null) => void
+  submittedFixtureIds?: Set<string>   // fixtures that have saved predictions
 }
 
 /**
  * Renders all fixtures for a given gameweek, grouped into midweek/weekend sections.
  * If all fixtures fall in the same group, the section header is omitted.
+ *
+ * When predictions + onScoreChange are provided (inside PredictionForm context),
+ * each FixtureCard receives its prediction data and the score-change callback.
  */
-export default function GameweekView({ fixtures, gameweek }: GameweekViewProps) {
+export default function GameweekView({
+  fixtures,
+  gameweek,
+  predictions,
+  onScoreChange,
+  submittedFixtureIds,
+}: GameweekViewProps) {
   if (fixtures.length === 0) {
     return (
       <div className="rounded-xl border border-slate-700 bg-slate-800/50 p-8 text-center">
@@ -56,13 +68,20 @@ export default function GameweekView({ fixtures, gameweek }: GameweekViewProps) 
             </h3>
           )}
           <div className="space-y-2">
-            {midweek.map((fixture) => (
-              <FixtureCard
-                key={fixture.id}
-                fixture={fixture}
-                showCountdown={isToday(fixture.kickoff_time)}
-              />
-            ))}
+            {midweek.map((fixture) => {
+              const isPastKickoff = new Date() >= new Date(fixture.kickoff_time)
+              return (
+                <FixtureCard
+                  key={fixture.id}
+                  fixture={fixture}
+                  showCountdown={isToday(fixture.kickoff_time)}
+                  prediction={predictions?.[fixture.id] ?? null}
+                  onScoreChange={onScoreChange}
+                  isLocked={onScoreChange ? isPastKickoff : undefined}
+                  hasSubmitted={submittedFixtureIds?.has(fixture.id) ?? false}
+                />
+              )
+            })}
           </div>
         </div>
       )}
@@ -76,13 +95,20 @@ export default function GameweekView({ fixtures, gameweek }: GameweekViewProps) 
             </h3>
           )}
           <div className="space-y-2">
-            {weekend.map((fixture) => (
-              <FixtureCard
-                key={fixture.id}
-                fixture={fixture}
-                showCountdown={isToday(fixture.kickoff_time)}
-              />
-            ))}
+            {weekend.map((fixture) => {
+              const isPastKickoff = new Date() >= new Date(fixture.kickoff_time)
+              return (
+                <FixtureCard
+                  key={fixture.id}
+                  fixture={fixture}
+                  showCountdown={isToday(fixture.kickoff_time)}
+                  prediction={predictions?.[fixture.id] ?? null}
+                  onScoreChange={onScoreChange}
+                  isLocked={onScoreChange ? isPastKickoff : undefined}
+                  hasSubmitted={submittedFixtureIds?.has(fixture.id) ?? false}
+                />
+              )
+            })}
           </div>
         </div>
       )}
