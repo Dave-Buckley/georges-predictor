@@ -2,12 +2,23 @@ import type { FixtureWithTeams, GameweekRow } from '@/lib/supabase/types'
 import { isMidweekFixture, isToday } from '@/lib/fixtures/timezone'
 import FixtureCard from '@/components/fixtures/fixture-card'
 
+interface ScoreBreakdown {
+  predicted_home: number
+  predicted_away: number
+  actual_home: number
+  actual_away: number
+  result_correct: boolean
+  score_correct: boolean
+  points_awarded: number
+}
+
 interface GameweekViewProps {
   fixtures: FixtureWithTeams[]
   gameweek: GameweekRow
   predictions?: Record<string, { home_score: number | null; away_score: number | null }>
   onScoreChange?: (fixtureId: string, home: number | null, away: number | null) => void
   submittedFixtureIds?: Set<string>   // fixtures that have saved predictions
+  scoreBreakdowns?: Record<string, ScoreBreakdown>
 }
 
 /**
@@ -23,6 +34,7 @@ export default function GameweekView({
   predictions,
   onScoreChange,
   submittedFixtureIds,
+  scoreBreakdowns,
 }: GameweekViewProps) {
   if (fixtures.length === 0) {
     return (
@@ -79,6 +91,7 @@ export default function GameweekView({
                   onScoreChange={onScoreChange}
                   isLocked={onScoreChange ? isPastKickoff : undefined}
                   hasSubmitted={submittedFixtureIds?.has(fixture.id) ?? false}
+                  scoreBreakdown={scoreBreakdowns?.[fixture.id] ?? null}
                 />
               )
             })}
@@ -106,6 +119,7 @@ export default function GameweekView({
                   onScoreChange={onScoreChange}
                   isLocked={onScoreChange ? isPastKickoff : undefined}
                   hasSubmitted={submittedFixtureIds?.has(fixture.id) ?? false}
+                  scoreBreakdown={scoreBreakdowns?.[fixture.id] ?? null}
                 />
               )
             })}

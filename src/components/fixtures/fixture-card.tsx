@@ -7,6 +7,16 @@ import { formatKickoffTime, formatKickoffDate, isToday } from '@/lib/fixtures/ti
 import TeamBadge from '@/components/fixtures/team-badge'
 import PredictionInputs from '@/components/predictions/prediction-inputs'
 
+interface ScoreBreakdown {
+  predicted_home: number
+  predicted_away: number
+  actual_home: number
+  actual_away: number
+  result_correct: boolean
+  score_correct: boolean
+  points_awarded: number
+}
+
 interface FixtureCardProps {
   fixture: FixtureWithTeams
   showCountdown?: boolean
@@ -14,6 +24,7 @@ interface FixtureCardProps {
   onScoreChange?: (fixtureId: string, home: number | null, away: number | null) => void
   isLocked?: boolean          // Override: when true, fixture is past kickoff
   hasSubmitted?: boolean      // This specific fixture has a saved prediction
+  scoreBreakdown?: ScoreBreakdown | null
 }
 
 /**
@@ -37,6 +48,7 @@ export default function FixtureCard({
   onScoreChange,
   isLocked: isLockedProp,
   hasSubmitted = false,
+  scoreBreakdown = null,
 }: FixtureCardProps) {
   const [now, setNow] = useState<Date>(() => new Date())
 
@@ -201,6 +213,37 @@ export default function FixtureCard({
             disabled={isLocked}
             hasSubmitted={hasSubmitted}
           />
+        ) : null}
+
+        {/* Score breakdown — shown only when scoreBreakdown is provided (finished fixture with result) */}
+        {scoreBreakdown ? (
+          <div className="mt-2 rounded-lg bg-slate-900/60 border border-slate-700/50 px-3 py-2 space-y-1.5">
+            <p className="text-xs text-slate-400 text-center">
+              Predicted{' '}
+              <span className="text-slate-200 font-medium">
+                {scoreBreakdown.predicted_home}–{scoreBreakdown.predicted_away}
+              </span>
+              {' '}| Actual{' '}
+              <span className="text-slate-200 font-medium">
+                {scoreBreakdown.actual_home}–{scoreBreakdown.actual_away}
+              </span>
+            </p>
+            <div className="flex justify-center">
+              {scoreBreakdown.score_correct ? (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-700/80 text-green-100">
+                  Correct Score = 30pts
+                </span>
+              ) : scoreBreakdown.result_correct ? (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-700/80 text-amber-100">
+                  Correct Result = 10pts
+                </span>
+              ) : (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-600/80 text-slate-300">
+                  Wrong = 0pts
+                </span>
+              )}
+            </div>
+          </div>
         ) : null}
       </div>
     </div>
