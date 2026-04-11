@@ -25,7 +25,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **FIX-02**: Fixtures clearly grouped by gameweek with midweek vs weekend distinction
 - [x] **FIX-03**: Per-fixture lockout at kick-off time — server-enforced, no submissions or edits after kick-off
 - [x] **FIX-04**: Postponed/rescheduled matches handled explicitly (George can void or reassign)
-- [ ] **FIX-05**: George can manually add, edit, or correct fixtures as fallback
+- [x] **FIX-05**: George can manually add, edit, or correct fixtures as fallback
 
 ### Predictions
 
@@ -170,7 +170,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | FIX-02 | Phase 2 | Complete |
 | FIX-03 | Phase 2 | Complete |
 | FIX-04 | Phase 2 | Complete |
-| FIX-05 | Phase 2 | Pending |
+| FIX-05 | Phase 2 | Complete |
 | PRED-01 | Phase 3 | Pending |
 | PRED-02 | Phase 3 | Pending |
 | PRED-03 | Phase 3 | Pending |

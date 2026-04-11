@@ -13,7 +13,7 @@ George's Predictor replaces a 10+ year manual WhatsApp process with a proper web
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [ ] **Phase 1: Foundation** - Project scaffold, database schema, auth, George-approved registration, infrastructure setup
-- [ ] **Phase 2: Fixture Layer** - Fixtures auto-loaded from API, timezone handling, per-fixture server-side lockout
+- [x] **Phase 2: Fixture Layer** - Fixtures auto-loaded from API, timezone handling, per-fixture server-side lockout (completed 2026-04-11)
 - [ ] **Phase 3: Predictions** - Member prediction submission, editing, visibility gating via RLS
 - [ ] **Phase 4: Scoring Engine** - Pure function scoring library, live results, manual override, point breakdown storage
 - [ ] **Phase 5: Admin Panel** - George's control dashboard, overrides, bonus management, gameweek close
@@ -56,7 +56,7 @@ Plans:
   3. After a fixture's kick-off time passes, the server rejects any prediction submission for that fixture
   4. George can manually add, edit, or void a fixture from the admin panel
   5. A postponed fixture can be marked void or rescheduled without corrupting other gameweek data
-**Plans:** 1/3 plans executed
+**Plans:** 3/3 plans complete
 Plans:
 - [ ] 02-01-PLAN.md — DB schema (teams, gameweeks, fixtures, sync_log), API client, sync engine, timezone helpers, cron config
 - [ ] 02-02-PLAN.md — Admin fixture management (add/edit/move server actions, gameweeks pages, sync status)
@@ -182,7 +182,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 4/5 | In Progress|  |
-| 2. Fixture Layer | 1/3 | In Progress|  |
+| 2. Fixture Layer | 3/3 | Complete   | 2026-04-11 |
 | 3. Predictions | 0/TBD | Not started | - |
 | 4. Scoring Engine | 0/TBD | Not started | - |
 | 5. Admin Panel | 0/TBD | Not started | - |

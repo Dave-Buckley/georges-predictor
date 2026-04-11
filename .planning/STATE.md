@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 02-fixture-layer/02-03-PLAN.md
-last_updated: "2026-04-11T19:25:46.848Z"
+stopped_at: Completed 02-fixture-layer/02-02-PLAN.md
+last_updated: "2026-04-11T19:27:37.329Z"
 last_activity: 2026-04-11 — Roadmap created, 11 phases derived from 71 v1 requirements
 progress:
   total_phases: 11
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 8
-  completed_plans: 7
+  completed_plans: 8
   percent: 0
 ---
 
@@ -56,6 +56,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01-foundation P04 | 13 | 2 tasks | 10 files |
 | Phase 02-fixture-layer P01 | 7 | 2 tasks | 14 files |
 | Phase 02-fixture-layer P03 | 5 | 2 tasks | 11 files |
+| Phase 02-fixture-layer P02 | 8 | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -88,6 +89,8 @@ Recent decisions affecting current work:
 - [Phase 02-fixture-layer]: First-sync-on-deploy: /api/sync-fixtures checks empty sync_log before auth — auto-triggers on first post-deploy request
 - [Phase 02-fixture-layer]: Team badges use plain img not next/image to avoid SVG optimization issues with football-data.org crest URLs
 - [Phase 02-fixture-layer]: All-fixtures filter state stored in URL search params (?team=id) for shareability
+- [Phase 02-fixture-layer]: editFixture kickoff guard: blocks time/team changes after kickoff server-side unless admin_override=true in FormData; scores/status always editable
+- [Phase 02-fixture-layer]: Negative external_id for manually added fixtures (-Date.now()) prevents collision with football-data.org positive integer IDs
 
 ### Pending Todos
 
@@ -102,6 +105,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-11T19:25:46.845Z
-Stopped at: Completed 02-fixture-layer/02-03-PLAN.md
+Last session: 2026-04-11T19:27:28.112Z
+Stopped at: Completed 02-fixture-layer/02-02-PLAN.md
 Resume file: None
