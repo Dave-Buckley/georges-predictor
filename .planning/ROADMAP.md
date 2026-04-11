@@ -88,7 +88,11 @@ Plans:
   3. A correct result prediction awards exactly 10 points; a correct exact score awards exactly 30 points
   4. Each member's prediction page shows points earned per fixture updating live as results come in, with a gameweek total at the bottom
   5. The full calculation breakdown (result points, score points, bonus points, applied formula) is stored per prediction and auditable
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 04-01-PLAN.md — Pure scoring function (TDD), DB migration (prediction_scores + result_overrides), types, validators
+- [ ] 04-02-PLAN.md — Sync pipeline FINISHED-transition scoring trigger, admin result override with audit trail
+- [ ] 04-03-PLAN.md — Member fixture card points breakdown, sticky gameweek total footer
 
 ### Phase 5: Admin Panel
 **Goal**: George has a single dashboard to manage all competition operations — with full visibility into everything at all times. Approve members, override results, set gameweek bonuses, toggle Double Bubble, close gameweeks, and submit his own predictions.
@@ -188,7 +192,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 1. Foundation | 4/5 | In Progress|  |
 | 2. Fixture Layer | 3/3 | Complete   | 2026-04-11 |
 | 3. Predictions | 2/3 | In Progress|  |
-| 4. Scoring Engine | 0/TBD | Not started | - |
+| 4. Scoring Engine | 0/3 | Not started | - |
 | 5. Admin Panel | 0/TBD | Not started | - |
 | 6. Bonus System | 0/TBD | Not started | - |
 | 7. Mid-Season Import | 0/TBD | Not started | - |
@@ -199,4 +203,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 
 ---
 *Roadmap created: 2026-04-11*
-*Last updated: 2026-04-12 — Phase 3 plans created (3 plans in 2 waves)*
+*Last updated: 2026-04-12 — Phase 4 plans created (3 plans in 2 waves)*
