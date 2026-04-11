@@ -117,6 +117,24 @@ export interface FixtureWithTeams extends FixtureRow {
   gameweek: GameweekRow
 }
 
+// ─── Prediction Types ─────────────────────────────────────────────────────────
+
+/** Row shape for the public.predictions table */
+export interface PredictionRow {
+  id: string
+  member_id: string
+  fixture_id: string
+  home_score: number
+  away_score: number
+  submitted_at: string
+  updated_at: string
+}
+
+/** Prediction joined with the member's display info (for admin table view) */
+export interface PredictionWithMember extends PredictionRow {
+  member: Pick<MemberRow, 'id' | 'display_name'>
+}
+
 // ─── Database Type (placeholder until `supabase gen types` is run) ────────────
 // This allows Supabase client to be used without strict DB type checking.
 // Replace with generated types after connecting to a Supabase project.
