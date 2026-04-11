@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createAdminClient } from '@/lib/supabase/admin'
-import type { MemberRow, AdminNotificationRow } from '@/lib/supabase/types'
+import { SyncStatus } from '@/components/admin/sync-status'
+import type { MemberRow, AdminNotificationRow, SyncLogRow } from '@/lib/supabase/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -8,31 +9,40 @@ async function getDashboardData() {
   try {
     const supabase = createAdminClient()
 
-    const [membersResult, notificationsResult] = await Promise.all([
+    const [membersResult, notificationsResult, syncLogResult] = await Promise.all([
       supabase.from('members').select('id, approval_status'),
       supabase
         .from('admin_notifications')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(5),
+      supabase
+        .from('sync_log')
+        .select('*')
+        .order('synced_at', { ascending: false })
+        .limit(1)
+        .single(),
     ])
 
     const members = (membersResult.data ?? []) as Pick<MemberRow, 'id' | 'approval_status'>[]
     const notifications = (notificationsResult.data ?? []) as AdminNotificationRow[]
+    // sync_log single() returns error if no rows — that's fine, latestSync will be null
+    const latestSync = syncLogResult.data as SyncLogRow | null
 
     return {
       totalMembers: members.length,
       pendingCount: members.filter((m) => m.approval_status === 'pending').length,
       approvedCount: members.filter((m) => m.approval_status === 'approved').length,
       notifications,
+      latestSync,
     }
   } catch {
-    return { totalMembers: 0, pendingCount: 0, approvedCount: 0, notifications: [] }
+    return { totalMembers: 0, pendingCount: 0, approvedCount: 0, notifications: [], latestSync: null }
   }
 }
 
 export default async function AdminDashboardPage() {
-  const { totalMembers, pendingCount, approvedCount, notifications } =
+  const { totalMembers, pendingCount, approvedCount, notifications, latestSync } =
     await getDashboardData()
 
   return (
@@ -41,6 +51,14 @@ export default async function AdminDashboardPage() {
         <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
         <p className="text-gray-500 mt-1">Here&apos;s what needs your attention.</p>
       </div>
+
+      {/* Fixture Sync */}
+      <section className="mb-8">
+        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
+          Fixture Sync
+        </h2>
+        <SyncStatus lastSync={latestSync} />
+      </section>
 
       {/* Action items */}
       <section className="mb-8 space-y-4">
@@ -75,11 +93,6 @@ export default async function AdminDashboardPage() {
 
         <div className="bg-white border border-gray-200 rounded-2xl p-5 text-gray-400">
           <p className="font-medium text-gray-500">Bonuses</p>
-          <p className="text-sm mt-0.5">Not yet available — coming in a future update.</p>
-        </div>
-
-        <div className="bg-white border border-gray-200 rounded-2xl p-5 text-gray-400">
-          <p className="font-medium text-gray-500">Gameweek status</p>
           <p className="text-sm mt-0.5">Not yet available — coming in a future update.</p>
         </div>
       </section>

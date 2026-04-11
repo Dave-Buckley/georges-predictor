@@ -57,7 +57,6 @@ export function AdminSidebar({ adminEmail }: SidebarProps) {
       href: '/admin/gameweeks',
       label: 'Gameweeks',
       icon: Calendar,
-      disabled: true,
     },
     {
       href: '/admin/bonuses',
