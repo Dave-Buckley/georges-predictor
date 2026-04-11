@@ -123,7 +123,7 @@ Plans:
   4. Double Bubble doubles all points for the designated gameweeks (GW10, GW20, GW30) — verified by comparing pre- and post-toggle totals
   5. No bonus points appear in a member's total until George explicitly confirms them
   6. Members can see their points both before and after bonus application to verify the confirmation step
-**Plans:** 3 plans
+**Plans:** 1/3 plans executed
 Plans:
 - [ ] 06-01-PLAN.md — Migration 006 (member RLS on bonus tables, points_awarded column), calculateBonusPoints pure function (TDD), types + validators
 - [ ] 06-02-PLAN.md — Member bonus pick UI (fixture card star, bonus banner, mandatory validation), extend submitPredictions for bonus pick
@@ -203,7 +203,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 3. Predictions | 2/3 | In Progress|  |
 | 4. Scoring Engine | 3/3 | Complete   | 2026-04-11 |
 | 5. Admin Panel | 4/4 | Complete   | 2026-04-11 |
-| 6. Bonus System | 0/3 | Not started | - |
+| 6. Bonus System | 1/3 | In Progress|  |
 | 7. Mid-Season Import | 0/TBD | Not started | - |
 | 8. Last One Standing & H2H | 0/TBD | Not started | - |
 | 9. Pre-Season Predictions | 0/TBD | Not started | - |

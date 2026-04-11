@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Phase 6 context gathered
-last_updated: "2026-04-11T22:46:19.421Z"
+stopped_at: Completed 06-bonus-system-01-PLAN.md
+last_updated: "2026-04-11T23:13:34.473Z"
 last_activity: 2026-04-11 — Roadmap created, 11 phases derived from 71 v1 requirements
 progress:
   total_phases: 11
   completed_phases: 5
-  total_plans: 18
-  completed_plans: 18
+  total_plans: 21
+  completed_plans: 19
   percent: 0
 ---
 
@@ -67,6 +67,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 05-admin-panel P02 | 4 | 2 tasks | 7 files |
 | Phase 05-admin-panel P03 | 5 | 2 tasks | 7 files |
 | Phase 05-admin-panel P04 | 5 | 2 tasks | 8 files |
+| Phase 06-bonus-system P01 | 2 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -127,6 +128,9 @@ Recent decisions affecting current work:
 - [Phase 05-admin-panel]: EmailNotificationToggles auto-saves on toggle change — no submit button, simpler UX for George
 - [Phase 05-admin-panel]: Vercel Hobby already at 2-cron limit — check-date-prizes route created but NOT added to vercel.json; merging into sync-fixtures is future work
 - [Phase 05-admin-panel]: Member bonuses page uses session client (not admin) so RLS restricts prize_awards to confirmed-only for members
+- [Phase 06-bonus-system]: calculateBonusPoints routes via SCORE_EVALUABLE_BONUSES Set — extensible, O(1) lookup, named evaluators per type
+- [Phase 06-bonus-system]: computeDisplayTotal excludes pending bonuses from doubled total — only George-confirmed awards count toward displayed points
+- [Phase 06-bonus-system]: Jose Park The Bus qualifying scores: explicit readonly array (0-0, 1-0, 0-1) — total goals <= 1 with no ambiguity
 
 ### Pending Todos
 
@@ -141,6 +145,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-04-11T22:46:19.418Z
-Stopped at: Phase 6 context gathered
-Resume file: .planning/phases/06-bonus-system/06-CONTEXT.md
+Last session: 2026-04-11T23:13:34.470Z
+Stopped at: Completed 06-bonus-system-01-PLAN.md
+Resume file: None

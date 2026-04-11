@@ -46,10 +46,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Bonus System
 
-- [ ] **BONUS-01**: George sets the active bonus type before each gameweek commences
+- [x] **BONUS-01**: George sets the active bonus type before each gameweek commences
 - [ ] **BONUS-02**: Members make their bonus pick during prediction submission (which game the bonus applies to)
-- [ ] **BONUS-03**: Standard bonuses award 20pts if the chosen condition is met
-- [ ] **BONUS-04**: Golden Glory bonus uses separate scoring formula — 20pts correct result, 60pts correct score on chosen game
+- [x] **BONUS-03**: Standard bonuses award 20pts if the chosen condition is met
+- [x] **BONUS-04**: Golden Glory bonus uses separate scoring formula — 20pts correct result, 60pts correct score on chosen game
 - [ ] **BONUS-05**: Double Bubble — George toggles double points for designated gameweeks (GW10, GW20, GW30)
 - [ ] **BONUS-06**: Two-phase confirmation — member picks bonus, George confirms before points are applied
 - [ ] **BONUS-07**: Points shown before and after bonus application
@@ -182,10 +182,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SCORE-04 | Phase 4 | Complete |
 | SCORE-05 | Phase 4 | Complete |
 | SCORE-06 | Phase 4 | Complete |
-| BONUS-01 | Phase 6 | Pending |
+| BONUS-01 | Phase 6 | Complete |
 | BONUS-02 | Phase 6 | Pending |
-| BONUS-03 | Phase 6 | Pending |
-| BONUS-04 | Phase 6 | Pending |
+| BONUS-03 | Phase 6 | Complete |
+| BONUS-04 | Phase 6 | Complete |
 | BONUS-05 | Phase 6 | Pending |
 | BONUS-06 | Phase 6 | Pending |
 | BONUS-07 | Phase 6 | Pending |
