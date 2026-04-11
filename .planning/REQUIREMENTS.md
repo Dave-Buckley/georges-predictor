@@ -14,6 +14,10 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **AUTH-03**: User session persists across browser refresh
 - [ ] **AUTH-04**: User can reset password via email link
 - [ ] **AUTH-05**: George can add new members manually (late joiners) with starting points
+- [ ] **AUTH-06**: Two admin accounts — George (primary) and Dave (backup) — both with full admin access
+- [ ] **AUTH-07**: Separate admin login page and member login page
+- [ ] **AUTH-08**: George can submit his own predictions from the admin panel — he is both admin and participant (Dave is admin-only, not a participant)
+- [ ] **AUTH-09**: During signup, member either selects their name from the existing imported list (to link to their standings) or enters a new name with a note saying username should reflect their WhatsApp name
 
 ### Fixtures & Gameweeks
 
@@ -98,7 +102,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Data & Continuity
 
-- [ ] **DATA-01**: Mid-season import tool — load existing member standings and pre-season picks
+- [ ] **DATA-01**: Mid-season import tool — load existing member names and points; league table always sorted by points descending (positions derived, not stored)
 - [ ] **DATA-02**: Season archive — previous season data stored with historical records
 - [ ] **DATA-03**: Member profiles with total points and history across seasons
 - [ ] **DATA-04**: Local fallback — George can export everything needed to run manually
@@ -110,6 +114,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **UI-02**: Mobile-responsive design — works well on phones (most members will use mobile)
 - [ ] **UI-03**: Overall league table prominently displayed
 - [ ] **UI-04**: Clean prediction submission form — all fixtures visible, easy score entry
+- [ ] **UI-05**: Public "How It Works" page explaining competition rules, scoring system, bonuses, LOS, and prizes
 
 ### Infrastructure
 
@@ -152,83 +157,103 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | — | Pending |
-| AUTH-02 | — | Pending |
-| AUTH-03 | — | Pending |
-| AUTH-04 | — | Pending |
-| AUTH-05 | — | Pending |
-| FIX-01 | — | Pending |
-| FIX-02 | — | Pending |
-| FIX-03 | — | Pending |
-| FIX-04 | — | Pending |
-| FIX-05 | — | Pending |
-| PRED-01 | — | Pending |
-| PRED-02 | — | Pending |
-| PRED-03 | — | Pending |
-| PRED-04 | — | Pending |
-| PRED-05 | — | Pending |
-| SCORE-01 | — | Pending |
-| SCORE-02 | — | Pending |
-| SCORE-03 | — | Pending |
-| SCORE-04 | — | Pending |
-| SCORE-05 | — | Pending |
-| SCORE-06 | — | Pending |
-| BONUS-01 | — | Pending |
-| BONUS-02 | — | Pending |
-| BONUS-03 | — | Pending |
-| BONUS-04 | — | Pending |
-| BONUS-05 | — | Pending |
-| BONUS-06 | — | Pending |
-| BONUS-07 | — | Pending |
-| H2H-01 | — | Pending |
-| H2H-02 | — | Pending |
-| H2H-03 | — | Pending |
-| LOS-01 | — | Pending |
-| LOS-02 | — | Pending |
-| LOS-03 | — | Pending |
-| LOS-04 | — | Pending |
-| LOS-05 | — | Pending |
-| LOS-06 | — | Pending |
-| LOS-07 | — | Pending |
-| PRE-01 | — | Pending |
-| PRE-02 | — | Pending |
-| PRE-03 | — | Pending |
-| PRE-04 | — | Pending |
-| PRE-05 | — | Pending |
-| ADMIN-01 | — | Pending |
-| ADMIN-02 | — | Pending |
-| ADMIN-03 | — | Pending |
-| ADMIN-04 | — | Pending |
-| ADMIN-05 | — | Pending |
-| ADMIN-06 | — | Pending |
-| ADMIN-07 | — | Pending |
-| ADMIN-08 | — | Pending |
-| ADMIN-09 | — | Pending |
-| RPT-01 | — | Pending |
-| RPT-02 | — | Pending |
-| RPT-03 | — | Pending |
-| RPT-04 | — | Pending |
-| RPT-05 | — | Pending |
-| RPT-06 | — | Pending |
-| RPT-07 | — | Pending |
-| DATA-01 | — | Pending |
-| DATA-02 | — | Pending |
-| DATA-03 | — | Pending |
-| DATA-04 | — | Pending |
-| DATA-05 | — | Pending |
-| UI-01 | — | Pending |
-| UI-02 | — | Pending |
-| UI-03 | — | Pending |
-| UI-04 | — | Pending |
-| INFRA-01 | — | Pending |
-| INFRA-02 | — | Pending |
-| INFRA-03 | — | Pending |
+| AUTH-01 | Phase 1 | Pending |
+| AUTH-02 | Phase 1 | Pending |
+| AUTH-03 | Phase 1 | Pending |
+| AUTH-04 | Phase 1 | Pending |
+| AUTH-05 | Phase 1 | Pending |
+| AUTH-06 | Phase 1 | Pending |
+| AUTH-07 | Phase 1 | Pending |
+| AUTH-08 | Phase 1 | Pending |
+| AUTH-09 | Phase 1 | Pending |
+| FIX-01 | Phase 2 | Pending |
+| FIX-02 | Phase 2 | Pending |
+| FIX-03 | Phase 2 | Pending |
+| FIX-04 | Phase 2 | Pending |
+| FIX-05 | Phase 2 | Pending |
+| PRED-01 | Phase 3 | Pending |
+| PRED-02 | Phase 3 | Pending |
+| PRED-03 | Phase 3 | Pending |
+| PRED-04 | Phase 3 | Pending |
+| PRED-05 | Phase 3 | Pending |
+| SCORE-01 | Phase 4 | Pending |
+| SCORE-02 | Phase 4 | Pending |
+| SCORE-03 | Phase 4 | Pending |
+| SCORE-04 | Phase 4 | Pending |
+| SCORE-05 | Phase 4 | Pending |
+| SCORE-06 | Phase 4 | Pending |
+| BONUS-01 | Phase 6 | Pending |
+| BONUS-02 | Phase 6 | Pending |
+| BONUS-03 | Phase 6 | Pending |
+| BONUS-04 | Phase 6 | Pending |
+| BONUS-05 | Phase 6 | Pending |
+| BONUS-06 | Phase 6 | Pending |
+| BONUS-07 | Phase 6 | Pending |
+| H2H-01 | Phase 8 | Pending |
+| H2H-02 | Phase 8 | Pending |
+| H2H-03 | Phase 8 | Pending |
+| LOS-01 | Phase 8 | Pending |
+| LOS-02 | Phase 8 | Pending |
+| LOS-03 | Phase 8 | Pending |
+| LOS-04 | Phase 8 | Pending |
+| LOS-05 | Phase 8 | Pending |
+| LOS-06 | Phase 8 | Pending |
+| LOS-07 | Phase 8 | Pending |
+| PRE-01 | Phase 9 | Pending |
+| PRE-02 | Phase 9 | Pending |
+| PRE-03 | Phase 9 | Pending |
+| PRE-04 | Phase 9 | Pending |
+| PRE-05 | Phase 9 | Pending |
+| ADMIN-01 | Phase 1 | Pending |
+| ADMIN-02 | Phase 5 | Pending |
+| ADMIN-03 | Phase 5 | Pending |
+| ADMIN-04 | Phase 5 | Pending |
+| ADMIN-05 | Phase 5 | Pending |
+| ADMIN-06 | Phase 1 | Pending |
+| ADMIN-07 | Phase 5 | Pending |
+| ADMIN-08 | Phase 7 | Pending |
+| ADMIN-09 | Phase 5 | Pending |
+| RPT-01 | Phase 10 | Pending |
+| RPT-02 | Phase 10 | Pending |
+| RPT-03 | Phase 10 | Pending |
+| RPT-04 | Phase 10 | Pending |
+| RPT-05 | Phase 10 | Pending |
+| RPT-06 | Phase 10 | Pending |
+| RPT-07 | Phase 10 | Pending |
+| DATA-01 | Phase 7 | Pending |
+| DATA-02 | Phase 11 | Pending |
+| DATA-03 | Phase 11 | Pending |
+| DATA-04 | Phase 10 | Pending |
+| DATA-05 | Phase 7 | Pending |
+| UI-01 | Phase 11 | Pending |
+| UI-02 | Phase 11 | Pending |
+| UI-03 | Phase 11 | Pending |
+| UI-04 | Phase 11 | Pending |
+| UI-05 | Phase 11 | Pending |
+| INFRA-01 | Phase 1 | Pending |
+| INFRA-02 | Phase 1 | Pending |
+| INFRA-03 | Phase 1 | Pending |
 
 **Coverage:**
-- v1 requirements: 63 total
-- Mapped to phases: 0
-- Unmapped: 63 ⚠️
+- v1 requirements: 75 total
+- Mapped to phases: 75
+- Unmapped: 0
+
+**Phase Distribution:**
+| Phase | Requirements |
+|-------|-------------|
+| Phase 1: Foundation | AUTH-01, AUTH-02, AUTH-03, AUTH-04, AUTH-05, AUTH-06, AUTH-07, AUTH-08, ADMIN-01, ADMIN-06, INFRA-01, INFRA-02, INFRA-03 |
+| Phase 2: Fixture Layer | FIX-01, FIX-02, FIX-03, FIX-04, FIX-05 |
+| Phase 3: Predictions | PRED-01, PRED-02, PRED-03, PRED-04, PRED-05 |
+| Phase 4: Scoring Engine | SCORE-01, SCORE-02, SCORE-03, SCORE-04, SCORE-05, SCORE-06 |
+| Phase 5: Admin Panel | ADMIN-02, ADMIN-03, ADMIN-04, ADMIN-05, ADMIN-07, ADMIN-09 |
+| Phase 6: Bonus System | BONUS-01, BONUS-02, BONUS-03, BONUS-04, BONUS-05, BONUS-06, BONUS-07 |
+| Phase 7: Mid-Season Import | DATA-01, DATA-05, ADMIN-08 |
+| Phase 8: Last One Standing & H2H | LOS-01, LOS-02, LOS-03, LOS-04, LOS-05, LOS-06, LOS-07, H2H-01, H2H-02, H2H-03 |
+| Phase 9: Pre-Season Predictions | PRE-01, PRE-02, PRE-03, PRE-04, PRE-05 |
+| Phase 10: Reports & Export | RPT-01, RPT-02, RPT-03, RPT-04, RPT-05, RPT-06, RPT-07, DATA-04 |
+| Phase 11: Polish & Continuity | UI-01, UI-02, UI-03, UI-04, UI-05, DATA-02, DATA-03 |
 
 ---
 *Requirements defined: 2026-04-11*
-*Last updated: 2026-04-11 after initial definition*
+*Last updated: 2026-04-11 — traceability populated after roadmap creation*
