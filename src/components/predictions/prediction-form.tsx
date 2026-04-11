@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Users, AlertTriangle, CheckCircle2, XCircle, Loader2, Star, Zap } from 'lucide-react'
 import type { FixtureWithTeams, GameweekRow, GameweekStatus } from '@/lib/supabase/types'
 import { submitPredictions } from '@/actions/predictions'
+import { computeDisplayTotal } from '@/lib/scoring/calculate-bonus'
 import GameweekNav from '@/components/fixtures/gameweek-nav'
 import GameweekView from '@/components/fixtures/gameweek-view'
 
@@ -30,6 +31,7 @@ interface PredictionFormProps {
   scoredFixtureCount?: number
   activeBonusType?: { id: string; name: string; description: string } | null
   existingBonusPick?: string | null
+  bonusAwardDisplay?: { points_awarded: number; awarded: boolean | null; fixture_id: string | null } | null
 }
 
 type FeedbackState = {
@@ -59,6 +61,7 @@ export default function PredictionForm({
   scoredFixtureCount = 0,
   activeBonusType = null,
   existingBonusPick = null,
+  bonusAwardDisplay = null,
 }: PredictionFormProps) {
 
   // ── Initialise local prediction state from server-provided saved scores ──────
@@ -189,14 +192,27 @@ export default function PredictionForm({
   // ── Derived layout flags ───────────────────────────────────────────────────
   // Total bar sits above submit button when both visible; drops to bottom when submit is hidden
   const totalBarBottom = allKickedOff ? 'bottom-0' : 'bottom-[60px]'
-  // Pad scrolling content to clear both fixed bars when both are visible
+  // Pad scrolling content to clear both fixed bars when both are visible.
+  // Footer is now taller with multiple bonus breakdown lines.
   const contentPadding = scoredFixtureCount > 0
-    ? (allKickedOff ? 'pb-20' : 'pb-32')
+    ? (allKickedOff ? 'pb-36' : 'pb-44')
     : 'pb-24'
 
-  // ── Derived bonus values ───────────────────────────────────────────────────
+  // ── Derived bonus display values ───────────────────────────────────────────
   const isGoldenGlory = activeBonusType?.name === 'Golden Glory'
   const bonusFixture = bonusFixtureId ? fixtures.find((f) => f.id === bonusFixtureId) : null
+
+  const bonusPoints = bonusAwardDisplay?.points_awarded ?? 0
+  const bonusConfirmed = bonusAwardDisplay?.awarded === true
+  const bonusPending = bonusAwardDisplay?.awarded === null && bonusPoints > 0
+  const bonusRejected = bonusAwardDisplay?.awarded === false
+
+  const { displayTotal, bonusIncluded } = computeDisplayTotal(
+    totalPoints,
+    bonusPoints,
+    bonusConfirmed,
+    gameweek.double_bubble,
+  )
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
@@ -316,11 +332,63 @@ export default function PredictionForm({
       {/* 8. Fixed gameweek total footer — visible only when at least 1 result is in */}
       {scoredFixtureCount > 0 && (
         <div className={`fixed ${totalBarBottom} left-0 right-0 bg-slate-800 border-t border-slate-700 px-4 py-3 z-10`}>
+          {/* Line 1: Base prediction points */}
           <div className="flex items-center justify-between">
-            <span className="text-white font-semibold text-sm">
-              Gameweek {currentGw} Total: {totalPoints} pts
-            </span>
-            <span className="text-slate-400 text-sm">
+            <span className="text-slate-300 text-xs">Base points</span>
+            <span className="text-white text-xs font-medium">{totalPoints} pts</span>
+          </div>
+
+          {/* Line 2: Bonus points — shown when bonus award exists and has points */}
+          {bonusAwardDisplay && bonusPoints > 0 && (
+            <div className="flex items-center justify-between mt-0.5">
+              <span className="text-xs">
+                {bonusConfirmed ? (
+                  <span className="text-green-400">Bonus (confirmed)</span>
+                ) : bonusPending ? (
+                  <span className="text-amber-400">Bonus (pending)</span>
+                ) : bonusRejected ? (
+                  <span className="text-red-400 line-through">Bonus (rejected)</span>
+                ) : (
+                  <span className="text-slate-400">Bonus</span>
+                )}
+              </span>
+              <span className={`text-xs font-medium ${bonusRejected ? 'text-red-400 line-through' : bonusConfirmed ? 'text-green-400' : 'text-amber-400'}`}>
+                +{bonusPoints} pts
+              </span>
+            </div>
+          )}
+
+          {/* Line 3: Awaiting result — bonus pick exists but fixture not finished yet */}
+          {bonusAwardDisplay && bonusPoints === 0 && bonusAwardDisplay.awarded === null && bonusAwardDisplay.fixture_id && (
+            <div className="flex items-center justify-between mt-0.5">
+              <span className="text-amber-400 text-xs">Bonus pick</span>
+              <span className="text-amber-400 text-xs">awaiting result</span>
+            </div>
+          )}
+
+          {/* Divider + Total */}
+          <div className="border-t border-slate-700/50 mt-1.5 pt-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-white font-semibold text-sm">
+                GW{currentGw} Total
+                {gameweek.double_bubble && (
+                  <span className="ml-1 text-xs font-bold text-amber-400">x 2</span>
+                )}
+              </span>
+              <span className="text-white font-bold text-sm">{displayTotal} pts</span>
+            </div>
+            {gameweek.double_bubble && (
+              <div className="text-right">
+                <span className="text-amber-400/80 text-[10px]">
+                  Double Bubble: ({totalPoints}{bonusIncluded ? ` + ${bonusPoints}` : ''}) x 2
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Results counter */}
+          <div className="text-right mt-0.5">
+            <span className="text-slate-500 text-[10px]">
               {scoredFixtureCount} of {fixtures.length} results in
             </span>
           </div>

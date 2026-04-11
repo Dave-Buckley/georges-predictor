@@ -211,6 +211,7 @@ export default async function GameweekPage({ params }: PageProps) {
 
   // ── Fetch member's existing bonus pick for this gameweek ────────────────────
   let existingBonusPick: string | null = null
+  let bonusAwardDisplay: { points_awarded: number; awarded: boolean | null; fixture_id: string | null } | null = null
 
   if (memberData?.id) {
     const { data: bonusAwardData } = await supabase
@@ -222,6 +223,11 @@ export default async function GameweekPage({ params }: PageProps) {
 
     if (bonusAwardData) {
       existingBonusPick = bonusAwardData.fixture_id as string | null
+      bonusAwardDisplay = {
+        points_awarded: (bonusAwardData.points_awarded as number) ?? 0,
+        awarded: bonusAwardData.awarded as boolean | null,
+        fixture_id: bonusAwardData.fixture_id as string | null,
+      }
     }
   }
 
@@ -239,6 +245,7 @@ export default async function GameweekPage({ params }: PageProps) {
       scoredFixtureCount={scoredFixtureCount}
       activeBonusType={activeBonusType}
       existingBonusPick={existingBonusPick}
+      bonusAwardDisplay={bonusAwardDisplay}
     />
   )
 }
