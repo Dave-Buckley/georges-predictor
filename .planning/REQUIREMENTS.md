@@ -14,7 +14,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **AUTH-03**: User session persists across browser refresh
 - [ ] **AUTH-04**: User can reset password via email link
 - [ ] **AUTH-05**: George can add new members manually (late joiners) with starting points
-- [ ] **AUTH-06**: Two admin accounts — George (primary) and Dave (backup) — both with full admin access
+- [x] **AUTH-06**: Two admin accounts — George (primary) and Dave (backup) — both with full admin access
 - [ ] **AUTH-07**: Separate admin login page and member login page
 - [ ] **AUTH-08**: George can submit his own predictions from the admin panel — he is both admin and participant (Dave is admin-only, not a participant)
 - [ ] **AUTH-09**: During signup, member either selects their name from the existing imported list (to link to their standings) or enters a new name with a note saying username should reflect their WhatsApp name
@@ -118,9 +118,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Infrastructure
 
-- [ ] **INFRA-01**: Zero ongoing costs — all hosting, database, API, and email on free tiers
-- [ ] **INFRA-02**: Scalable to 100 members on free-tier infrastructure
-- [ ] **INFRA-03**: Supabase keep-alive mechanism to prevent free-tier database pausing
+- [x] **INFRA-01**: Zero ongoing costs — all hosting, database, API, and email on free tiers
+- [x] **INFRA-02**: Scalable to 100 members on free-tier infrastructure
+- [x] **INFRA-03**: Supabase keep-alive mechanism to prevent free-tier database pausing
 
 ## v2 Requirements
 
@@ -162,7 +162,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AUTH-03 | Phase 1 | Pending |
 | AUTH-04 | Phase 1 | Pending |
 | AUTH-05 | Phase 1 | Pending |
-| AUTH-06 | Phase 1 | Pending |
+| AUTH-06 | Phase 1 | Complete |
 | AUTH-07 | Phase 1 | Pending |
 | AUTH-08 | Phase 1 | Pending |
 | AUTH-09 | Phase 1 | Pending |
@@ -230,9 +230,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | UI-03 | Phase 11 | Pending |
 | UI-04 | Phase 11 | Pending |
 | UI-05 | Phase 11 | Pending |
-| INFRA-01 | Phase 1 | Pending |
-| INFRA-02 | Phase 1 | Pending |
-| INFRA-03 | Phase 1 | Pending |
+| INFRA-01 | Phase 1 | Complete |
+| INFRA-02 | Phase 1 | Complete |
+| INFRA-03 | Phase 1 | Complete |
 
 **Coverage:**
 - v1 requirements: 75 total
