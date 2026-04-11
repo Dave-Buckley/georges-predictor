@@ -63,3 +63,19 @@ export const createBonusTypeSchema = z.object({
 })
 
 export type CreateBonusTypeInput = z.infer<typeof createBonusTypeSchema>
+
+// ─── Member Bonus Pick Schemas ────────────────────────────────────────────────
+
+/**
+ * Validates a member's bonus fixture pick.
+ * Used in the extended submitPredictions server action (Phase 6 Plan 02).
+ *
+ * Members submit this alongside their predictions — the bonus pick selects
+ * which fixture their bonus condition should be evaluated against.
+ */
+export const submitBonusPickSchema = z.object({
+  gameweek_id: z.string().uuid({ message: 'Invalid gameweek ID' }),
+  fixture_id: z.string().uuid({ message: 'Invalid fixture ID' }),
+})
+
+export type SubmitBonusPickInput = z.infer<typeof submitBonusPickSchema>

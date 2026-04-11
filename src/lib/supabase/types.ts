@@ -215,6 +215,8 @@ export interface BonusAwardRow {
   awarded: boolean | null
   confirmed_by: string | null
   confirmed_at: string | null
+  /** Calculated bonus points for this award. Added by migration 006. */
+  points_awarded: number
   created_at: string
 }
 
@@ -260,6 +262,11 @@ export interface AdminSettingsRow {
 
 /** BonusSchedule joined with bonus type info */
 export interface BonusScheduleWithType extends BonusScheduleRow {
+  bonus_type: BonusTypeRow
+}
+
+/** BonusAward joined with bonus type info (for member display) */
+export interface BonusAwardWithType extends BonusAwardRow {
   bonus_type: BonusTypeRow
 }
 
