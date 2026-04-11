@@ -50,9 +50,9 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **BONUS-02**: Members make their bonus pick during prediction submission (which game the bonus applies to)
 - [x] **BONUS-03**: Standard bonuses award 20pts if the chosen condition is met
 - [x] **BONUS-04**: Golden Glory bonus uses separate scoring formula — 20pts correct result, 60pts correct score on chosen game
-- [ ] **BONUS-05**: Double Bubble — George toggles double points for designated gameweeks (GW10, GW20, GW30)
+- [x] **BONUS-05**: Double Bubble — George toggles double points for designated gameweeks (GW10, GW20, GW30)
 - [x] **BONUS-06**: Two-phase confirmation — member picks bonus, George confirms before points are applied
-- [ ] **BONUS-07**: Points shown before and after bonus application
+- [x] **BONUS-07**: Points shown before and after bonus application
 
 ### H2H Steals
 
@@ -186,9 +186,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | BONUS-02 | Phase 6 | Complete |
 | BONUS-03 | Phase 6 | Complete |
 | BONUS-04 | Phase 6 | Complete |
-| BONUS-05 | Phase 6 | Pending |
+| BONUS-05 | Phase 6 | Complete |
 | BONUS-06 | Phase 6 | Complete |
-| BONUS-07 | Phase 6 | Pending |
+| BONUS-07 | Phase 6 | Complete |
 | H2H-01 | Phase 8 | Pending |
 | H2H-02 | Phase 8 | Pending |
 | H2H-03 | Phase 8 | Pending |

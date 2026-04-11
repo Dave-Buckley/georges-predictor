@@ -17,7 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 3: Predictions** - Member prediction submission, editing, visibility gating via RLS
 - [x] **Phase 4: Scoring Engine** - Pure function scoring library, live results, manual override, point breakdown storage (completed 2026-04-11)
 - [x] **Phase 5: Admin Panel** - George's control dashboard, overrides, bonus management, gameweek close (completed 2026-04-11)
-- [ ] **Phase 6: Bonus System** - Weekly bonuses, Golden Glory, Double Bubble, two-phase confirmation
+- [x] **Phase 6: Bonus System** - Weekly bonuses, Golden Glory, Double Bubble, two-phase confirmation (completed 2026-04-11)
 - [ ] **Phase 7: Mid-Season Import** - Load existing standings and late joiners before members onboard (launch blocker)
 - [ ] **Phase 8: Last One Standing & H2H** - LOS sub-competition, H2H steal detection and reporting
 - [ ] **Phase 9: Pre-Season Predictions** - Pre-season submission, lockout, end-of-season scoring
@@ -123,7 +123,7 @@ Plans:
   4. Double Bubble doubles all points for the designated gameweeks (GW10, GW20, GW30) — verified by comparing pre- and post-toggle totals
   5. No bonus points appear in a member's total until George explicitly confirms them
   6. Members can see their points both before and after bonus application to verify the confirmation step
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 Plans:
 - [ ] 06-01-PLAN.md — Migration 006 (member RLS on bonus tables, points_awarded column), calculateBonusPoints pure function (TDD), types + validators
 - [ ] 06-02-PLAN.md — Member bonus pick UI (fixture card star, bonus banner, mandatory validation), extend submitPredictions for bonus pick
@@ -203,7 +203,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 3. Predictions | 2/3 | In Progress|  |
 | 4. Scoring Engine | 3/3 | Complete   | 2026-04-11 |
 | 5. Admin Panel | 4/4 | Complete   | 2026-04-11 |
-| 6. Bonus System | 2/3 | In Progress|  |
+| 6. Bonus System | 3/3 | Complete   | 2026-04-11 |
 | 7. Mid-Season Import | 0/TBD | Not started | - |
 | 8. Last One Standing & H2H | 0/TBD | Not started | - |
 | 9. Pre-Season Predictions | 0/TBD | Not started | - |
