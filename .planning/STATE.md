@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Phase 5 context gathered
-last_updated: "2026-04-11T21:56:34.824Z"
+stopped_at: Completed 05-admin-panel-01-PLAN.md
+last_updated: "2026-04-11T22:20:47.315Z"
 last_activity: 2026-04-11 — Roadmap created, 11 phases derived from 71 v1 requirements
 progress:
   total_phases: 11
   completed_phases: 4
-  total_plans: 14
-  completed_plans: 14
+  total_plans: 18
+  completed_plans: 15
   percent: 0
 ---
 
@@ -63,6 +63,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 04-scoring-engine P01 | 4 | 2 tasks | 6 files |
 | Phase 04-scoring-engine P03 | 6 | 2 tasks | 4 files |
 | Phase 04-scoring-engine P02 | 8 | 2 tasks | 6 files |
+| Phase 05-admin-panel P01 | 3 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -113,6 +114,9 @@ Recent decisions affecting current work:
 - [Phase 04-scoring-engine]: detectNewlyFinished exported as pure testable helper — avoids complex sync mocking in tests
 - [Phase 04-scoring-engine]: Pre-upsert status snapshot enables FINISHED-transition detection without re-querying after upsert
 - [Phase 04-scoring-engine]: vi.mock hoisting: use vi.mocked(import) pattern, not variables in factory functions
+- [Phase 05-admin-panel]: bonus_awards.awarded uses tri-state boolean (NULL=pending, true=confirmed, false=rejected)
+- [Phase 05-admin-panel]: admin_notifications type CHECK dropped and re-added in migration 005 with all Phase 5 types included
+- [Phase 05-admin-panel]: bonus_types and additional_prizes grant SELECT to authenticated users so members can see names/prize list
 
 ### Pending Todos
 
@@ -127,6 +131,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-11T21:56:34.821Z
-Stopped at: Phase 5 context gathered
-Resume file: .planning/phases/05-admin-panel/05-CONTEXT.md
+Last session: 2026-04-11T22:20:47.313Z
+Stopped at: Completed 05-admin-panel-01-PLAN.md
+Resume file: None

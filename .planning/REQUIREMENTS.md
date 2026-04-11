@@ -81,14 +81,14 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Admin Panel
 
 - [x] **ADMIN-01**: George can approve or reject member registrations
-- [ ] **ADMIN-02**: George can set the active bonus for each gameweek before it starts
-- [ ] **ADMIN-03**: George can confirm or reject bonus point awards after gameweek
-- [ ] **ADMIN-04**: George can override match results and trigger score recalculation
-- [ ] **ADMIN-05**: George can toggle Double Bubble for specific gameweeks
+- [x] **ADMIN-02**: George can set the active bonus for each gameweek before it starts
+- [x] **ADMIN-03**: George can confirm or reject bonus point awards after gameweek
+- [x] **ADMIN-04**: George can override match results and trigger score recalculation
+- [x] **ADMIN-05**: George can toggle Double Bubble for specific gameweeks
 - [x] **ADMIN-06**: George can manage members — add, remove, set starting points
-- [ ] **ADMIN-07**: Additional prizes tracked and surfaced in reports — only applied when George confirms
+- [x] **ADMIN-07**: Additional prizes tracked and surfaced in reports — only applied when George confirms
 - [ ] **ADMIN-08**: George can import mid-season data (existing standings, pre-season picks)
-- [ ] **ADMIN-09**: George can close a gameweek manually (e.g., when postponed fixtures are voided)
+- [x] **ADMIN-09**: George can close a gameweek manually (e.g., when postponed fixtures are voided)
 
 ### Reports & Export
 
@@ -205,14 +205,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PRE-04 | Phase 9 | Pending |
 | PRE-05 | Phase 9 | Pending |
 | ADMIN-01 | Phase 1 | Complete |
-| ADMIN-02 | Phase 5 | Pending |
-| ADMIN-03 | Phase 5 | Pending |
-| ADMIN-04 | Phase 5 | Pending |
-| ADMIN-05 | Phase 5 | Pending |
+| ADMIN-02 | Phase 5 | Complete |
+| ADMIN-03 | Phase 5 | Complete |
+| ADMIN-04 | Phase 5 | Complete |
+| ADMIN-05 | Phase 5 | Complete |
 | ADMIN-06 | Phase 1 | Complete |
-| ADMIN-07 | Phase 5 | Pending |
+| ADMIN-07 | Phase 5 | Complete |
 | ADMIN-08 | Phase 7 | Pending |
-| ADMIN-09 | Phase 5 | Pending |
+| ADMIN-09 | Phase 5 | Complete |
 | RPT-01 | Phase 10 | Pending |
 | RPT-02 | Phase 10 | Pending |
 | RPT-03 | Phase 10 | Pending |
