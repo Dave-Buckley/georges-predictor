@@ -56,7 +56,11 @@ Plans:
   3. After a fixture's kick-off time passes, the server rejects any prediction submission for that fixture
   4. George can manually add, edit, or void a fixture from the admin panel
   5. A postponed fixture can be marked void or rescheduled without corrupting other gameweek data
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 02-01-PLAN.md — DB schema (teams, gameweeks, fixtures, sync_log), API client, sync engine, timezone helpers, cron config
+- [ ] 02-02-PLAN.md — Admin fixture management (add/edit/move server actions, gameweeks pages, sync status)
+- [ ] 02-03-PLAN.md — Member fixture display (gameweek view, fixture cards, lockout UX, all-fixtures page, dashboard update)
 
 ### Phase 3: Predictions
 **Goal**: Members can submit and edit their score predictions for open fixtures, and predictions are hidden from other members until the gameweek is fully complete.
@@ -178,7 +182,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 4/5 | In Progress|  |
-| 2. Fixture Layer | 0/TBD | Not started | - |
+| 2. Fixture Layer | 0/3 | Not started | - |
 | 3. Predictions | 0/TBD | Not started | - |
 | 4. Scoring Engine | 0/TBD | Not started | - |
 | 5. Admin Panel | 0/TBD | Not started | - |
@@ -191,4 +195,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 
 ---
 *Roadmap created: 2026-04-11*
-*Last updated: 2026-04-11 — Phase 1 plans created (5 plans in 3 waves)*
+*Last updated: 2026-04-11 — Phase 2 plans created (3 plans in 2 waves)*
