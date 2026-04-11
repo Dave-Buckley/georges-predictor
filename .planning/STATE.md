@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 06-bonus-system-01-PLAN.md
-last_updated: "2026-04-11T23:13:34.473Z"
+stopped_at: Completed 06-bonus-system-02-PLAN.md
+last_updated: "2026-04-11T23:19:09.804Z"
 last_activity: 2026-04-11 — Roadmap created, 11 phases derived from 71 v1 requirements
 progress:
   total_phases: 11
   completed_phases: 5
   total_plans: 21
-  completed_plans: 19
+  completed_plans: 20
   percent: 0
 ---
 
@@ -68,6 +68,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 05-admin-panel P03 | 5 | 2 tasks | 7 files |
 | Phase 05-admin-panel P04 | 5 | 2 tasks | 8 files |
 | Phase 06-bonus-system P01 | 2 | 2 tasks | 5 files |
+| Phase 06-bonus-system P02 | 3 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -131,6 +132,8 @@ Recent decisions affecting current work:
 - [Phase 06-bonus-system]: calculateBonusPoints routes via SCORE_EVALUABLE_BONUSES Set — extensible, O(1) lookup, named evaluators per type
 - [Phase 06-bonus-system]: computeDisplayTotal excludes pending bonuses from doubled total — only George-confirmed awards count toward displayed points
 - [Phase 06-bonus-system]: Jose Park The Bus qualifying scores: explicit readonly array (0-0, 1-0, 0-1) — total goals <= 1 with no ambiguity
+- [Phase 06-bonus-system]: bonusFixtureId defaults to null — when no bonus active, stars hidden and bonus validation skipped entirely
+- [Phase 06-bonus-system]: Bonus upsert uses onConflict gameweek_id,member_id — idempotent, overwrites prior pick on re-submit
 
 ### Pending Todos
 
@@ -145,6 +148,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-04-11T23:13:34.470Z
-Stopped at: Completed 06-bonus-system-01-PLAN.md
+Last session: 2026-04-11T23:19:09.802Z
+Stopped at: Completed 06-bonus-system-02-PLAN.md
 Resume file: None
