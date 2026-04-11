@@ -1,12 +1,15 @@
 import { createClient } from '@supabase/supabase-js'
-import type { Database } from './types'
 
 /**
  * Creates a Supabase client using the service role key.
  * This client bypasses Row Level Security — use only in secure server-side code.
  * NEVER import this in client components or expose to the browser.
+ *
+ * Note: Typed as SupabaseClient<any> until supabase gen types is run.
+ * When the Database type is generated, update to createClient<Database>.
  */
-export function createAdminClient() {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function createAdminClient(): ReturnType<typeof createClient<any>> {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
@@ -17,7 +20,8 @@ export function createAdminClient() {
     throw new Error('SUPABASE_SERVICE_ROLE_KEY is not set')
   }
 
-  return createClient<Database>(supabaseUrl, serviceRoleKey, {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return createClient<any>(supabaseUrl, serviceRoleKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,

@@ -15,7 +15,7 @@ vi.mock('@/lib/supabase/server', () => ({
 }))
 
 vi.mock('@/lib/email', () => ({
-  sendAdminSignupNotification: vi.fn().mockResolvedValue(undefined),
+  sendAdminSignupNotification: vi.fn().mockResolvedValue({}),
 }))
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -89,17 +89,16 @@ describe('signupSchema', () => {
     }
   })
 
-  it('email_opt_in defaults to true when not provided', async () => {
+  it('requires email_opt_in to be explicitly provided', async () => {
     const { signupSchema } = await import('@/lib/validators/auth')
+    // email_opt_in is required (no schema-level default — default is in the form component)
     const result = signupSchema.safeParse({
       display_name: 'Steve',
       email: 'steve@example.com',
       is_new_member: false,
     })
-    expect(result.success).toBe(true)
-    if (result.success) {
-      expect(result.data.email_opt_in).toBe(true)
-    }
+    // Without email_opt_in, parse fails (required boolean)
+    expect(result.success).toBe(false)
   })
 })
 
@@ -144,7 +143,7 @@ describe('signUpMember', () => {
     mockSupabase.auth.signInWithOtp = vi.fn().mockResolvedValue({ data: {}, error: null })
 
     const { sendAdminSignupNotification } = await import('@/lib/email')
-    vi.mocked(sendAdminSignupNotification).mockResolvedValue(undefined)
+    vi.mocked(sendAdminSignupNotification).mockResolvedValue({})
 
     const { signUpMember } = await import('@/actions/auth')
 
@@ -180,7 +179,7 @@ describe('signUpMember', () => {
     mockSupabase.auth.signInWithOtp = vi.fn().mockResolvedValue({ data: {}, error: null })
 
     const { sendAdminSignupNotification } = await import('@/lib/email')
-    vi.mocked(sendAdminSignupNotification).mockResolvedValue(undefined)
+    vi.mocked(sendAdminSignupNotification).mockResolvedValue({})
 
     const { signUpMember } = await import('@/actions/auth')
 
@@ -208,7 +207,7 @@ describe('signUpMember', () => {
     mockSupabase.auth.signInWithOtp = vi.fn().mockResolvedValue({ data: {}, error: null })
 
     const { sendAdminSignupNotification } = await import('@/lib/email')
-    vi.mocked(sendAdminSignupNotification).mockRejectedValue(new Error('Resend API down'))
+    vi.mocked(sendAdminSignupNotification).mockRejectedValue(new Error('Resend API down') as unknown as { error?: string })
 
     const { signUpMember } = await import('@/actions/auth')
 
@@ -259,7 +258,7 @@ describe('signUpMember', () => {
     mockSupabase.auth.signInWithOtp = vi.fn().mockResolvedValue({ data: {}, error: null })
 
     const { sendAdminSignupNotification } = await import('@/lib/email')
-    vi.mocked(sendAdminSignupNotification).mockResolvedValue(undefined)
+    vi.mocked(sendAdminSignupNotification).mockResolvedValue({})
 
     const { signUpMember } = await import('@/actions/auth')
 

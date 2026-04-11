@@ -13,7 +13,7 @@ export const signupSchema = z.object({
     .email('Please enter a valid email address')
     .transform((val) => val.toLowerCase()),
   is_new_member: z.boolean(),
-  email_opt_in: z.boolean().default(true),
+  email_opt_in: z.boolean(),
 })
 
 export type SignupInput = z.infer<typeof signupSchema>
