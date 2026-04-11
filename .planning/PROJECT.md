@@ -16,7 +16,8 @@ Accurate, automated point calculation that removes all manual load from George w
 
 ### Active
 
-- [ ] Members sign up with email/password and submit score predictions for each gameweek
+- [ ] Members sign up with email/password — George must approve each registration before they can access the tool (invite-only, no random signups)
+- [ ] Members submit score predictions for each gameweek
 - [ ] Fixtures auto-loaded per gameweek with clear grouping (midweek vs weekend)
 - [ ] Per-fixture lockout at kick-off — no submissions or edits after a match starts
 - [ ] Predictions hidden from other members until all fixtures in the gameweek are complete (George can see all)
