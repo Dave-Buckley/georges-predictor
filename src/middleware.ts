@@ -58,6 +58,15 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // ─── Protect /gameweeks/* and /fixtures routes ───────────────────────────────
+  // Member-only routes — redirect to login if not authenticated
+  if (pathname.startsWith('/gameweeks') || pathname.startsWith('/fixtures')) {
+    if (!user) {
+      const redirectUrl = new URL('/login', request.url)
+      return NextResponse.redirect(redirectUrl)
+    }
+  }
+
   // All other routes are public — return response with refreshed token cookies
   return supabaseResponse
 }
