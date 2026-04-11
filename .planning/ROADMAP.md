@@ -138,7 +138,10 @@ Plans:
   2. Existing pre-season picks are stored against each member's account and match George's records
   3. A late-joining member added by George mid-season starts with the correct custom point total George specifies
   4. After import, all 48 existing members appear in the standings with correct totals before any new gameweek plays
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 07-01-PLAN.md — Migration 007 (pre_season_picks table, handle_new_user trigger fix, members.updated_at), types, validators, parseImportText pure function with tests
+- [ ] 07-02-PLAN.md — Import server actions (importMembers, clearImportedMembers, importPreSeasonPicks), admin import page with paste/preview/confirm UI, sidebar link
 
 ### Phase 8: Last One Standing & H2H
 **Goal**: The Last One Standing sub-competition runs automatically alongside weekly predictions, and H2H steal situations are detected and flagged without manual work from George.
@@ -204,7 +207,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 4. Scoring Engine | 3/3 | Complete   | 2026-04-11 |
 | 5. Admin Panel | 4/4 | Complete   | 2026-04-11 |
 | 6. Bonus System | 3/3 | Complete   | 2026-04-11 |
-| 7. Mid-Season Import | 0/TBD | Not started | - |
+| 7. Mid-Season Import | 0/2 | Not started | - |
 | 8. Last One Standing & H2H | 0/TBD | Not started | - |
 | 9. Pre-Season Predictions | 0/TBD | Not started | - |
 | 10. Reports & Export | 0/TBD | Not started | - |
@@ -212,4 +215,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 
 ---
 *Roadmap created: 2026-04-11*
-*Last updated: 2026-04-12 — Phase 6 plans created (3 plans in 3 waves)*
+*Last updated: 2026-04-12 — Phase 7 plans created (2 plans in 2 waves)*
