@@ -58,6 +58,13 @@ Project scaffold, database schema, auth system, George-approved registration flo
 - Name: "George's Predictor" — personal, it's his competition
 - Visual blend of Premier League feel (dark tones, bold colours, team badges) with clean, modern design
 
+### Idiot-Proof Design (Project-Wide)
+- ALL users are non-technical — the entire application must be idiot-proof, not just admin
+- Every screen, every flow, every interaction must be obvious without explanation
+- Clear labels, big buttons, confirmation dialogs, no jargon, no ambiguous states
+- If a user could misinterpret something, redesign it
+- Real money is involved — confusion = errors = disputes
+
 ### Claude's Discretion
 - Database schema design and table structure
 - Supabase RLS policy implementation details
