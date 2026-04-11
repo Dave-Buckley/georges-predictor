@@ -1,12 +1,23 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ChevronLeft, ArrowRightCircle } from 'lucide-react'
+import { ChevronLeft, ArrowRightCircle, Star, Zap } from 'lucide-react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { formatKickoffFull, formatKickoffDate } from '@/lib/fixtures/timezone'
 import { FixtureDialog } from '@/components/admin/fixture-form'
 import { MoveFixtureDialog } from '@/components/admin/move-fixture-dialog'
 import { ResultOverrideDialog } from '@/components/admin/result-override-dialog'
-import type { FixtureWithTeams, GameweekRow, TeamRow } from '@/lib/supabase/types'
+import { SetBonusDialog } from '@/components/admin/set-bonus-dialog'
+import { CloseGameweekDialog } from '@/components/admin/close-gameweek-dialog'
+import { toggleDoubleBubble } from '@/actions/admin/bonuses'
+import type { FixtureWithTeams, GameweekRow, TeamRow, BonusTypeRow } from '@/lib/supabase/types'
+
+interface BonusScheduleEntry {
+  id: string
+  gameweek_id: string
+  bonus_type_id: string
+  confirmed: boolean
+  bonus_type: BonusTypeRow
+}
 
 export const dynamic = 'force-dynamic'
 
@@ -50,11 +61,34 @@ async function getGameweekData(gwNumber: number) {
     .select('id, number, season, status, created_at')
     .order('number')
 
+  // Fetch bonus schedule for this gameweek
+  const { data: bonusSchedule } = await supabase
+    .from('bonus_schedule')
+    .select('*, bonus_type:bonus_types(*)')
+    .eq('gameweek_id', gameweek.id)
+    .maybeSingle()
+
+  // Fetch all bonus types for the SetBonusDialog dropdown
+  const { data: bonusTypes } = await supabase
+    .from('bonus_types')
+    .select('*')
+    .order('name')
+
+  // Count pending bonus awards for this gameweek
+  const { count: pendingAwardCount } = await supabase
+    .from('bonus_awards')
+    .select('id', { count: 'exact', head: true })
+    .eq('gameweek_id', gameweek.id)
+    .is('awarded', null)
+
   return {
     gameweek: gameweek as GameweekRow,
     fixtures: (fixtures ?? []) as FixtureWithTeams[],
     teams: (teams ?? []) as TeamRow[],
     gameweeks: (gameweeks ?? []) as GameweekRow[],
+    bonusSchedule: bonusSchedule as BonusScheduleEntry | null,
+    bonusTypes: (bonusTypes ?? []) as BonusTypeRow[],
+    pendingAwardCount: pendingAwardCount ?? 0,
   }
 }
 
@@ -89,7 +123,7 @@ export default async function SingleGameweekPage({ params }: PageProps) {
     notFound()
   }
 
-  const { gameweek, fixtures, teams, gameweeks } = data
+  const { gameweek, fixtures, teams, gameweeks, bonusSchedule, bonusTypes, pendingAwardCount } = data
 
   // Group fixtures by date
   const fixturesByDate = fixtures.reduce<Record<string, FixtureWithTeams[]>>(
@@ -118,7 +152,14 @@ export default async function SingleGameweekPage({ params }: PageProps) {
 
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Gameweek {gwNumber}</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold text-gray-900">Gameweek {gwNumber}</h1>
+              {gameweek.closed_at && (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
+                  Closed
+                </span>
+              )}
+            </div>
             <p className="text-gray-500 mt-1">
               {fixtures.length} fixture{fixtures.length !== 1 ? 's' : ''}
               {' — '}
@@ -136,23 +177,114 @@ export default async function SingleGameweekPage({ params }: PageProps) {
             </p>
           </div>
 
-          {teams.length > 0 && (
-            <FixtureDialog
-              mode="add"
-              teams={teams}
-              gameweeks={gameweeks}
-              defaultGameweekNumber={gwNumber}
-              trigger={
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold transition-colors shadow-sm"
-                >
-                  + Add fixture
-                </button>
-              }
+          <div className="flex items-center gap-2">
+            <CloseGameweekDialog
+              gameweekId={gameweek.id}
+              gameweekNumber={gwNumber}
+              isClosed={gameweek.closed_at !== null}
             />
-          )}
+            {teams.length > 0 && (
+              <FixtureDialog
+                mode="add"
+                teams={teams}
+                gameweeks={gameweeks}
+                defaultGameweekNumber={gwNumber}
+                trigger={
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold transition-colors shadow-sm"
+                  >
+                    + Add fixture
+                  </button>
+                }
+              />
+            )}
+          </div>
         </div>
+      </div>
+
+      {/* Bonus section */}
+      <div className="bg-white border border-gray-200 rounded-2xl p-5 mb-6">
+        <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2 mb-4">
+          <Star className="w-4 h-4 text-purple-600" />
+          Bonus
+        </h2>
+
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          {/* Current bonus */}
+          <div className="flex-1">
+            <p className="text-xs text-gray-500 mb-1">Assigned bonus</p>
+            {bonusSchedule ? (
+              <div>
+                <span className="font-semibold text-gray-900">
+                  {bonusSchedule.bonus_type.name}
+                </span>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  {bonusSchedule.bonus_type.description}
+                </p>
+              </div>
+            ) : (
+              <span className="text-gray-400 italic text-sm">No bonus set</span>
+            )}
+          </div>
+
+          {/* Double Bubble toggle */}
+          <div className="flex-shrink-0">
+            <p className="text-xs text-gray-500 mb-1">Double Bubble</p>
+            <form action={toggleDoubleBubble} className="inline-flex">
+              <input type="hidden" name="gameweek_id" value={gameweek.id} />
+              <input
+                type="hidden"
+                name="enabled"
+                value={gameweek.double_bubble ? 'false' : 'true'}
+              />
+              <button
+                type="submit"
+                title={
+                  gameweek.double_bubble
+                    ? 'Click to disable Double Bubble'
+                    : 'Click to enable Double Bubble'
+                }
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                  gameweek.double_bubble
+                    ? 'bg-purple-100 text-purple-700 hover:bg-purple-200 border border-purple-200'
+                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200 border border-gray-200'
+                }`}
+              >
+                <Zap className="w-4 h-4" />
+                {gameweek.double_bubble ? 'Double Bubble ON' : 'Double Bubble OFF'}
+              </button>
+            </form>
+          </div>
+
+          {/* Set/Change bonus button */}
+          <div className="flex-shrink-0">
+            <p className="text-xs text-gray-500 mb-1">Actions</p>
+            <SetBonusDialog
+              gameweekNumber={gwNumber}
+              gameweekId={gameweek.id}
+              currentBonusTypeId={bonusSchedule?.bonus_type_id ?? null}
+              bonusTypes={bonusTypes}
+              existingPickCount={0}
+            />
+          </div>
+        </div>
+
+        {/* Pending awards notice */}
+        {pendingAwardCount > 0 && (
+          <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+            <p className="text-sm text-amber-800">
+              <span className="font-semibold">{pendingAwardCount} bonus award{pendingAwardCount !== 1 ? 's' : ''} pending review</span>
+              {' — '}
+              <Link
+                href="/admin/bonuses#awards"
+                className="underline hover:no-underline"
+              >
+                Review on Bonuses page
+              </Link>
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Fixtures */}

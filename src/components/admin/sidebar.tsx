@@ -62,7 +62,6 @@ export function AdminSidebar({ adminEmail }: SidebarProps) {
       href: '/admin/bonuses',
       label: 'Bonuses',
       icon: Star,
-      disabled: true,
     },
     {
       href: '/admin/reports',
