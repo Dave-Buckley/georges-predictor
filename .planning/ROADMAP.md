@@ -38,7 +38,13 @@ Decimal phases appear between their surrounding integers in numeric order.
   5. An approved member can log in, refresh the page, and remain logged in (session persists)
   4. A member can request a password reset and receive an email link that works
   5. The application is deployed on Vercel and the Supabase database does not pause due to inactivity
-**Plans**: TBD
+**Plans:** 5 plans
+Plans:
+- [ ] 01-01-PLAN.md — Project scaffold, Supabase clients, middleware, DB schema, RLS, keep-alive, test infra
+- [ ] 01-02-PLAN.md — Member signup flow (magic link) and branded landing page
+- [ ] 01-03-PLAN.md — Admin login, dashboard shell with sidebar, member management CRUD
+- [ ] 01-04-PLAN.md — Member login (magic link), member dashboard with approval gating, test suite
+- [ ] 01-05-PLAN.md — Vercel deployment, environment config, end-to-end verification
 
 ### Phase 2: Fixture Layer
 **Goal**: Premier League fixtures are automatically loaded per gameweek, displayed with correct grouping and timezone, and the system enforces per-fixture lockout at kick-off server-side.
@@ -171,7 +177,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/TBD | Not started | - |
+| 1. Foundation | 0/5 | Planning complete | - |
 | 2. Fixture Layer | 0/TBD | Not started | - |
 | 3. Predictions | 0/TBD | Not started | - |
 | 4. Scoring Engine | 0/TBD | Not started | - |
@@ -185,4 +191,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 
 ---
 *Roadmap created: 2026-04-11*
-*Last updated: 2026-04-11 — initial roadmap from requirements*
+*Last updated: 2026-04-11 — Phase 1 plans created (5 plans in 3 waves)*
