@@ -35,7 +35,7 @@ export async function adminLogin(
   ].filter(Boolean)
 
   if (knownAdmins.length > 0 && !knownAdmins.includes(email)) {
-    return { error: 'Invalid admin credentials' }
+    return { error: `Email not recognised as admin (${knownAdmins.length} admins configured)` }
   }
 
   const supabase = await createServerSupabaseClient()
@@ -46,14 +46,14 @@ export async function adminLogin(
   })
 
   if (error || !data.user) {
-    return { error: 'Invalid admin credentials' }
+    return { error: `Login failed: ${error?.message ?? 'No user returned'}` }
   }
 
   // Verify the user actually has admin role (middleware also enforces this)
   const isAdmin = data.user.app_metadata?.role === 'admin'
   if (!isAdmin) {
     await supabase.auth.signOut()
-    return { error: 'Invalid admin credentials' }
+    return { error: 'Account exists but is not an admin' }
   }
 
   redirect('/admin')
