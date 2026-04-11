@@ -40,7 +40,7 @@ export interface BlockedEmailRow {
 /** Row shape for the public.admin_notifications table */
 export interface AdminNotificationRow {
   id: string
-  type: 'new_signup' | 'approval_needed' | 'system' | 'sync_failure' | 'fixture_rescheduled' | 'fixture_moved'
+  type: 'new_signup' | 'approval_needed' | 'system' | 'sync_failure' | 'fixture_rescheduled' | 'fixture_moved' | 'result_override' | 'scoring_complete'
   title: string
   message: string | null
   is_read: boolean
@@ -97,6 +97,7 @@ export interface FixtureRow {
   is_rescheduled: boolean
   home_score: number | null
   away_score: number | null
+  result_source: 'api' | 'manual' | null
   created_at: string
   updated_at: string
 }
@@ -133,6 +134,37 @@ export interface PredictionRow {
 /** Prediction joined with the member's display info (for admin table view) */
 export interface PredictionWithMember extends PredictionRow {
   member: Pick<MemberRow, 'id' | 'display_name'>
+}
+
+// ─── Scoring Types ────────────────────────────────────────────────────────────
+
+/** Row shape for the public.prediction_scores table */
+export interface PredictionScoreRow {
+  id: string
+  prediction_id: string
+  fixture_id: string
+  member_id: string
+  predicted_home: number
+  predicted_away: number
+  actual_home: number
+  actual_away: number
+  result_correct: boolean
+  score_correct: boolean
+  points_awarded: 0 | 10 | 30
+  calculated_at: string
+}
+
+/** Row shape for the public.result_overrides table */
+export interface ResultOverrideRow {
+  id: string
+  fixture_id: string
+  changed_by: string
+  old_home: number | null
+  old_away: number | null
+  new_home: number
+  new_away: number
+  predictions_recalculated: number
+  created_at: string
 }
 
 // ─── Database Type (placeholder until `supabase gen types` is run) ────────────
