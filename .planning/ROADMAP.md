@@ -63,16 +63,20 @@ Plans:
 - [ ] 02-03-PLAN.md — Member fixture display (gameweek view, fixture cards, lockout UX, all-fixtures page, dashboard update)
 
 ### Phase 3: Predictions
-**Goal**: Members can submit and edit their score predictions for open fixtures, and predictions are hidden from other members until the gameweek is fully complete.
+**Goal**: Members can submit and edit their score predictions for open fixtures, and predictions become visible to all members at kick-off time (per CONTEXT.md override of PRED-03). George can view all predictions at any time from the admin panel.
 **Depends on**: Phase 2
 **Requirements**: PRED-01, PRED-02, PRED-03, PRED-04, PRED-05
 **Success Criteria** (what must be TRUE):
   1. A member can submit home/away score predictions for all unlocked fixtures in a gameweek
   2. A member can change their prediction for any fixture up until that fixture's kick-off
-  3. A member cannot see any other member's predictions until every fixture in the gameweek has a final result
+  3. A member cannot see any other member's predictions until that fixture has kicked off
   4. George can view all members' predictions for any fixture at any time
   5. A member who submits late can still predict remaining fixtures that have not yet kicked off
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 03-01-PLAN.md — Predictions DB migration, types, Zod validators, submitPredictions server action, unit tests
+- [ ] 03-02-PLAN.md — Member prediction form (stepper inputs on fixture cards, PredictionForm wrapper, gameweek page integration)
+- [ ] 03-03-PLAN.md — Admin all-predictions table, sidebar relabel from "My Predictions" to "All Predictions"
 
 ### Phase 4: Scoring Engine
 **Goal**: Points are calculated automatically and accurately as results come in, the full calculation breakdown is stored, and members can see their running points in real time.
@@ -183,7 +187,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 |-------|----------------|--------|-----------|
 | 1. Foundation | 4/5 | In Progress|  |
 | 2. Fixture Layer | 3/3 | Complete   | 2026-04-11 |
-| 3. Predictions | 0/TBD | Not started | - |
+| 3. Predictions | 0/3 | Not started | - |
 | 4. Scoring Engine | 0/TBD | Not started | - |
 | 5. Admin Panel | 0/TBD | Not started | - |
 | 6. Bonus System | 0/TBD | Not started | - |
@@ -195,4 +199,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 
 ---
 *Roadmap created: 2026-04-11*
-*Last updated: 2026-04-11 — Phase 2 plans created (3 plans in 2 waves)*
+*Last updated: 2026-04-12 — Phase 3 plans created (3 plans in 2 waves)*
