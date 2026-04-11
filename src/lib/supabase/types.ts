@@ -1,6 +1,3 @@
-// Database type placeholder — will be replaced with generated types after `supabase gen types`
-export type Database = Record<string, unknown>
-
 // ─── Enums ────────────────────────────────────────────────────────────────────
 
 export type ApprovalStatus = 'pending' | 'approved' | 'rejected'
@@ -50,3 +47,9 @@ export interface AdminNotificationRow {
   member_id: string | null
   created_at: string
 }
+
+// ─── Database Type (placeholder until `supabase gen types` is run) ────────────
+// This allows Supabase client to be used without strict DB type checking.
+// Replace with generated types after connecting to a Supabase project.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type Database = any
