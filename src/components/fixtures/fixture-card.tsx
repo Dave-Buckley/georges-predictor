@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Lock } from 'lucide-react'
+import { Lock, Star } from 'lucide-react'
 import type { FixtureWithTeams } from '@/lib/supabase/types'
 import { formatKickoffTime, formatKickoffDate, isToday } from '@/lib/fixtures/timezone'
 import TeamBadge from '@/components/fixtures/team-badge'
@@ -25,6 +25,10 @@ interface FixtureCardProps {
   isLocked?: boolean          // Override: when true, fixture is past kickoff
   hasSubmitted?: boolean      // This specific fixture has a saved prediction
   scoreBreakdown?: ScoreBreakdown | null
+  isBonusPick?: boolean                                // This fixture is the selected bonus fixture
+  onBonusToggle?: (fixtureId: string) => void         // Callback when star is tapped
+  bonusActive?: boolean                               // Whether a bonus is active this GW
+  isGoldenGlory?: boolean                             // Golden Glory visual treatment
 }
 
 /**
@@ -49,6 +53,10 @@ export default function FixtureCard({
   isLocked: isLockedProp,
   hasSubmitted = false,
   scoreBreakdown = null,
+  isBonusPick = false,
+  onBonusToggle,
+  bonusActive = false,
+  isGoldenGlory = false,
 }: FixtureCardProps) {
   const [now, setNow] = useState<Date>(() => new Date())
 
@@ -85,6 +93,10 @@ export default function FixtureCard({
   let cardClasses = 'rounded-xl border p-4 transition-colors '
   if (isLive) {
     cardClasses += 'border-red-500/50 bg-slate-800/80 '
+  } else if (isBonusPick && isGoldenGlory) {
+    cardClasses += 'border-l-4 border-l-yellow-400 border-yellow-400/50 bg-slate-800/80 '
+  } else if (isBonusPick) {
+    cardClasses += 'border-l-4 border-l-amber-500 border-amber-500/50 bg-slate-800/80 '
   } else if (withinWarningWindow) {
     cardClasses += 'border-l-4 border-l-amber-500 border-slate-700 bg-slate-800/80 '
   } else if (isGrey) {
@@ -173,14 +185,43 @@ export default function FixtureCard({
     )
   }
 
+  // ─── Bonus star visibility ────────────────────────────────────────────────────
+  // Show star only when bonus is active, a toggle callback exists, and fixture is
+  // not in a terminal/locked state (no point picking a kicked-off fixture as bonus)
+  const isTerminal = isFinished || isPostponed || isCancelled || isLocked || isLive
+  const showBonusStar = bonusActive && !!onBonusToggle && !isTerminal
+
   return (
     <div className={cardClasses}>
-      {/* Rescheduled badge */}
-      {fixture.is_rescheduled && (
-        <div className="mb-2 flex justify-end">
-          <span className="px-2 py-0.5 rounded-full bg-blue-600/80 text-white text-xs font-semibold">
-            Rescheduled
-          </span>
+      {/* Top badges row: Rescheduled + bonus star */}
+      {(fixture.is_rescheduled || showBonusStar) && (
+        <div className="mb-2 flex justify-between items-center">
+          {fixture.is_rescheduled ? (
+            <span className="px-2 py-0.5 rounded-full bg-blue-600/80 text-white text-xs font-semibold">
+              Rescheduled
+            </span>
+          ) : (
+            <span />
+          )}
+
+          {/* Bonus star button */}
+          {showBonusStar && (
+            <button
+              type="button"
+              onClick={() => onBonusToggle!(fixture.id)}
+              aria-label={isBonusPick ? 'Remove bonus pick' : 'Set as bonus fixture'}
+              className="p-2 rounded-lg transition-colors hover:bg-slate-700/60 active:bg-slate-700"
+              style={{ minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
+              {isBonusPick ? (
+                <Star
+                  className={`w-5 h-5 fill-current ${isGoldenGlory ? 'text-yellow-400' : 'text-amber-400'}`}
+                />
+              ) : (
+                <Star className="w-5 h-5 text-slate-500" />
+              )}
+            </button>
+          )}
         </div>
       )}
 
@@ -214,6 +255,24 @@ export default function FixtureCard({
             hasSubmitted={hasSubmitted}
           />
         ) : null}
+
+        {/* Bonus pick badge — shown when this fixture is the active bonus pick */}
+        {isBonusPick && (
+          <div className={`mt-2 rounded-lg px-3 py-2 text-center ${
+            isGoldenGlory
+              ? 'bg-gradient-to-r from-yellow-900/60 to-amber-900/60 border border-yellow-500/50'
+              : 'bg-amber-900/40 border border-amber-600/50'
+          }`}>
+            {isGoldenGlory ? (
+              <>
+                <p className="text-xs font-bold text-yellow-300 uppercase tracking-wide">Golden Glory Bonus</p>
+                <p className="text-xs text-yellow-400/80 mt-0.5">20pts correct result · 60pts exact score!</p>
+              </>
+            ) : (
+              <p className="text-xs font-semibold text-amber-300 uppercase tracking-wide">Bonus Fixture</p>
+            )}
+          </div>
+        )}
 
         {/* Score breakdown — shown only when scoreBreakdown is provided (finished fixture with result) */}
         {scoreBreakdown ? (

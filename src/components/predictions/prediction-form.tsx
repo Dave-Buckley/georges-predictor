@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Users, AlertTriangle, CheckCircle2, XCircle, Loader2 } from 'lucide-react'
+import { Users, AlertTriangle, CheckCircle2, XCircle, Loader2, Star, Zap } from 'lucide-react'
 import type { FixtureWithTeams, GameweekRow, GameweekStatus } from '@/lib/supabase/types'
 import { submitPredictions } from '@/actions/predictions'
 import GameweekNav from '@/components/fixtures/gameweek-nav'
@@ -28,6 +28,8 @@ interface PredictionFormProps {
   scoreBreakdowns?: Record<string, ScoreBreakdown>
   totalPoints?: number
   scoredFixtureCount?: number
+  activeBonusType?: { id: string; name: string; description: string } | null
+  existingBonusPick?: string | null
 }
 
 type FeedbackState = {
@@ -55,6 +57,8 @@ export default function PredictionForm({
   scoreBreakdowns,
   totalPoints = 0,
   scoredFixtureCount = 0,
+  activeBonusType = null,
+  existingBonusPick = null,
 }: PredictionFormProps) {
 
   // ── Initialise local prediction state from server-provided saved scores ──────
@@ -85,6 +89,9 @@ export default function PredictionForm({
     () => new Set(Object.keys(existingPredictions))
   )
 
+  // ── Bonus pick state ────────────────────────────────────────────────────────
+  const [bonusFixtureId, setBonusFixtureId] = useState<string | null>(existingBonusPick ?? null)
+
   // Auto-dismiss feedback banner after 5 seconds
   useEffect(() => {
     if (!feedback) return
@@ -102,6 +109,11 @@ export default function PredictionForm({
     },
     []
   )
+
+  // ── Bonus toggle handler — tapping same fixture deselects ───────────────────
+  const handleBonusToggle = useCallback((fixtureId: string) => {
+    setBonusFixtureId((prev) => (prev === fixtureId ? null : fixtureId))
+  }, [])
 
   // ── Submit handler ─────────────────────────────────────────────────────────
   async function handleSubmit() {
@@ -123,17 +135,34 @@ export default function PredictionForm({
       return
     }
 
+    // ── Bonus pick validation ───────────────────────────────────────────────
+    // Bonus is mandatory when active — block submission without a selection
+    if (activeBonusType && !bonusFixtureId) {
+      setFeedback({ type: 'error', message: 'Pick your bonus fixture before submitting — tap the star icon on a fixture card.' })
+      return
+    }
+
+    // Client-side guard: bonus fixture must not have already kicked off
+    if (bonusFixtureId) {
+      const bonusFixture = fixtures.find((f) => f.id === bonusFixtureId)
+      if (bonusFixture && new Date(bonusFixture.kickoff_time) <= now) {
+        setFeedback({ type: 'error', message: 'Your bonus fixture has already kicked off. Pick a different fixture.' })
+        return
+      }
+    }
+
     setIsSubmitting(true)
     setFeedback(null)
 
     try {
-      const result = await submitPredictions(currentGw, validEntries)
+      const result = await submitPredictions(currentGw, validEntries, bonusFixtureId)
 
       if (result.error) {
         setFeedback({ type: 'error', message: result.error })
       } else {
         const skippedMsg = result.skipped > 0 ? ` (${result.skipped} skipped — already kicked off)` : ''
-        setFeedback({ type: 'success', message: `Saved ${result.saved} prediction${result.saved !== 1 ? 's' : ''}${skippedMsg}` })
+        const bonusMsg = result.bonusSaved ? ' Bonus pick saved.' : ''
+        setFeedback({ type: 'success', message: `Saved ${result.saved} prediction${result.saved !== 1 ? 's' : ''}${skippedMsg}${bonusMsg}` })
         setSubmitResult({ saved: result.saved, skipped: result.skipped })
         setHasExistingPredictions(true)
         // Mark submitted fixtures as saved
@@ -165,6 +194,10 @@ export default function PredictionForm({
     ? (allKickedOff ? 'pb-20' : 'pb-32')
     : 'pb-24'
 
+  // ── Derived bonus values ───────────────────────────────────────────────────
+  const isGoldenGlory = activeBonusType?.name === 'Golden Glory'
+  const bonusFixture = bonusFixtureId ? fixtures.find((f) => f.id === bonusFixtureId) : null
+
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className={`space-y-4 ${contentPadding}`}>
@@ -180,14 +213,54 @@ export default function PredictionForm({
         </span>
       </div>
 
-      {/* 2. Gameweek navigation */}
+      {/* 2. Double Bubble banner (when active) */}
+      {gameweek.double_bubble && (
+        <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-amber-900/60 to-orange-900/60 border border-amber-500/50">
+          <Zap className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-bold text-amber-300">DOUBLE BUBBLE WEEK</p>
+            <p className="text-xs text-amber-400/80 mt-0.5">All confirmed points are doubled this gameweek!</p>
+          </div>
+        </div>
+      )}
+
+      {/* 3. Bonus banner (when a confirmed bonus is active) */}
+      {activeBonusType && (
+        <div className={`flex items-start gap-3 px-4 py-3 rounded-xl border ${
+          isGoldenGlory
+            ? 'bg-gradient-to-r from-yellow-900/60 to-amber-900/60 border-yellow-500/50'
+            : 'bg-gradient-to-r from-indigo-900/60 to-purple-900/60 border-indigo-500/50'
+        }`}>
+          <Star className={`w-5 h-5 flex-shrink-0 mt-0.5 ${isGoldenGlory ? 'text-yellow-400 fill-yellow-400' : 'text-indigo-400'}`} />
+          <div className="flex-1 min-w-0">
+            <p className={`text-sm font-bold ${isGoldenGlory ? 'text-yellow-300' : 'text-indigo-300'}`}>
+              {activeBonusType.name}
+            </p>
+            <p className={`text-xs mt-0.5 ${isGoldenGlory ? 'text-yellow-400/80' : 'text-indigo-400/80'}`}>
+              {isGoldenGlory ? '20pts for correct result · 60pts for exact score!' : activeBonusType.description}
+            </p>
+            {/* Bonus selection status */}
+            {bonusFixture ? (
+              <p className="text-xs text-green-400 mt-1 font-medium">
+                Bonus applied to: {bonusFixture.home_team?.name ?? ''} vs {bonusFixture.away_team?.name ?? ''}
+              </p>
+            ) : (
+              <p className="text-xs text-amber-400 mt-1">
+                Tap the star on a fixture to pick your bonus
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 4. Gameweek navigation */}
       <GameweekNav
         currentGw={currentGw}
         totalGw={totalGw}
         gameweeks={navGameweeks}
       />
 
-      {/* 3. Fixture list with prediction inputs */}
+      {/* 5. Fixture list with prediction inputs */}
       <GameweekView
         fixtures={fixtures}
         gameweek={gameweek}
@@ -195,9 +268,13 @@ export default function PredictionForm({
         onScoreChange={handleScoreChange}
         submittedFixtureIds={submittedFixtureIds}
         scoreBreakdowns={scoreBreakdowns}
+        bonusFixtureId={bonusFixtureId}
+        onBonusToggle={handleBonusToggle}
+        bonusActive={!!activeBonusType}
+        isGoldenGlory={isGoldenGlory}
       />
 
-      {/* 4. Late kickoff warning (conditional) */}
+      {/* 6. Late kickoff warning (conditional) */}
       {someKickedOff && !allKickedOff && (
         <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg bg-amber-900/40 border border-amber-700/50">
           <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
@@ -216,7 +293,7 @@ export default function PredictionForm({
         </div>
       )}
 
-      {/* 5. Feedback banner (auto-dismisses after 5s) */}
+      {/* 7. Feedback banner (auto-dismisses after 5s) */}
       {feedback && (
         <div
           className={`flex items-start gap-2 px-3 py-2.5 rounded-lg border ${
@@ -236,7 +313,7 @@ export default function PredictionForm({
         </div>
       )}
 
-      {/* 6. Fixed gameweek total footer — visible only when at least 1 result is in */}
+      {/* 8. Fixed gameweek total footer — visible only when at least 1 result is in */}
       {scoredFixtureCount > 0 && (
         <div className={`fixed ${totalBarBottom} left-0 right-0 bg-slate-800 border-t border-slate-700 px-4 py-3 z-10`}>
           <div className="flex items-center justify-between">
@@ -250,7 +327,7 @@ export default function PredictionForm({
         </div>
       )}
 
-      {/* 7. Sticky submit button */}
+      {/* 9. Sticky submit button */}
       {!allKickedOff && (
         <div className="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-700 p-4 z-10">
           <button

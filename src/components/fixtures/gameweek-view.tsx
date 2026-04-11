@@ -19,6 +19,10 @@ interface GameweekViewProps {
   onScoreChange?: (fixtureId: string, home: number | null, away: number | null) => void
   submittedFixtureIds?: Set<string>   // fixtures that have saved predictions
   scoreBreakdowns?: Record<string, ScoreBreakdown>
+  bonusFixtureId?: string | null
+  onBonusToggle?: (fixtureId: string) => void
+  bonusActive?: boolean
+  isGoldenGlory?: boolean
 }
 
 /**
@@ -35,6 +39,10 @@ export default function GameweekView({
   onScoreChange,
   submittedFixtureIds,
   scoreBreakdowns,
+  bonusFixtureId,
+  onBonusToggle,
+  bonusActive,
+  isGoldenGlory,
 }: GameweekViewProps) {
   if (fixtures.length === 0) {
     return (
@@ -92,6 +100,10 @@ export default function GameweekView({
                   isLocked={onScoreChange ? isPastKickoff : undefined}
                   hasSubmitted={submittedFixtureIds?.has(fixture.id) ?? false}
                   scoreBreakdown={scoreBreakdowns?.[fixture.id] ?? null}
+                  isBonusPick={bonusFixtureId === fixture.id}
+                  onBonusToggle={onBonusToggle}
+                  bonusActive={bonusActive}
+                  isGoldenGlory={isGoldenGlory}
                 />
               )
             })}
@@ -120,6 +132,10 @@ export default function GameweekView({
                   isLocked={onScoreChange ? isPastKickoff : undefined}
                   hasSubmitted={submittedFixtureIds?.has(fixture.id) ?? false}
                   scoreBreakdown={scoreBreakdowns?.[fixture.id] ?? null}
+                  isBonusPick={bonusFixtureId === fixture.id}
+                  onBonusToggle={onBonusToggle}
+                  bonusActive={bonusActive}
+                  isGoldenGlory={isGoldenGlory}
                 />
               )
             })}
