@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import type { FixtureWithTeams, GameweekRow, GameweekStatus } from '@/lib/supabase/types'
+import type { FixtureWithTeams, GameweekRow, GameweekStatus, PredictionScoreRow } from '@/lib/supabase/types'
 import PredictionForm from '@/components/predictions/prediction-form'
 
 // Force dynamic rendering — fixture data + predictions change frequently
@@ -140,6 +140,46 @@ export default async function GameweekPage({ params }: PageProps) {
     }
   }
 
+  // ── Fetch prediction_scores for this member x these fixtures ───────────────
+  type ScoreBreakdownShape = Pick<
+    PredictionScoreRow,
+    | 'predicted_home'
+    | 'predicted_away'
+    | 'actual_home'
+    | 'actual_away'
+    | 'result_correct'
+    | 'score_correct'
+    | 'points_awarded'
+  >
+
+  let scoreBreakdowns: Record<string, ScoreBreakdownShape> = {}
+
+  if (fixtureIds.length > 0) {
+    const { data: scoresData } = await supabase
+      .from('prediction_scores')
+      .select('fixture_id, predicted_home, predicted_away, actual_home, actual_away, result_correct, score_correct, points_awarded')
+      .eq('member_id', memberData.id)
+      .in('fixture_id', fixtureIds)
+
+    if (scoresData) {
+      for (const s of scoresData) {
+        scoreBreakdowns[s.fixture_id] = {
+          predicted_home: s.predicted_home,
+          predicted_away: s.predicted_away,
+          actual_home: s.actual_home,
+          actual_away: s.actual_away,
+          result_correct: s.result_correct,
+          score_correct: s.score_correct,
+          points_awarded: s.points_awarded,
+        }
+      }
+    }
+  }
+
+  // ── Compute gameweek totals server-side ─────────────────────────────────────
+  const totalPoints = Object.values(scoreBreakdowns).reduce((sum, s) => sum + s.points_awarded, 0)
+  const scoredFixtureCount = Object.keys(scoreBreakdowns).length
+
   // ── Fetch submission count via RPC ──────────────────────────────────────────
   let submittedCount = 0
   let totalMembers = 0
@@ -162,6 +202,9 @@ export default async function GameweekPage({ params }: PageProps) {
       navGameweeks={navList}
       currentGw={gwNum}
       totalGw={totalGw}
+      scoreBreakdowns={scoreBreakdowns}
+      totalPoints={totalPoints}
+      scoredFixtureCount={scoredFixtureCount}
     />
   )
 }

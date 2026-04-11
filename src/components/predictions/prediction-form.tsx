@@ -7,6 +7,16 @@ import { submitPredictions } from '@/actions/predictions'
 import GameweekNav from '@/components/fixtures/gameweek-nav'
 import GameweekView from '@/components/fixtures/gameweek-view'
 
+interface ScoreBreakdown {
+  predicted_home: number
+  predicted_away: number
+  actual_home: number
+  actual_away: number
+  result_correct: boolean
+  score_correct: boolean
+  points_awarded: number
+}
+
 interface PredictionFormProps {
   fixtures: FixtureWithTeams[]
   gameweek: GameweekRow
@@ -15,6 +25,9 @@ interface PredictionFormProps {
   navGameweeks: Array<{ number: number; status: GameweekStatus }>
   currentGw: number
   totalGw: number
+  scoreBreakdowns?: Record<string, ScoreBreakdown>
+  totalPoints?: number
+  scoredFixtureCount?: number
 }
 
 type FeedbackState = {
@@ -39,6 +52,9 @@ export default function PredictionForm({
   navGameweeks,
   currentGw,
   totalGw,
+  scoreBreakdowns,
+  totalPoints = 0,
+  scoredFixtureCount = 0,
 }: PredictionFormProps) {
 
   // ── Initialise local prediction state from server-provided saved scores ──────
@@ -141,9 +157,17 @@ export default function PredictionForm({
   )
   const allKickedOff = fixtures.every((f) => new Date(f.kickoff_time) <= now)
 
+  // ── Derived layout flags ───────────────────────────────────────────────────
+  // Total bar sits above submit button when both visible; drops to bottom when submit is hidden
+  const totalBarBottom = allKickedOff ? 'bottom-0' : 'bottom-[60px]'
+  // Pad scrolling content to clear both fixed bars when both are visible
+  const contentPadding = scoredFixtureCount > 0
+    ? (allKickedOff ? 'pb-20' : 'pb-32')
+    : 'pb-24'
+
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="space-y-4 pb-24">
+    <div className={`space-y-4 ${contentPadding}`}>
 
       {/* 1. Submission counter bar */}
       <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-700/60 border border-slate-700">
@@ -170,6 +194,7 @@ export default function PredictionForm({
         predictions={predictions}
         onScoreChange={handleScoreChange}
         submittedFixtureIds={submittedFixtureIds}
+        scoreBreakdowns={scoreBreakdowns}
       />
 
       {/* 4. Late kickoff warning (conditional) */}
@@ -211,7 +236,21 @@ export default function PredictionForm({
         </div>
       )}
 
-      {/* 6. Sticky submit button */}
+      {/* 6. Fixed gameweek total footer — visible only when at least 1 result is in */}
+      {scoredFixtureCount > 0 && (
+        <div className={`fixed ${totalBarBottom} left-0 right-0 bg-slate-800 border-t border-slate-700 px-4 py-3 z-10`}>
+          <div className="flex items-center justify-between">
+            <span className="text-white font-semibold text-sm">
+              Gameweek {currentGw} Total: {totalPoints} pts
+            </span>
+            <span className="text-slate-400 text-sm">
+              {scoredFixtureCount} of {fixtures.length} results in
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* 7. Sticky submit button */}
       {!allKickedOff && (
         <div className="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-700 p-4 z-10">
           <button
