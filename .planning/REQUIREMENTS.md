@@ -40,9 +40,9 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **SCORE-01**: Match results auto-pulled from football-data.org API
 - [ ] **SCORE-02**: George can manually enter or override match results
 - [x] **SCORE-03**: Automatic point calculation — 10pts correct result, 30pts correct score (total)
-- [ ] **SCORE-04**: Live points display per prediction as results come in, with gameweek total at bottom
+- [x] **SCORE-04**: Live points display per prediction as results come in, with gameweek total at bottom
 - [x] **SCORE-05**: Full calculation breakdown stored per prediction (not just final totals)
-- [ ] **SCORE-06**: Members see calculated points for each score as predictions are entered (once results are in)
+- [x] **SCORE-06**: Members see calculated points for each score as predictions are entered (once results are in)
 
 ### Bonus System
 
@@ -179,9 +179,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SCORE-01 | Phase 4 | Pending |
 | SCORE-02 | Phase 4 | Pending |
 | SCORE-03 | Phase 4 | Complete |
-| SCORE-04 | Phase 4 | Pending |
+| SCORE-04 | Phase 4 | Complete |
 | SCORE-05 | Phase 4 | Complete |
-| SCORE-06 | Phase 4 | Pending |
+| SCORE-06 | Phase 4 | Complete |
 | BONUS-01 | Phase 6 | Pending |
 | BONUS-02 | Phase 6 | Pending |
 | BONUS-03 | Phase 6 | Pending |

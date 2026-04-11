@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 04-scoring-engine 04-01-PLAN.md
-last_updated: "2026-04-11T21:07:11.942Z"
+stopped_at: Completed 04-scoring-engine 04-03-PLAN.md
+last_updated: "2026-04-11T21:14:52.111Z"
 last_activity: 2026-04-11 — Roadmap created, 11 phases derived from 71 v1 requirements
 progress:
   total_phases: 11
   completed_phases: 3
   total_plans: 14
-  completed_plans: 12
+  completed_plans: 13
   percent: 0
 ---
 
@@ -61,6 +61,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 03-predictions P03 | 4 | 2 tasks | 4 files |
 | Phase 03-predictions P02 | 4 | 2 tasks | 5 files |
 | Phase 04-scoring-engine P01 | 4 | 2 tasks | 6 files |
+| Phase 04-scoring-engine P03 | 6 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -105,6 +106,9 @@ Recent decisions affecting current work:
 - [Phase 04-scoring-engine]: prediction_scores CHECK constraint enforces points_awarded IN (0,10,30) at DB level
 - [Phase 04-scoring-engine]: recalculateFixture always uses adminClient — RLS blocks member writes to prediction_scores
 - [Phase 04-scoring-engine]: Upsert on prediction_id UNIQUE makes recalculation idempotent — safe to re-run for any fixture
+- [Phase 04-scoring-engine]: ScoreBreakdown interface kept local in UI components — avoids coupling to DB row type directly
+- [Phase 04-scoring-engine]: Fixed footer uses fixed not sticky positioning — avoids mobile Safari stacking issues with nested scroll containers
+- [Phase 04-scoring-engine]: scoredFixtureCount > 0 gate on total bar — ensures no provisional points shown before results arrive
 
 ### Pending Todos
 
@@ -119,6 +123,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-11T21:07:11.938Z
-Stopped at: Completed 04-scoring-engine 04-01-PLAN.md
+Last session: 2026-04-11T21:14:52.104Z
+Stopped at: Completed 04-scoring-engine 04-03-PLAN.md
 Resume file: None
