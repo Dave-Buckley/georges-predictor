@@ -187,7 +187,7 @@ Plans:
   3. A detailed XLSX file is generated with all members, all scores, and all calculations for George's records
   4. The current standings and latest gameweek report are viewable on the website without logging in
   5. George can download a single export file containing all data in a format that lets him continue running the competition manually if the site goes down
-**Plans:** 1/4 plans executed
+**Plans:** 2/4 plans executed
 Plans:
 - [ ] 10-01-PLAN.md — Migration 011 + gatherGameweekData aggregator + Resend attachment helper + deps (xlsx 0.18.5, @react-pdf/renderer)
 - [ ] 10-02-PLAN.md — Pure renderers: group PDF, personal PDF, kickoff backup PDF, weekly/kickoff/full-export XLSX, React Email templates
@@ -223,7 +223,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 7. Mid-Season Import | 2/2 | Complete   | 2026-04-12 |
 | 8. Last One Standing & H2H | 0/3 | In Progress | - |
 | 9. Pre-Season Predictions | 0/3 | Not started | - |
-| 10. Reports & Export | 1/4 | In Progress|  |
+| 10. Reports & Export | 2/4 | In Progress|  |
 | 11. Polish & Continuity | 0/TBD | Not started | - |
 
 ---

@@ -2,17 +2,17 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_plan: Plan 2 of 4 (10-02 Renderers)
-status: Phase 10 Plan 01 shipped — pinned xlsx+react-pdf deps, migration 011 (report tracking + per-member email toggles + member_report_log ledger), typed gatherGameweekData aggregator with pure shapeData transform, Buffer->base64 sendWithAttachments helper, shared test fixtures. 454/454 tests green. Build clean.
-stopped_at: Completed 10-01-PLAN.md
-last_updated: "2026-04-12T18:47:29Z"
+current_plan: Plan 3 of 4 (10-03 Orchestration + Cron)
+status: Phase 10 Plan 02 shipped — 3 PDF renderers (group/personal/kickoff) + 3 XLSX builders (weekly admin/kickoff backup/full export) + 5 React Email body templates + EmailLayout wrapper. All renderers pure; gatherFullExportData is the only DB-touching function. 497/497 tests green (+43 new). Build clean.
+stopped_at: Completed 10-02-PLAN.md
+last_updated: "2026-04-12T19:05:09.801Z"
 last_activity: 2026-04-12
 progress:
   total_phases: 11
   completed_phases: 9
   total_plans: 33
-  completed_plans: 30
-  percent: 91
+  completed_plans: 31
+  percent: 94
 ---
 
 # Project State
@@ -27,12 +27,12 @@ See: .planning/PROJECT.md (updated 2026-04-11)
 ## Current Position
 
 Phase: 10 of 11 (Reports & Export) — IN PROGRESS
-Current Plan: Plan 2 of 4 (10-02 Renderers)
-Total Plans in Phase: 4 (10-01 complete; 10-02/03/04 pending)
-Status: Phase 10 Plan 01 shipped — pinned xlsx+react-pdf deps, migration 011 (report tracking + per-member email toggles + member_report_log ledger), typed gatherGameweekData aggregator with pure shapeData transform, Buffer->base64 sendWithAttachments helper, shared test fixtures. 454/454 tests green. Build clean.
+Current Plan: Plan 3 of 4 (10-03 Orchestration + Cron)
+Total Plans in Phase: 4 (10-01 + 10-02 complete; 10-03/04 pending)
+Status: Phase 10 Plan 02 shipped — 3 PDF renderers (group/personal/kickoff) + 3 XLSX builders (weekly admin/kickoff backup/full export) + 5 React Email body templates + EmailLayout wrapper. All renderers pure; gatherFullExportData is the only DB-touching function. 497/497 tests green (+43 new). Build clean.
 Last activity: 2026-04-12
 
-Progress: [█████████░] 91% (9/11 phases complete + Phase 10 in-progress; 30/33 plans shipped)
+Progress: [█████████░] 94% (9/11 phases complete + Phase 10 in-progress; 31/33 plans shipped)
 
 **Deferred QA (tracked for end-of-project master QA sheet — `docs/FINAL_QA_CHECKLIST.md`):**
 - Phase 8 Task 3 (08-03): 6 manual UI scenarios (admin LOS page, mobile LOS picker, member /los, H2H banner stages, notification triggers, RLS Network spot-check) — covered in §7, §8
@@ -86,6 +86,7 @@ Progress: [█████████░] 91% (9/11 phases complete + Phase 10 
 | Phase 09-pre-season-predictions P02 | 4 | 3 tasks | 10 files |
 | Phase 09-pre-season-predictions P03 | 25 | 4 tasks | 14 files |
 | Phase 10-reports-export P01 | 20 | 3 tasks | 12 files |
+| Phase 10-reports-export P02 | 35 | 3 tasks | 18 files |
 
 ## Accumulated Context
 
@@ -207,6 +208,11 @@ Recent decisions affecting current work:
 - [Phase 10-reports-export P01]: Resend mock for constructor-based `new Resend(...)` requires `function(this){ Object.assign(this, mock.client) }` — arrow-function mockImplementation is not construct-callable
 - [Phase 10-reports-export P01]: Shared Phase 10 test fixtures live at tests/reports/fixtures/ — mockGameweekData + mockSupabaseFrom + createResendMock imported by every report test in Plans 02-04
 - [Phase 10-reports-export P01]: Pre-existing lint errors (Phase 8 los/round.ts + Phase 1/2/4 test files) deferred to .planning/phases/10-reports-export/deferred-items.md — out of scope per GSD boundary rules; Phase 10 code lint-clean
+- [Phase 10-reports-export]: P02: PDF content tests walk React element tree (invoke function components synchronously) rather than grepping renderToString output — react-pdf PDFs use glyph IDs so binary text-search is unreliable
+- [Phase 10-reports-export]: P02: server-only aliased in vitest.config.ts to tests/stubs/server-only.ts — vi.mock resolves too late for vite import-analysis; pattern now available for any future server-only-guarded module
+- [Phase 10-reports-export]: P02: Personal PDF throws Error on missing memberId (contract enforced) — no silent empty PDFs; both renderer runtime and test layer exercise the throw path
+- [Phase 10-reports-export]: P02: Full-export split — buildFullExportXlsx is pure (sync Buffer); gatherFullExportData is the ONLY DB caller in the module and co-located so shape + collector evolve together; pre-season re-uses Phase 9 getPreSeasonExportRows via dynamic import with try/catch fallback
+- [Phase 10-reports-export]: P02: @react-email/components installed at Plan 02 (dependency gap from Plan 01 — only react-email CLI dev-tool had been pinned); runtime primitives are required for Phase 10 email bodies
 
 ### Pending Todos
 
@@ -222,6 +228,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-04-12T18:47:29Z
-Stopped at: Completed 10-01-PLAN.md
-Resume file: .planning/phases/10-reports-export/10-02-PLAN.md
+Last session: 2026-04-12T19:05:09.797Z
+Stopped at: Completed 10-02-PLAN.md
+Resume file: .planning/phases/10-reports-export/10-03-PLAN.md
