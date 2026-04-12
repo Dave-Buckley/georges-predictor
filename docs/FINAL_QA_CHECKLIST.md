@@ -289,12 +289,109 @@ After Phase 10 QA, reset any test data: clear `member_report_log` rows, reset `r
 
 ---
 
-## 13. League table & historical data
+## 13. Phase 11 — Polish, Profile, Explainer, Season Rollover (master QA)
+
+Phase 11 Plan 04's checkpoint was deferred here per user approval (2026-04-12) — matches Phase 8 §7-8, Phase 9 §10, Phase 10 §12, Phase 11 Plan 03 §14.1 precedents. Walk through all 7 sub-sections below before launch.
+
+**Setup:** `npm run dev` running, logged in as George on one browser profile, incognito window handy for unauth checks, a test member account available.
+
+### 13.1 Visual polish sign-off (Plans 01 + 03)
+
+- [ ] `/standings` hero banner (StandingsHero inline-SVG) renders PL-purple gradient + stadium silhouette — no broken layout
+- [ ] `/` landing hero (LandingHero) renders wordmark + tagline + "Learn how it works" + sign-in CTA
+- [ ] Team kit accents visible on `/gameweeks/[current]` fixture cards — 4px left border in home-team primary_color; admin-overridden colours survive
+- [ ] MemberLink hover state shows PL-green accent on every clickable username (standings, fixtures, admin LOS, admin predictions)
+- [ ] No regressions on pre-existing surfaces — `/admin`, `/pre-season`, `/los`, `/profile` all render without visual glitches vs pre-Phase-11 baseline
+- [ ] Dark mode (system preference dark): palette inverts sensibly, text contrast OK
+- [ ] Print preview on `/admin`: league table + admin tables printable
+- [ ] No `console.error` in DevTools on any Phase 11 page
+
+### 13.2 Clickable usernames end-to-end (Plan 01 + 02)
+
+- [ ] Unauth: click a name on `/standings` → redirects to `/login` (locked decision — acceptable)
+- [ ] Auth (member): click a name on `/gameweeks/[N]` → lands on `/members/[slug]`, renders profile correctly
+- [ ] Auth (admin): click a name on `/admin/los` table → lands on profile with admin-only fields visible (email, approval_status)
+- [ ] Auth (admin): click a name on `/admin/predictions` → lands on profile
+- [ ] Profile 404-safe: visit `/members/non-existent-slug` → "Member not found" empty state with link back to /standings (not a hard 404)
+- [ ] Slug generation matches DB functional UNIQUE index — create a test member "Test User" → slug = "test-user"
+
+### 13.3 /how-it-works content review (Plan 03)
+
+Read end-to-end as a new-member persona who has never seen the app:
+
+- [ ] All 9 sections render and are readable: Overview, Sign up, Predictions, Scoring (worked example), Bonuses, LOS, H2H Steals, Pre-Season, Prizes
+- [ ] Worked example in Scoring section makes sense (2-1 prediction, 2-1 actual = 30pts; 2-1 prediction, 1-0 actual = 10pts; 2-1 prediction, 0-2 actual = 0pts)
+- [ ] 4 FAQs cover: what happens if I miss a gameweek, can I edit after kickoff, why is my bonus pending, how do LOS ties work
+- [ ] Anchor nav scrolls to correct section on click; sticky on desktop, horizontally scrollable on mobile
+- [ ] Screenshots in /public/how-it-works/ are the real UI (NOT still the 5 PL-purple placeholder PNGs committed in Plan 03) — if still placeholders, verify `docs/how-it-works-screenshot-runbook.md` is actioned before public launch
+- [ ] Footer "How it works" link visible on every layout (public, member, admin)
+- [ ] /login page has a visible "Learn how it works" link to /how-it-works
+
+### 13.4 Member profile page (Plan 02)
+
+- [ ] Visit `/members/[your-slug]` — profile header shows display_name + favourite team badge (if favourite_team_id set)
+- [ ] Season stats grid: 6 cards render (total points, weekly avg, best GW, worst GW, bonuses confirmed, LOS teams used) — numbers match ground truth
+- [ ] WeeklyPointsChart renders: running-total line + per-GW bars, both legible, scales via viewBox
+- [ ] Home rank widget visible on `/dashboard` — shows your rank + 2 above + 2 below, clamped at top/bottom of leaderboard
+- [ ] Back link to /standings visible and working on profile page
+- [ ] Admin-only fields (email, approval_status) visible when admin viewing, hidden when member viewing another member
+
+### 13.5 Season rollover wizard end-to-end (Plan 04)
+
+**Prep:** Stage a test-season setup — at least one season row with all GWs closed, pre-season awards confirmed, LOS competition resolved.
+
+- [ ] Visit `/admin` dashboard → "Season rollover" card visible. When ready-to-archive conditions met, card shows URGENT visual
+- [ ] Click card → lands on `/admin/season-rollover?step=1`
+- [ ] **Step 1 (readiness):** Green checks for all GWs closed, pre-season awards confirmed, LOS resolved. Re-open a GW in another tab → refresh → check changes to red. Restore and continue.
+- [ ] **Step 2 (archive):** Shows summary of final standings (top 5 + total member count). Submit → seasons.ended_at set to now(). Go back to step 2 and resubmit → seasons.ended_at unchanged (idempotent — no-op on second run).
+- [ ] **Step 3 (new season):** Form inputs for year (default current+1) + gw1_kickoff datetime-local. Submit → new season row inserted. Resubmit with different gw1_kickoff → row UPDATEd (intentional: typo correction).
+- [ ] **Step 4 (fixture sync):** Click sync → /api/sync-fixtures runs, returns count. Advance.
+- [ ] **Cancel-safe test:** Close browser tab at step 5 before confirming. Verify no new rows in `members`, `championship_teams`, or `admin_settings` beyond what steps 2-4 already committed (steps 1-4 are explicit per-step submits, so those DO persist; steps 5+ require explicit confirmation to persist).
+- [ ] **Step 5 (championship):** Radio choice "Carry forward" → calls carryForwardChampionshipTeams. Verify toSeason now has all 24 Championship teams from fromSeason.
+- [ ] **Step 6 (members):** Shows count of approved members + "This resets points to 0 for all approved members. Pending registrations are untouched." warning. Tick confirm checkbox. Submit. **Before-after check:** query `members` — approved + user_id-not-null rows now have starting_points = 0. Pending (approval_status='pending') + rejected (approval_status='rejected') + placeholder (user_id IS NULL) rows UNTOUCHED.
+- [ ] **Step 7 (pre-season):** Informational — "Pre-season window for {new season} is now open"
+- [ ] **Step 8 (launch):** Final confirmation text visible. Submit → admin_settings.current_active_season flipped. admin_notifications row type='season_launched' emitted. Redirected to /admin with success banner.
+- [ ] Post-launch: `/`, `/standings`, `/dashboard`, `/admin` all reflect new season
+- [ ] Idempotency sanity: re-visit wizard at step 8 (bookmark `/admin/season-rollover?step=8`), resubmit → admin_settings still at same season (no error, second run overwrites to same value; audit row is expected)
+
+### 13.6 End-of-season summary page (Plan 04)
+
+**Setup:** Archive current season (seasons.ended_at set) but DO NOT launch the new season yet. This is the archive-to-relaunch window.
+
+- [ ] Visit `/` — end-of-season summary renders instead of standings landing
+- [ ] Hero shows "{YYYY-YY} Season — Final Standings"
+- [ ] Champion spotlight: top 3 members with display_name + total_points + favourite-team crest (TeamBadge) if favourite_team_id set
+- [ ] Full final standings table: every member with rank + name + total_points
+- [ ] LOS winners list: iterate los_competitions.winner_id for that season — each cycle's winner shown
+- [ ] Prize awards summary: every confirmed prize_award for that season
+- [ ] Pre-season all-correct list: every member with all_correct_overall flag true
+- [ ] Visit `/members/[slug]` during this window — historical profile still renders (stats from archived season)
+- [ ] Launch new season via wizard step 8 → `/` reverts to landing hero + standings preview (no longer end-of-season content)
+- [ ] Fallback: with no archived seasons at all, `/end-of-season` shows "No archived season yet — check back after the first season completes"
+
+### 13.7 Mobile audit — reference §14.1
+
+All Phase 11 mobile checks are in §14.1 (5-flow mobile audit covering /predictions, LOS picker, /pre-season, /standings + landing hero, /members/[slug], /how-it-works + footer/signin links). Run §14.1 in full on DevTools iPhone 13 + Pixel 5 emulators AND real iOS Safari + Android Chrome devices before launch. Do not skip.
+
+### 13.8 Final launch gate
+
+Before shipping to real members for the first time:
+
+- [ ] `npm run test:run` — 614/614 green (or current full-suite count)
+- [ ] `npm run build` — clean, 34 routes
+- [ ] `npm run lint` — no new errors (pre-existing deferred errors in .planning/phases/10-reports-export/deferred-items.md acceptable)
+- [ ] `.planning/phases/*/deferred-items.md` reviewed — any pre-launch-blocking items resolved
+- [ ] §14.1 (5-flow mobile audit) signed off
+- [ ] §18 "shove it and see" test passed — one real member played a full gameweek without asking you a question
+
+---
+
+## 13a. League table & historical data (legacy checks — covered by §13.4 + §13.6)
 
 - [ ] League table sorted by points descending (positions derived on the fly)
 - [ ] Ties shown correctly
-- [ ] Previous season archive accessible
-- [ ] Member profile page shows total points + season history
+- [ ] Previous season archive accessible (see §13.6)
+- [ ] Member profile page shows total points + season history (see §13.4)
 
 ---
 

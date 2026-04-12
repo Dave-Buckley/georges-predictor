@@ -2,17 +2,17 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_plan: Phase 11 Plan 03 shipped — public /how-it-works + hero banners + 5-flow mobile audit deferred to master QA sheet
+current_plan: Phase 11 Plan 04 shipped — season rollover wizard + end-of-season summary
 status: completed
-stopped_at: Completed 11-03-PLAN.md
-last_updated: "2026-04-12T22:00:00.000Z"
+stopped_at: "Completed 11-04-PLAN.md — Phase 11 all plans shipped; v1.0 milestone closure pending /gsd:complete-milestone"
+last_updated: "2026-04-12T21:43:13.612Z"
 last_activity: 2026-04-12
 progress:
   total_phases: 11
-  completed_phases: 10
+  completed_phases: 11
   total_plans: 37
-  completed_plans: 36
-  percent: 97
+  completed_plans: 37
+  percent: 100
 ---
 
 # Project State
@@ -22,17 +22,17 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-11)
 
 **Core value:** Accurate, automated point calculation that removes all manual load from George while keeping him in full control of the competition.
-**Current focus:** Phase 11 (polish & continuity) — Plan 03 shipped, next up Plan 04 (polish copy + end-of-season wiring).
+**Current focus:** v1.0 launch-ready. All 37 plans across 11 phases shipped. Milestone closure (`/gsd:complete-milestone`) pending as separate orchestrator action.
 
 ## Current Position
 
-Phase: 11 of 11 (Polish & Continuity) — IN PROGRESS
-Current Plan: Phase 11 Plan 03 shipped — public /how-it-works + hero banners + 5-flow mobile audit deferred to master QA sheet
-Total Plans in Phase: 4 (01, 02, 03 shipped; 04 remaining)
-Status: Plan 03 complete — public /how-it-works (9 sections + 4 FAQs + anchor nav) + StandingsHero + LandingHero inline-SVG + landing page rebuild + footer + signin links + 5 placeholder PNGs + runbook + 5-flow mobile audit script merged into docs/FINAL_QA_CHECKLIST.md §14.1. 588/588 tests green. Build green.
+Phase: 11 of 11 (Polish & Continuity) — COMPLETE
+Current Plan: Phase 11 Plan 04 shipped — season rollover wizard + end-of-season summary
+Total Plans in Phase: 4 (01, 02, 03, 04 all shipped)
+Status: Phase 11 complete — 8-step URL-param wizard at /admin/season-rollover + 6 idempotent server actions + /end-of-season public summary + admin nav wiring + FINAL_QA_CHECKLIST §13 (Phase 11 master QA) deferred. 614/614 tests green. Build green, 34 routes.
 Last activity: 2026-04-12
 
-Progress: [██████████] 97% of plans (10/11 phases complete; 36/37 plans shipped; Phase 11 in progress)
+Progress: [██████████] 100% of plans (11/11 phases complete; 37/37 plans shipped; v1.0 launch-ready)
 
 **Deferred QA (tracked for end-of-project master QA sheet — `docs/FINAL_QA_CHECKLIST.md`):**
 - Phase 8 Task 3 (08-03): 6 manual UI scenarios (admin LOS page, mobile LOS picker, member /los, H2H banner stages, notification triggers, RLS Network spot-check) — covered in §7, §8
@@ -40,6 +40,7 @@ Progress: [██████████] 97% of plans (10/11 phases complete; 
 - Phase 10 Task 4 (10-04): 6 scenarios covering real email send end-to-end (personal + group PDF + admin XLSX), kickoff backup (first-fixture trigger + both attachments + idempotency), public /standings (incognito + column allowlist), member /profile opt-out, full data export (admin download + Excel round-trip), failure handling (broken Resend key + resume button), mobile PDF rendering — merged into `docs/FINAL_QA_CHECKLIST.md` §12 (expanded)
 - Phase 11 Task 3 (11-03): 5-flow mobile audit (/predictions/[gwNumber], LOS picker, /pre-season, /standings + landing hero, /members/[slug], plus /how-it-works + footer/signin links) at iPhone 13 + Pixel 5 DevTools emulators AND real iOS Safari + Android Chrome devices — merged into `docs/FINAL_QA_CHECKLIST.md` §14.1 (6 sub-sections, 30+ check items). Proactive responsive patterns already applied during Plans 01-03 (Tailwind mobile-first prefixes, overflow-x-auto anchor nav, viewBox+w-full charts/heroes, 44px tap targets).
 - Phase 11 Plan 03: 5 placeholder PNGs committed to `/public/how-it-works/`; real screenshots to be captured per `docs/how-it-works-screenshot-runbook.md` before public launch (deferred to pre-launch checklist alongside §14.1)
+- Phase 11 Task 3 (11-04): Phase 11 master QA — visual polish sign-off (PL palette, team kit accents, MemberLink hover), clickable usernames E2E (unauth redirect, auth member/admin, 404-safe slug), /how-it-works content review (9 sections + 4 FAQs + screenshots), member profile page (/members/[slug] stats + chart + back link), season rollover wizard walkthrough (all 8 steps, archive idempotency, cancel-safe test, members reset guard, launch global revalidation), end-of-season summary page (champion spotlight + standings + LOS winners + prizes + pre-season), mobile audit reference to §14.1, final launch gate — merged into `docs/FINAL_QA_CHECKLIST.md` §13 (8 sub-sections, 60+ check items). User approved 2026-04-12 (matches Phase 8 §7-8, Phase 9 §10, Phase 10 §12, Phase 11 Plan 03 §14.1 deferral precedent — 5th application of master-QA-sheet pattern).
 
 ## Performance Metrics
 
@@ -95,6 +96,7 @@ Progress: [██████████] 97% of plans (10/11 phases complete; 
 | Phase 11-polish-continuity P01 | 38 min | 4 tasks tasks | 17 files files |
 | Phase 11-polish-continuity P02 | 32 min | 3 tasks | 12 files |
 | Phase 11-polish-continuity P03 | 45 min | 2 tasks + 1 deferred QA | 18 files |
+| Phase 11-polish-continuity P04 | 55 min | 2 tasks + 1 deferred QA | 19 files |
 
 ## Accumulated Context
 
@@ -259,6 +261,13 @@ Recent decisions affecting current work:
 - [Phase 11-polish-continuity P03]: Footer "How it works" link added to single shared `<Footer />` component — appears on public + member + admin layouts via shared mount, no per-layout duplication.
 - [Phase 11-polish-continuity P03]: 5 placeholder PNGs committed to /public/how-it-works/ (solid PL-purple 800x600 + filename overlay) per plan's explicit fallback — avoids broken-image icons; real screenshots deferred to docs/how-it-works-screenshot-runbook.md pre-launch retake. TODO in deferred-items.
 - [Phase 11-polish-continuity P03]: 5-flow mobile audit checkpoint approved with deferral to docs/FINAL_QA_CHECKLIST.md §14.1 — 2026-04-12, matches Phase 8 §7-8, Phase 9 §10, Phase 10 §12 master-QA-sheet deferral precedent. 6 sub-sections covering /predictions, LOS picker, /pre-season, /standings+hero, /members/[slug], /how-it-works + footer/signin links. Proactive responsive patterns (Tailwind mobile-first, overflow-x-auto, viewBox+w-full, 44px tap targets) already applied during Plans 01-03 cover most common regressions.
+- [Phase 11-polish-continuity P04]: URL-param wizard (?step=1..8) — server component switches on parseInt(searchParams.step), each step renders its own component, server actions issue redirect() to advance. Zero client-side state. Cancel = close tab. Pattern from 11-RESEARCH.md Example 5.
+- [Phase 11-polish-continuity P04]: 6 idempotent season-rollover server actions in one file (getArchiveReadiness pure-read + archiveSeason UPDATE-guarded-by-ended_at-IS-NULL + defineNewSeason UPSERT + carryForwardChampionshipTeams ON-CONFLICT-DO-NOTHING + carryForwardMembers approval_status+user_id guard + launchNewSeason admin_settings flip). Every action re-runnable with identical outcome.
+- [Phase 11-polish-continuity P04]: carryForwardMembers WHERE approval_status = 'approved' AND user_id IS NOT NULL — Pitfall 6 enforcement documented with inline comment; pending/rejected/user_id-null placeholder rows never touched. Tests cover the approval_status guard explicitly.
+- [Phase 11-polish-continuity P04]: launchNewSeason flips admin_settings.current_active_season (not a new seasons.is_active column) — re-uses Phase 5 settings-key row idiom, avoids schema change + CHECK constraint risk. admin_notifications row emitted each run for audit trail.
+- [Phase 11-polish-continuity P04]: End-of-season content inlined at src/app/page.tsx (not server redirect to /end-of-season) — saves a network hop, keeps SEO URL stable, /end-of-season still works as a direct link. Branch: seasons.ended_at IS NOT NULL AND no row WHERE ended_at IS NULL.
+- [Phase 11-polish-continuity P04]: Step 8 is the ONLY action with global revalidation fanout (/, /standings, /dashboard, /admin, /admin/season-rollover). Steps 1-7 revalidate only /admin + /admin/season-rollover — pre-launch members browsing see consistent state, not half-rolled-over content.
+- [Phase 11-polish-continuity P04]: Phase 11 master QA deferred to docs/FINAL_QA_CHECKLIST.md §13 — 2026-04-12, 5th application of master-QA-sheet deferral pattern. 8 sub-sections covering visual polish, clickable usernames E2E, /how-it-works content review, member profile, wizard walkthrough (idempotency + cancel-safe + members-reset guard), end-of-season summary, mobile audit reference, launch gate. Phase 11 v1.0 launch-ready.
 
 ### Pending Todos
 
@@ -277,6 +286,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-04-12T22:00:00.000Z
-Stopped at: Completed 11-03-PLAN.md
+Last session: 2026-04-12T23:05:00.000Z
+Stopped at: Completed 11-04-PLAN.md — Phase 11 all plans shipped; v1.0 milestone closure pending /gsd:complete-milestone
 Resume file: None
