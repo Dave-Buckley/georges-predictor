@@ -170,6 +170,7 @@ Recent decisions affecting current work:
 ### Pending Todos
 
 - [Phase 7] Add "Bucks" (Dave — the builder/backup admin) as a member in mid-season import with points matching the current league leader. Dave needs to use the platform alongside George to QA and catch issues before members use it.
+- [Phase 10] Kickoff-time backup email to George — when the first fixture of each gameweek kicks off (predictions/LOS/bonus all locked at that moment), email George a single document containing every member's predictions, LOS pick, and bonus pick for the gameweek. Disaster-recovery backup so George can run the gameweek manually if the system dies mid-week. Timing variant of RPT-03/RPT-04.
 
 ### Blockers/Concerns
 
