@@ -54,6 +54,10 @@ export type AdminNotificationType =
   | 'prize_triggered'
   | 'bonus_award_needed'
   | 'import_complete'
+  | 'los_winner_found'
+  | 'los_competition_started'
+  | 'h2h_steal_detected'
+  | 'h2h_steal_resolved'
 
 /** Row shape for the public.admin_notifications table */
 export interface AdminNotificationRow {
@@ -301,6 +305,72 @@ export interface PreSeasonPickRow {
   promoted_playoff_winner: string | null
   imported_by: string | null
   imported_at: string
+}
+
+// ─── Last One Standing + Head-to-Head Types (Phase 8) ────────────────────────
+
+/** Lifecycle status for a LOS competition cycle */
+export type LosCompetitionStatus = 'active' | 'complete'
+
+/** Per-member status within a LOS competition cycle */
+export type LosMemberStatus = 'active' | 'eliminated'
+
+/** Reason a member was eliminated from a LOS competition cycle */
+export type LosEliminationReason = 'draw' | 'lose' | 'missed' | 'admin_override'
+
+/** Outcome of a single LOS pick once its fixture has finished */
+export type LosPickOutcome = 'win' | 'lose' | 'draw' | 'pending'
+
+/** Row shape for the public.los_competitions table */
+export interface LosCompetitionRow {
+  id: string
+  season: number
+  competition_num: number
+  status: LosCompetitionStatus
+  starts_at_gw: number
+  ended_at_gw: number | null
+  winner_id: string | null
+  created_at: string
+  ended_at: string | null
+}
+
+/** Row shape for the public.los_competition_members table */
+export interface LosCompetitionMemberRow {
+  id: string
+  competition_id: string
+  member_id: string
+  status: LosMemberStatus
+  eliminated_at_gw: number | null
+  eliminated_reason: LosEliminationReason | null
+  created_at: string
+}
+
+/** Row shape for the public.los_picks table */
+export interface LosPickRow {
+  id: string
+  competition_id: string
+  member_id: string
+  gameweek_id: string
+  team_id: string
+  fixture_id: string
+  outcome: LosPickOutcome | null
+  evaluated_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+/** Row shape for the public.h2h_steals table */
+export interface H2hStealRow {
+  id: string
+  detected_in_gw_id: string
+  resolves_in_gw_id: string
+  /** 1 = tied for 1st place; 2 = tied for 2nd place */
+  position: 1 | 2
+  tied_member_ids: string[]
+  /** NULL until resolved in the following gameweek */
+  winner_ids: string[] | null
+  resolved_at: string | null
+  created_at: string
 }
 
 // ─── Database Type (placeholder until `supabase gen types` is run) ────────────
