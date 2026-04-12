@@ -60,6 +60,7 @@ created: 2026-04-12
 - [ ] `tests/lib/h2h-detect-ties.test.ts` — covers H2H-01 (weekly tie detection, excl. unconfirmed bonuses)
 - [ ] `tests/lib/h2h-resolve.test.ts` — covers H2H-03 (highest scorer wins / split on re-tie)
 - [ ] `tests/lib/sync-h2h.test.ts` — covers H2H-02 (sync pipeline flags steal for next GW)
+- [ ] `tests/lib/los-round.test.ts` — covers LOS-02, LOS-05, LOS-06 orchestrator integration
 - [ ] `tests/actions/predictions-los.test.ts` — covers LOS-01 (submission + mandatory + already-used rejection)
 - [ ] `tests/actions/admin/los.test.ts` — covers LOS-04, LOS-07 (admin view + override + reinstate + reset)
 - [ ] `supabase/migrations/008_los_h2h.sql` — four new tables + RLS + admin_notifications CHECK extension
