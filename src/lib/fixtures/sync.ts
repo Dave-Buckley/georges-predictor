@@ -9,6 +9,8 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { fetchAllMatches, type FootballDataMatch } from './football-data-client'
 import { recalculateFixture } from '@/lib/scoring/recalculate'
+import { runLosRound } from '@/lib/los/round'
+import { detectH2HForGameweek, resolveStealsForGameweek } from '@/lib/h2h/sync-hook'
 import type { TeamRow, GameweekRow } from '@/lib/supabase/types'
 
 export interface SyncResult {
@@ -52,6 +54,45 @@ export function detectNewlyFinished(
       && row.away_score !== null
     )
   })
+}
+
+// ─── Helper: Detect gameweeks where ALL fixtures are FINISHED ────────────────
+// Given a set of newly-FINISHED external_ids, resolves them to gameweek UUIDs,
+// then returns only those gameweeks where every fixture has status='FINISHED'.
+// Called after scoring so LOS round evaluation and H2H steal detection can run.
+
+export async function detectFullyFinishedGameweeks(
+  adminClient: ReturnType<typeof createAdminClient>,
+  newlyFinishedExternalIds: number[],
+): Promise<string[]> {
+  if (newlyFinishedExternalIds.length === 0) return []
+
+  // Resolve gameweek IDs touched by these fixtures
+  const { data: touchedRows } = await adminClient
+    .from('fixtures')
+    .select('gameweek_id')
+    .in('external_id', newlyFinishedExternalIds)
+
+  const touchedGwIds = Array.from(
+    new Set(((touchedRows ?? []) as Array<{ gameweek_id: string }>).map((r) => r.gameweek_id)),
+  )
+
+  if (touchedGwIds.length === 0) return []
+
+  // For each touched gw, check whether ANY fixture is still non-FINISHED
+  const fullyFinished: string[] = []
+  for (const gwId of touchedGwIds) {
+    const { count } = await adminClient
+      .from('fixtures')
+      .select('id', { count: 'exact', head: true })
+      .eq('gameweek_id', gwId)
+      .neq('status', 'FINISHED')
+    if ((count ?? 0) === 0) {
+      fullyFinished.push(gwId)
+    }
+  }
+
+  return fullyFinished
 }
 
 // ─── Helper: Extract unique teams from matches ────────────────────────────────
@@ -397,6 +438,47 @@ export async function syncFixtures(): Promise<SyncResult> {
           message: fixtureLabelsList,
         })
       }
+    }
+
+    // ── 9b. LOS round evaluation + H2H tie detection/resolution ──────────────
+    // Run ONLY for gameweeks where every fixture has status='FINISHED'.
+    // detectH2HForGameweek is a no-op when closed_at IS NULL (pre-close state).
+    // resolveStealsForGameweek resolves any steals whose resolves_in_gw_id = this gw.
+    try {
+      const newlyFinishedExternalIds = newlyFinished.map((r) => r.external_id)
+      const fullyFinishedGwIds = await detectFullyFinishedGameweeks(
+        adminClient,
+        newlyFinishedExternalIds,
+      )
+
+      for (const gwId of fullyFinishedGwIds) {
+        // LOS round evaluation (application-level orchestrator)
+        try {
+          await runLosRound(adminClient, gwId)
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : 'Unknown LOS round error'
+          errors.push(`LOS round error for gw ${gwId}: ${msg}`)
+        }
+
+        // H2H tie detection — no-op unless gameweek has been closed by George
+        try {
+          await detectH2HForGameweek(adminClient, gwId)
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : 'Unknown H2H detect error'
+          errors.push(`H2H detect error for gw ${gwId}: ${msg}`)
+        }
+
+        // H2H steal resolution — resolves any pending steals landing in this gw
+        try {
+          await resolveStealsForGameweek(adminClient, gwId)
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : 'Unknown H2H resolve error'
+          errors.push(`H2H resolve error for gw ${gwId}: ${msg}`)
+        }
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Unknown post-scoring pipeline error'
+      errors.push(`Post-scoring pipeline error: ${msg}`)
     }
 
     // ── 10. Create admin notifications for reschedules/moves ─────────────────

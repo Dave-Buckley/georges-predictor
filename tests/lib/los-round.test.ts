@@ -174,24 +174,30 @@ describe('runLosRound — LOS round orchestrator', () => {
         ],
       },
       los_competition_members: {
-        // 3 active members: A, B, C
+        // 4 active members: A, B, C, D — ensures 2 survivors so no reset
         selectData: [
           { member_id: MEMBER_A, status: 'active' },
           { member_id: MEMBER_B, status: 'active' },
           { member_id: MEMBER_C, status: 'active' },
+          { member_id: MEMBER_D, status: 'active' },
         ],
         updateFn: updateCompMembers,
       },
       los_picks: {
-        // A picks team_A (won), B picks team_B (drew), C missed
+        // A picks team_A (won), B picks team_B (lost), D picks team_C (won),
+        // C no pick → missed. Survivors = [A, D] → no winner yet.
         selectData: [
           {
             id: PICK_A, member_id: MEMBER_A, team_id: TEAM_A, fixture_id: FIX_1,
-            fixtures: { id: FIX_1, status: 'FINISHED', home_team_id: TEAM_A, away_team_id: TEAM_B, home_score: 2, away_score: 0 },
+            outcome: null,
           },
           {
             id: PICK_B, member_id: MEMBER_B, team_id: TEAM_B, fixture_id: FIX_3,
-            fixtures: { id: FIX_3, status: 'FINISHED', home_team_id: TEAM_B, away_team_id: TEAM_C, home_score: 0, away_score: 3 },
+            outcome: null,
+          },
+          {
+            id: PICK_C, member_id: MEMBER_D, team_id: TEAM_C, fixture_id: FIX_3,
+            outcome: null,
           },
         ],
         upsertFn: upsertLosPick,
@@ -200,14 +206,14 @@ describe('runLosRound — LOS round orchestrator', () => {
 
     const result = await runLosRound(adminMock, GW_ID)
 
-    expect(result.evaluatedPickCount).toBe(2)
-    // B eliminated (lose) + C eliminated (missed). A survives.
-    expect(result.eliminatedMemberIds.sort()).toEqual([MEMBER_B].sort())
-    expect(result.missedMemberIds.sort()).toEqual([MEMBER_C].sort())
-    expect(result.winnerId).toBeNull() // only A survives BUT reset creates new comp → check in next test
-    // Actually A is sole survivor here — adjust: if survivors.length=1, winnerId set
-    // Let me re-check — A won, B lost, C missed → survivors=[A] → winnerId=A → competitionReset=true
-    // So winnerId SHOULD be A.
+    expect(result.evaluatedPickCount).toBe(3)
+    // B eliminated (lose by pick). C missed.
+    expect(result.eliminatedMemberIds).toContain(MEMBER_B)
+    expect(result.missedMemberIds).toEqual([MEMBER_C])
+    // 2 survivors → no winner, no reset
+    expect(result.winnerId).toBeNull()
+    expect(result.competitionReset).toBe(false)
+    expect(upsertLosPick).toHaveBeenCalled()
   })
 
   it('triggers competition reset when sole survivor → inserts new competition + notifications', async () => {
