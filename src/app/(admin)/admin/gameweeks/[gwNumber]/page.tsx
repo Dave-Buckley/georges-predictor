@@ -9,6 +9,7 @@ import { ResultOverrideDialog } from '@/components/admin/result-override-dialog'
 import { SetBonusDialog } from '@/components/admin/set-bonus-dialog'
 import { CloseGameweekDialog } from '@/components/admin/close-gameweek-dialog'
 import { toggleDoubleBubble } from '@/actions/admin/bonuses'
+import { resumeReportSend } from '@/actions/admin/gameweeks'
 import type { FixtureWithTeams, GameweekRow, TeamRow, BonusTypeRow } from '@/lib/supabase/types'
 
 interface BonusScheduleEntry {
@@ -178,6 +179,18 @@ export default async function SingleGameweekPage({ params }: PageProps) {
           </div>
 
           <div className="flex items-center gap-2">
+            {gameweek.closed_at && (
+              <form action={resumeReportSend as unknown as (formData: FormData) => void}>
+                <input type="hidden" name="gameweek_id" value={gameweek.id} />
+                <button
+                  type="submit"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-800 text-sm font-semibold transition-colors border border-amber-200"
+                  title="Re-send the weekly report pack (idempotent — skips already-sent members)"
+                >
+                  Resume report send
+                </button>
+              </form>
+            )}
             <CloseGameweekDialog
               gameweekId={gameweek.id}
               gameweekNumber={gwNumber}

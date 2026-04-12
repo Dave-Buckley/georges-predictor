@@ -34,6 +34,7 @@ import {
   closeGameweek,
   reopenGameweek,
   updateAdminSettings,
+  resumeReportSend,
 } from '@/actions/admin/gameweeks'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -485,6 +486,239 @@ describe('closeGameweek', () => {
     expect(capturedNotification).toMatchObject({
       type: 'gw_complete',
     })
+  })
+})
+
+// ─── closeGameweek fires reports trigger ──────────────────────────────────────
+
+describe('closeGameweek — fires /api/reports/send-weekly', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    process.env.NEXT_PUBLIC_APP_URL = 'https://app.example.com'
+    process.env.CRON_SECRET = 'test-cron-secret'
+  })
+
+  it('invokes fetch with correct URL, method, Bearer auth, and JSON body', async () => {
+    mockAdminAuth()
+
+    const fetchSpy = vi
+      .fn()
+      .mockResolvedValue({ ok: true, json: async () => ({}) })
+    const origFetch = globalThis.fetch
+    globalThis.fetch = fetchSpy as typeof fetch
+
+    const mockClient = {
+      from: vi.fn().mockImplementation((table: string) => {
+        if (table === 'fixtures') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockResolvedValue({
+                data: [
+                  { id: 'fix-1', home_team: { name: 'Arsenal' }, away_team: { name: 'Chelsea' }, status: 'FINISHED' },
+                ],
+                error: null,
+              }),
+            }),
+          }
+        }
+        if (table === 'bonus_awards') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                is: vi.fn().mockResolvedValue({ data: [], error: null }),
+              }),
+            }),
+          }
+        }
+        if (table === 'gameweeks') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
+                  data: { id: GAMEWEEK_ID, number: 5 },
+                  error: null,
+                }),
+              }),
+            }),
+            update: vi.fn().mockReturnValue({
+              eq: vi.fn().mockResolvedValue({ error: null }),
+            }),
+          }
+        }
+        if (table === 'admin_notifications') {
+          return { insert: vi.fn().mockResolvedValue({ error: null }) }
+        }
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              is: vi.fn().mockResolvedValue({ data: [], error: null }),
+              single: vi.fn().mockResolvedValue({ data: null, error: null }),
+            }),
+          }),
+          eq: vi.fn().mockReturnThis(),
+        }
+      }),
+    }
+
+    vi.mocked(createAdminClient).mockReturnValue(
+      mockClient as unknown as ReturnType<typeof createAdminClient>
+    )
+
+    try {
+      const formData = new FormData()
+      formData.set('gameweek_id', GAMEWEEK_ID)
+      const result = await closeGameweek(formData)
+      expect(result).toEqual({ success: true })
+
+      expect(fetchSpy).toHaveBeenCalledTimes(1)
+      const [url, opts] = fetchSpy.mock.calls[0]
+      expect(url).toBe('https://app.example.com/api/reports/send-weekly')
+      expect(opts.method).toBe('POST')
+      expect(opts.headers.Authorization).toBe('Bearer test-cron-secret')
+      expect(opts.headers['Content-Type']).toBe('application/json')
+      const body = JSON.parse(opts.body as string)
+      expect(body).toEqual({ gameweek_id: GAMEWEEK_ID })
+    } finally {
+      globalThis.fetch = origFetch
+    }
+  })
+
+  it('does NOT await the fetch — resolves even when fetch never resolves', async () => {
+    mockAdminAuth()
+
+    // Fetch that NEVER resolves — if closeGameweek awaited, the test would hang.
+    const neverResolving = new Promise(() => {}) // intentional — never resolves
+    const fetchSpy = vi.fn().mockReturnValue(neverResolving)
+    const origFetch = globalThis.fetch
+    globalThis.fetch = fetchSpy as typeof fetch
+
+    const mockClient = {
+      from: vi.fn().mockImplementation((table: string) => {
+        if (table === 'fixtures') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockResolvedValue({
+                data: [
+                  { id: 'fix-1', home_team: { name: 'A' }, away_team: { name: 'B' }, status: 'FINISHED' },
+                ],
+                error: null,
+              }),
+            }),
+          }
+        }
+        if (table === 'bonus_awards') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                is: vi.fn().mockResolvedValue({ data: [], error: null }),
+              }),
+            }),
+          }
+        }
+        if (table === 'gameweeks') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
+                  data: { id: GAMEWEEK_ID, number: 5 },
+                  error: null,
+                }),
+              }),
+            }),
+            update: vi.fn().mockReturnValue({
+              eq: vi.fn().mockResolvedValue({ error: null }),
+            }),
+          }
+        }
+        if (table === 'admin_notifications') {
+          return { insert: vi.fn().mockResolvedValue({ error: null }) }
+        }
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              is: vi.fn().mockResolvedValue({ data: [], error: null }),
+              single: vi.fn().mockResolvedValue({ data: null, error: null }),
+            }),
+          }),
+          eq: vi.fn().mockReturnThis(),
+        }
+      }),
+    }
+
+    vi.mocked(createAdminClient).mockReturnValue(
+      mockClient as unknown as ReturnType<typeof createAdminClient>
+    )
+
+    try {
+      const formData = new FormData()
+      formData.set('gameweek_id', GAMEWEEK_ID)
+
+      // If closeGameweek awaited the never-resolving fetch, this await would
+      // hang — vitest's default 5s test timeout would fire. A fast resolve
+      // confirms fire-and-forget.
+      const result = await closeGameweek(formData)
+
+      expect(result).toEqual({ success: true })
+      expect(fetchSpy).toHaveBeenCalled()
+    } finally {
+      globalThis.fetch = origFetch
+    }
+  }, 2000)
+})
+
+// ─── resumeReportSend ─────────────────────────────────────────────────────────
+
+describe('resumeReportSend', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    process.env.NEXT_PUBLIC_APP_URL = 'https://app.example.com'
+    process.env.CRON_SECRET = 'test-cron-secret'
+  })
+
+  it('returns { error } when caller is not admin', async () => {
+    mockNonAdminAuth()
+
+    const formData = new FormData()
+    formData.set('gameweek_id', GAMEWEEK_ID)
+
+    const result = await resumeReportSend(formData)
+    expect(result).toHaveProperty('error')
+    expect((result as { error: string }).error).toContain('Unauthorized')
+  })
+
+  it('posts to /api/reports/send-weekly with Bearer CRON_SECRET and returns success', async () => {
+    mockAdminAuth()
+
+    const fetchSpy = vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) })
+    const origFetch = globalThis.fetch
+    globalThis.fetch = fetchSpy as typeof fetch
+
+    try {
+      const formData = new FormData()
+      formData.set('gameweek_id', GAMEWEEK_ID)
+      const result = await resumeReportSend(formData)
+
+      expect(result).toEqual({ success: true })
+      expect(fetchSpy).toHaveBeenCalledTimes(1)
+      const [url, opts] = fetchSpy.mock.calls[0]
+      expect(url).toBe('https://app.example.com/api/reports/send-weekly')
+      expect(opts.method).toBe('POST')
+      expect(opts.headers.Authorization).toBe('Bearer test-cron-secret')
+    } finally {
+      globalThis.fetch = origFetch
+    }
+  })
+
+  it('returns error when env vars missing', async () => {
+    mockAdminAuth()
+    delete process.env.NEXT_PUBLIC_APP_URL
+
+    const formData = new FormData()
+    formData.set('gameweek_id', GAMEWEEK_ID)
+    const result = await resumeReportSend(formData)
+
+    expect(result).toHaveProperty('error')
+    expect((result as { error: string }).error).toMatch(/not configured/i)
   })
 })
 

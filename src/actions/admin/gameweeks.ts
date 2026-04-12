@@ -241,8 +241,79 @@ export async function closeGameweek(
     })
   }
 
+  // ── Fire-and-forget: trigger weekly reports endpoint ────────────────────────
+  // New serverless invocation so the report batch has its own 60s Vercel Hobby
+  // budget. Failures are logged inside the endpoint — closeGameweek never awaits.
+  try {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
+    const cronSecret = process.env.CRON_SECRET ?? ''
+    if (appUrl && cronSecret) {
+      void fetch(`${appUrl}/api/reports/send-weekly`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${cronSecret}`,
+        },
+        body: JSON.stringify({ gameweek_id }),
+      }).catch((err) => {
+        console.error('[closeGameweek] reports trigger failed:', err)
+      })
+    } else {
+      console.warn(
+        '[closeGameweek] Skipping reports trigger — NEXT_PUBLIC_APP_URL or CRON_SECRET not set',
+      )
+    }
+  } catch (triggerErr) {
+    // Never throw — closeGameweek success MUST stand regardless of trigger outcome
+    console.error('[closeGameweek] reports trigger threw synchronously:', triggerErr)
+  }
+
   revalidatePath('/admin', 'layout')
 
+  return { success: true }
+}
+
+// ─── resumeReportSend ─────────────────────────────────────────────────────────
+
+/**
+ * Admin recovery action — manually re-fire /api/reports/send-weekly for a
+ * gameweek. Used when a batch partial-fails and George needs to retry.
+ * Idempotency is handled downstream (member_report_log UNIQUE + reports_sent_at).
+ */
+export async function resumeReportSend(
+  formData: FormData
+): Promise<{ success: true } | { error: string }> {
+  const auth = await requireAdmin()
+  if ('error' in auth) return auth
+
+  const raw = { gameweek_id: formData.get('gameweek_id') }
+  const result = closeGameweekSchema.safeParse(raw)
+  if (!result.success) {
+    const firstError = result.error.issues[0]?.message ?? 'Invalid input'
+    return { error: firstError }
+  }
+
+  const { gameweek_id } = result.data
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
+  const cronSecret = process.env.CRON_SECRET ?? ''
+
+  if (!appUrl || !cronSecret) {
+    return { error: 'Server not configured (NEXT_PUBLIC_APP_URL or CRON_SECRET missing)' }
+  }
+
+  // Fire-and-forget — same contract as closeGameweek.
+  void fetch(`${appUrl}/api/reports/send-weekly`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${cronSecret}`,
+    },
+    body: JSON.stringify({ gameweek_id }),
+  }).catch((err) => {
+    console.error('[resumeReportSend] trigger failed:', err)
+  })
+
+  revalidatePath('/admin', 'layout')
   return { success: true }
 }
 
