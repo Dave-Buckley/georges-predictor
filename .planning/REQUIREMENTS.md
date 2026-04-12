@@ -111,10 +111,10 @@ Requirements for initial release. Each maps to roadmap phases.
 ### UI & Branding
 
 - [x] **UI-01**: Polished Premier League visual design with team badges and photos
-- [ ] **UI-02**: Mobile-responsive design — works well on phones (most members will use mobile)
+- [x] **UI-02**: Mobile-responsive design — works well on phones (most members will use mobile)
 - [x] **UI-03**: Overall league table prominently displayed
 - [x] **UI-04**: Clean prediction submission form — all fixtures visible, easy score entry
-- [ ] **UI-05**: Public "How It Works" page explaining competition rules, scoring system, bonuses, LOS, and prizes
+- [x] **UI-05**: Public "How It Works" page explaining competition rules, scoring system, bonuses, LOS, and prizes
 
 ### Infrastructure
 
@@ -226,10 +226,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DATA-04 | Phase 10 | Complete |
 | DATA-05 | Phase 7 | Complete |
 | UI-01 | Phase 11 | Complete |
-| UI-02 | Phase 11 | Pending |
+| UI-02 | Phase 11 | Complete |
 | UI-03 | Phase 11 | Complete |
 | UI-04 | Phase 11 | Complete |
-| UI-05 | Phase 11 | Pending |
+| UI-05 | Phase 11 | Complete |
 | INFRA-01 | Phase 1 | Complete |
 | INFRA-02 | Phase 1 | Complete |
 | INFRA-03 | Phase 1 | Complete |

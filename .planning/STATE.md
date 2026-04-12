@@ -2,17 +2,17 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_plan: Phase 11 Plan 02 shipped — member profile pages + home rank widget
+current_plan: Phase 11 Plan 03 shipped — public /how-it-works + hero banners + 5-flow mobile audit deferred to master QA sheet
 status: completed
-stopped_at: Completed 11-02-PLAN.md
-last_updated: "2026-04-12T20:58:23.470Z"
+stopped_at: Completed 11-03-PLAN.md
+last_updated: "2026-04-12T22:00:00.000Z"
 last_activity: 2026-04-12
 progress:
   total_phases: 11
   completed_phases: 10
   total_plans: 37
-  completed_plans: 35
-  percent: 95
+  completed_plans: 36
+  percent: 97
 ---
 
 # Project State
@@ -22,22 +22,24 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-11)
 
 **Core value:** Accurate, automated point calculation that removes all manual load from George while keeping him in full control of the competition.
-**Current focus:** Phase 11 (polish & continuity) — Plan 02 shipped, next up Plan 03 (season archive wizard) or Plan 04 (copy polish).
+**Current focus:** Phase 11 (polish & continuity) — Plan 03 shipped, next up Plan 04 (polish copy + end-of-season wiring).
 
 ## Current Position
 
 Phase: 11 of 11 (Polish & Continuity) — IN PROGRESS
-Current Plan: Phase 11 Plan 02 shipped — member profile pages + home rank widget
-Total Plans in Phase: 4 (01, 02 shipped; 03-04 remaining)
-Status: Plan 02 complete — aggregateSeasonStats pure lib + /members/[slug] auth-gated profile page + pure-SVG WeeklyPointsChart + 4 sub-components + HomeRankWidget on dashboard. 588/588 tests green. Build green.
+Current Plan: Phase 11 Plan 03 shipped — public /how-it-works + hero banners + 5-flow mobile audit deferred to master QA sheet
+Total Plans in Phase: 4 (01, 02, 03 shipped; 04 remaining)
+Status: Plan 03 complete — public /how-it-works (9 sections + 4 FAQs + anchor nav) + StandingsHero + LandingHero inline-SVG + landing page rebuild + footer + signin links + 5 placeholder PNGs + runbook + 5-flow mobile audit script merged into docs/FINAL_QA_CHECKLIST.md §14.1. 588/588 tests green. Build green.
 Last activity: 2026-04-12
 
-Progress: [██████████] 95% of plans (10/11 phases complete; 35/37 plans shipped; Phase 11 in progress)
+Progress: [██████████] 97% of plans (10/11 phases complete; 36/37 plans shipped; Phase 11 in progress)
 
 **Deferred QA (tracked for end-of-project master QA sheet — `docs/FINAL_QA_CHECKLIST.md`):**
 - Phase 8 Task 3 (08-03): 6 manual UI scenarios (admin LOS page, mobile LOS picker, member /los, H2H banner stages, notification triggers, RLS Network spot-check) — covered in §7, §8
 - Phase 9 Task 4 (09-03): 9-section script covering member read-only, admin monitoring, late-joiner flow, actuals entry, calculation, confirmation, Championship management + rollover, dashboard card, mobile — merged into `docs/FINAL_QA_CHECKLIST.md` §10
 - Phase 10 Task 4 (10-04): 6 scenarios covering real email send end-to-end (personal + group PDF + admin XLSX), kickoff backup (first-fixture trigger + both attachments + idempotency), public /standings (incognito + column allowlist), member /profile opt-out, full data export (admin download + Excel round-trip), failure handling (broken Resend key + resume button), mobile PDF rendering — merged into `docs/FINAL_QA_CHECKLIST.md` §12 (expanded)
+- Phase 11 Task 3 (11-03): 5-flow mobile audit (/predictions/[gwNumber], LOS picker, /pre-season, /standings + landing hero, /members/[slug], plus /how-it-works + footer/signin links) at iPhone 13 + Pixel 5 DevTools emulators AND real iOS Safari + Android Chrome devices — merged into `docs/FINAL_QA_CHECKLIST.md` §14.1 (6 sub-sections, 30+ check items). Proactive responsive patterns already applied during Plans 01-03 (Tailwind mobile-first prefixes, overflow-x-auto anchor nav, viewBox+w-full charts/heroes, 44px tap targets).
+- Phase 11 Plan 03: 5 placeholder PNGs committed to `/public/how-it-works/`; real screenshots to be captured per `docs/how-it-works-screenshot-runbook.md` before public launch (deferred to pre-launch checklist alongside §14.1)
 
 ## Performance Metrics
 
@@ -92,6 +94,7 @@ Progress: [██████████] 95% of plans (10/11 phases complete; 
 | Phase 10-reports-export P04 | 28 | 3 tasks + 1 deferred QA | 13 files |
 | Phase 11-polish-continuity P01 | 38 min | 4 tasks tasks | 17 files files |
 | Phase 11-polish-continuity P02 | 32 min | 3 tasks | 12 files |
+| Phase 11-polish-continuity P03 | 45 min | 2 tasks + 1 deferred QA | 18 files |
 
 ## Accumulated Context
 
@@ -247,6 +250,15 @@ Recent decisions affecting current work:
 - [Phase 11-polish-continuity]: [Phase 11-polish-continuity P02]: /members/[slug] uses /login (not plan-specified /signin) matching repo-wide auth convention. Unknown slug renders empty state with link-back to /standings (no 404 throw).
 - [Phase 11-polish-continuity]: [Phase 11-polish-continuity P02]: HomeRankWidget dense-ranks members.starting_points DESC with alpha tiebreak, slices viewer+/-2 clamped at edges, returns null for non-member viewers. Dashboard query wrapped in try/catch — widget hides silently on failure rather than crashing dashboard.
 - [Phase 11-polish-continuity]: [Phase 11-polish-continuity P02]: Vitest 4 vi.hoisted pattern adopted for factory mocks that reference module-scope identifiers — avoids 'Cannot access X before initialization' ReferenceError from vi.mock hoisting before const declarations.
+- [Phase 11-polish-continuity P03]: /how-it-works placed under (public) route group — unauth-accessible, no middleware redirect. Required by CONTEXT.md: explainer linkable pre-registration. Matches /standings + /login placement.
+- [Phase 11-polish-continuity P03]: JS-free FAQ via native <details>/<summary> disclosure — zero hydration cost, no client component boundary, works with JavaScript disabled. Matches plan's explicit guidance.
+- [Phase 11-polish-continuity P03]: Anchor nav dual-mode styling single component — `md:sticky md:top-4` desktop + `overflow-x-auto whitespace-nowrap` mobile. No per-viewport duplicate component tree.
+- [Phase 11-polish-continuity P03]: Inline-SVG heroes (StandingsHero + LandingHero) with CSS gradients + viewBox stadium silhouette — zero external assets per CONTEXT.md (no image hosting, no CDN cost); renders identically dev/prod/future-PDF-contexts.
+- [Phase 11-polish-continuity P03]: Sign-in CTA links to /login not /signin — continues Phase 11 Plan 02 deviation for repo-wide auth path consistency (middleware, (member) layout, dashboard, pre-season all use /login).
+- [Phase 11-polish-continuity P03]: Landing page `/` rebuilt from Phase 10 P04 re-export into proper landing (LandingHero + top-5 preview + CTA); seasons.ended_at branching hook placed for Plan 04 end-of-season wiring without restructuring.
+- [Phase 11-polish-continuity P03]: Footer "How it works" link added to single shared `<Footer />` component — appears on public + member + admin layouts via shared mount, no per-layout duplication.
+- [Phase 11-polish-continuity P03]: 5 placeholder PNGs committed to /public/how-it-works/ (solid PL-purple 800x600 + filename overlay) per plan's explicit fallback — avoids broken-image icons; real screenshots deferred to docs/how-it-works-screenshot-runbook.md pre-launch retake. TODO in deferred-items.
+- [Phase 11-polish-continuity P03]: 5-flow mobile audit checkpoint approved with deferral to docs/FINAL_QA_CHECKLIST.md §14.1 — 2026-04-12, matches Phase 8 §7-8, Phase 9 §10, Phase 10 §12 master-QA-sheet deferral precedent. 6 sub-sections covering /predictions, LOS picker, /pre-season, /standings+hero, /members/[slug], /how-it-works + footer/signin links. Proactive responsive patterns (Tailwind mobile-first, overflow-x-auto, viewBox+w-full, 44px tap targets) already applied during Plans 01-03 cover most common regressions.
 
 ### Pending Todos
 
@@ -265,6 +277,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-04-12T20:58:23.466Z
-Stopped at: Completed 11-02-PLAN.md
+Last session: 2026-04-12T22:00:00.000Z
+Stopped at: Completed 11-03-PLAN.md
 Resume file: None

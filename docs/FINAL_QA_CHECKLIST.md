@@ -314,6 +314,74 @@ Use YOUR actual phone, not just DevTools. iOS Safari AND Android Chrome.
 
 ---
 
+## 14.1 Phase 11 — 5-flow mobile audit (deferred from Plan 11-03 Task 3)
+
+Plan 11-03's mobile-audit checkpoint was deferred here per user approval (2026-04-12) — matches Phase 8 §7-8, Phase 9 §10, Phase 10 §12 precedents. Walk through all 5 flows below on both DevTools emulation **and** a real phone before launch.
+
+**Setup:** Chrome DevTools device emulator at iPhone 13 (390×844) AND Pixel 5 (393×851). Also run on your actual phone (iOS Safari + Android Chrome).
+
+**Proactive responsive patterns already applied during Plans 01-03** (should make most of this green first time):
+- Every new component uses Tailwind mobile-first responsive prefixes (sm: / md: / lg:)
+- How It Works anchor nav uses `overflow-x-auto` on narrow viewports
+- WeeklyPointsChart scales via viewBox + w-full (pure SVG, responsive by design)
+- MemberLink is a full `<a>` (not sub-span) with padding ≥ 44px tap target
+- Hero banners (Landing, Standings) use viewBox-based SVG, no fixed widths
+
+**14.1.1 Predictions submit flow** (`/predictions/[gwNumber]`)
+- [ ] No horizontal scroll at 390px / 393px
+- [ ] Score input fields tappable without zoom; numeric keypad opens (inputMode=numeric)
+- [ ] Sticky submit bar visible and tappable; doesn't cover the last fixture card
+- [ ] LOS picker opens without overflow (team list wraps to 2-3 columns)
+- [ ] Bonus star selection reachable on every fixture card (≥ 44px tap target)
+- [ ] Fixed footer (total bar) stacks cleanly — no Safari stacking issue
+
+**14.1.2 LOS picker widget** (same page, dedicated team grid)
+- [ ] Grid of 20 PL teams wraps to 2 or 3 columns on mobile (not one long horizontal scroll)
+- [ ] Selected team has clear visual state (bg-pl-purple/20 + pl-green accent or similar)
+- [ ] No overflow when the virtual keyboard is open
+- [ ] Can clear + re-select without ghost state
+
+**14.1.3 Pre-season form** (`/pre-season`)
+- [ ] All 3 sections (Top 4, Relegated, Promoted, Playoff Winner, 10th) usable without horizontal scroll
+- [ ] Championship dropdown fits viewport (full-width on mobile)
+- [ ] Submit button always reachable (no keyboard-cover issue)
+- [ ] All 12 slots accessible via vertical scroll
+- [ ] If locked post-GW1 kickoff: banner + read-only picks render without overflow
+
+**14.1.4 Standings + Landing hero** (`/standings` and `/`)
+- [ ] StandingsHero renders PL-purple gradient, scales correctly at mobile viewport
+- [ ] LandingHero on `/` renders wordmark + tagline + CTA, no overflow
+- [ ] Table either scrolls horizontally gracefully (`overflow-x-auto` on wrapper) OR collapses less-important columns — no page-level horizontal scroll
+- [ ] Top-5 preview on landing (unauth) readable
+- [ ] MemberLink tap targets work on every row
+- [ ] "View full standings" CTA reachable
+
+**14.1.5 Member profile page** (`/members/[slug]`)
+- [ ] Profile header doesn't wrap awkwardly (admin-only fields stack cleanly)
+- [ ] Season-stats-panel grid collapses to single column on mobile (6 stat cards)
+- [ ] WeeklyPointsChart renders + scales (viewBox + w-full) — both running-total line and weekly bars legible
+- [ ] Season history table readable or horizontally scrollable
+- [ ] Achievement badges row wraps without clipping
+- [ ] Back link to /standings visible on unknown-slug empty state
+
+**14.1.6 How It Works + Footer + Signin links** (Phase 11 Plan 03 surface)
+- [ ] `/how-it-works` unauth loads without redirect
+- [ ] Anchor nav scrolls horizontally on mobile (not clipped)
+- [ ] All 9 sections render without overflow; screenshot images scale (max-w-md or w-full)
+- [ ] FAQ `<details>` expands on tap without layout shift
+- [ ] Footer "How it works" link tappable on every layout (public + member + admin)
+- [ ] Signin page "Learn how it works" link tappable
+
+**Report any regressions as:** "Flow X.Y has Z issue at viewport W" — file in `docs/QA_BUGS.md` and fix before launch.
+
+**Sign-off:**
+- [ ] All 6 sub-sections pass on iPhone 13 DevTools emulator
+- [ ] All 6 sub-sections pass on Pixel 5 DevTools emulator
+- [ ] All 6 sub-sections pass on real iOS phone (Safari)
+- [ ] All 6 sub-sections pass on real Android phone (Chrome)
+
+---
+
 ## 15. Polish & branding (Phase 11)
 
 - [ ] Team badges consistent everywhere
