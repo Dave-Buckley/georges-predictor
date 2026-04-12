@@ -1,8 +1,10 @@
 import { redirect } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import type { MemberRow, GameweekRow, FixtureWithTeams } from '@/lib/supabase/types'
 import PendingNotice from '@/components/member/pending-notice'
 import DashboardOverview from '@/components/member/dashboard-overview'
+import { HomeRankWidget, type HomeRankWidgetMember } from '@/components/member/home-rank-widget'
 
 // Force dynamic rendering — reads member data on every request
 export const dynamic = 'force-dynamic'
@@ -101,12 +103,66 @@ export default async function DashboardPage() {
     }
   }
 
+  // ─── Rank-neighbour widget data (Phase 11 Plan 02 Task 3) ───────────────────
+  // Same shape as /standings: member_id, display_name, starting_points.
+  // Dense-rank by starting_points DESC, alpha tiebreak on display_name.
+  let rankNeighbours: HomeRankWidgetMember[] = []
+  try {
+    const admin = createAdminClient()
+    const { data: membersRaw } = await admin
+      .from('members')
+      .select('id, display_name, starting_points')
+      .eq('approval_status', 'approved')
+
+    const sorted = ((membersRaw ?? []) as Array<{
+      id: string
+      display_name: string
+      starting_points: number | null
+    }>)
+      .map((m) => ({
+        id: m.id,
+        display_name: m.display_name,
+        starting_points: m.starting_points ?? 0,
+      }))
+      .sort((a, b) => {
+        if (b.starting_points !== a.starting_points) {
+          return b.starting_points - a.starting_points
+        }
+        return a.display_name.localeCompare(b.display_name)
+      })
+
+    // Dense rank — ties share rank, next distinct point value increments.
+    let lastPts: number | null = null
+    let lastRank = 0
+    rankNeighbours = sorted.map((m, i) => {
+      if (lastPts === null || m.starting_points !== lastPts) {
+        lastRank = i + 1
+        lastPts = m.starting_points
+      }
+      return {
+        memberId: m.id,
+        displayName: m.display_name,
+        rank: lastRank,
+        totalPoints: m.starting_points,
+      }
+    })
+  } catch {
+    // Non-blocking — widget silently hides if DB fetch fails.
+    rankNeighbours = []
+  }
+
   // Approved members see the full dashboard
   return (
-    <DashboardOverview
-      member={memberRow}
-      currentGameweek={currentGameweek}
-      upcomingFixtures={upcomingFixtures}
-    />
+    <div className="space-y-6">
+      <HomeRankWidget
+        viewerMemberId={memberRow.id}
+        members={rankNeighbours}
+      />
+      <DashboardOverview
+        member={memberRow}
+        currentGameweek={currentGameweek}
+        upcomingFixtures={upcomingFixtures}
+      />
+    </div>
   )
 }
