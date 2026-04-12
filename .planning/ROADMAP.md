@@ -205,7 +205,12 @@ Plans:
   4. A member can view their historical points and prediction records across previous seasons
   5. A public "How It Works" page explains the competition rules, scoring, bonuses, LOS, and prizes
   6. George can archive the current season and start a new one without losing any historical data
-**Plans**: TBD
+**Plans:** 4 plans
+Plans:
+- [ ] 11-01-PLAN.md — Migration 012 (team colours + members.favourite_team_id + seasons.ended_at + slug index) + Tailwind v4 @theme tokens + MemberLink helper + site-wide username linking + team kit colour accents on fixture cards
+- [ ] 11-02-PLAN.md — /members/[slug] profile page + pure aggregateSeasonStats library + pure-SVG weekly-points chart + home dashboard rank-neighbour widget
+- [ ] 11-03-PLAN.md — /how-it-works public explainer page + in-code SVG hero banners on /standings and / + footer/signin wiring + 5-flow mobile audit checkpoint
+- [ ] 11-04-PLAN.md — /admin/season-rollover 8-step wizard + 6 idempotent rollover server actions + /end-of-season summary page + admin nav wiring + Phase 11 master QA checkpoint (merges into FINAL_QA_CHECKLIST §13)
 
 ## Progress
 
@@ -224,7 +229,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 8. Last One Standing & H2H | 0/3 | In Progress | - |
 | 9. Pre-Season Predictions | 0/3 | Not started | - |
 | 10. Reports & Export | 4/4 | Complete    | 2026-04-12 |
-| 11. Polish & Continuity | 0/TBD | Not started | - |
+| 11. Polish & Continuity | 0/4 | Not started | - |
 
 ---
 *Roadmap created: 2026-04-11*
