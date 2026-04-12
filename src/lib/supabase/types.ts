@@ -58,6 +58,9 @@ export type AdminNotificationType =
   | 'los_competition_started'
   | 'h2h_steal_detected'
   | 'h2h_steal_resolved'
+  | 'pre_season_all_correct'
+  | 'pre_season_category_correct'
+  | 'pre_season_awards_ready'
 
 /** Row shape for the public.admin_notifications table */
 export interface AdminNotificationRow {
@@ -293,7 +296,7 @@ export interface PreSeasonPickRow {
   id: string
   member_id: string
   season: number
-  /** Ordered array of up to 4 team names. Order matters for Phase 9 scoring. */
+  /** Ordered array of up to 4 team names. Phase 9 scoring uses set-equality (order ignored) but the array stays ordered for future tiered-scoring variants. */
   top4: string[]
   /** Team name predicted to finish 10th */
   tenth_place: string | null
@@ -305,6 +308,52 @@ export interface PreSeasonPickRow {
   promoted_playoff_winner: string | null
   imported_by: string | null
   imported_at: string
+  /** Added by migration 009 — true when row was entered by an admin on a late-joiner's behalf. */
+  submitted_by_admin: boolean
+  /** Added by migration 009 — timestamp the row was last submitted (member or admin). */
+  submitted_at: string | null
+}
+
+// ─── Pre-Season Predictions Types (Phase 9) ──────────────────────────────────
+
+/** Row shape for the public.seasons table (added by migration 009) */
+export interface SeasonRow {
+  id: number
+  season: number
+  label: string
+  gw1_kickoff: string
+  /** Season-end actuals — empty/null until admin populates at season end */
+  final_top4: string[]
+  final_tenth: string | null
+  final_relegated: string[]
+  final_promoted: string[]
+  final_playoff_winner: string | null
+  actuals_locked_at: string | null
+  created_at: string
+}
+
+/** Pre-season award flag emission shape (stored in pre_season_awards.flags jsonb) */
+export interface PreSeasonAwardFlags {
+  all_top4_correct: boolean
+  all_relegated_correct: boolean
+  all_promoted_correct: boolean
+  all_correct_overall: boolean
+}
+
+/** Row shape for the public.pre_season_awards table (added by migration 009) */
+export interface PreSeasonAwardRow {
+  id: string
+  member_id: string
+  season: number
+  /** System-calculated value (30 × number of correct picks) */
+  calculated_points: number
+  /** Admin's final number — may override calculated_points */
+  awarded_points: number
+  flags: PreSeasonAwardFlags
+  /** false = pending George's confirmation; true = confirmed and counts toward member totals */
+  confirmed: boolean
+  confirmed_by: string | null
+  confirmed_at: string | null
 }
 
 // ─── Last One Standing + Head-to-Head Types (Phase 8) ────────────────────────
