@@ -114,6 +114,12 @@ export default async function MemberLayout({ children }: MemberLayoutProps) {
             >
               Bonuses &amp; Prizes
             </Link>
+            <Link
+              href="/los"
+              className="px-4 py-3 text-sm font-medium text-slate-300 hover:text-white whitespace-nowrap border-b-2 border-transparent hover:border-purple-500 transition"
+            >
+              Last One Standing
+            </Link>
             <span className="px-4 py-3 text-sm text-slate-600 whitespace-nowrap cursor-not-allowed">
               League Table
             </span>

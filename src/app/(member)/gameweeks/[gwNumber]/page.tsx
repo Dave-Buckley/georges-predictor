@@ -1,9 +1,11 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import type { FixtureWithTeams, GameweekRow, GameweekStatus, PredictionScoreRow } from '@/lib/supabase/types'
 import PredictionForm from '@/components/predictions/prediction-form'
 import { getLosContext } from '@/actions/predictions'
+import { H2HStealBanner } from '@/components/h2h/h2h-steal-banner'
 
 // Force dynamic rendering — fixture data + predictions change frequently
 export const dynamic = 'force-dynamic'
@@ -235,22 +237,135 @@ export default async function GameweekPage({ params }: PageProps) {
   // ── Fetch LOS context for this gameweek ─────────────────────────────────────
   const losContext = await getLosContext(gwNum)
 
+  // ── Fetch H2H steals relevant to this gameweek ──────────────────────────────
+  // Two relationships: steals detected in THIS gw (flagged-for-next-week) or
+  // steals that resolve in THIS gw (showdown this week or already resolved).
+  // Admin client — steal + member-name joins are public context on the gameweek view.
+  const adminSb = createAdminClient()
+
+  const { data: detectedStealsData } = await adminSb
+    .from('h2h_steals')
+    .select('id, position, tied_member_ids, detected_in_gw_id, resolves_in_gw_id, resolved_at, winner_ids')
+    .eq('detected_in_gw_id', gameweek.id)
+
+  const { data: resolvingStealsData } = await adminSb
+    .from('h2h_steals')
+    .select('id, position, tied_member_ids, detected_in_gw_id, resolves_in_gw_id, resolved_at, winner_ids')
+    .eq('resolves_in_gw_id', gameweek.id)
+
+  type StealRow = {
+    id: string
+    position: 1 | 2
+    tied_member_ids: string[]
+    detected_in_gw_id: string
+    resolves_in_gw_id: string
+    resolved_at: string | null
+    winner_ids: string[] | null
+  }
+
+  const detectedSteals = (detectedStealsData ?? []) as StealRow[]
+  const resolvingSteals = (resolvingStealsData ?? []) as StealRow[]
+
+  // Deduplicate by id (a steal where detected === resolves shouldn't exist, but be safe)
+  const seenStealIds = new Set<string>()
+  const allSteals: Array<StealRow & { stage: 'detected' | 'resolving' | 'resolved' }> = []
+  for (const s of detectedSteals) {
+    if (seenStealIds.has(s.id)) continue
+    seenStealIds.add(s.id)
+    allSteals.push({ ...s, stage: 'detected' })
+  }
+  for (const s of resolvingSteals) {
+    if (seenStealIds.has(s.id)) continue
+    seenStealIds.add(s.id)
+    allSteals.push({ ...s, stage: s.resolved_at ? 'resolved' : 'resolving' })
+  }
+
+  // Resolve member names for all tied + winner IDs
+  const allMemberIds = new Set<string>()
+  for (const s of allSteals) {
+    for (const id of s.tied_member_ids) allMemberIds.add(id)
+    for (const id of s.winner_ids ?? []) allMemberIds.add(id)
+  }
+
+  const memberNameById = new Map<string, string>()
+  if (allMemberIds.size > 0) {
+    const { data: membersData } = await adminSb
+      .from('members')
+      .select('id, display_name')
+      .in('id', Array.from(allMemberIds))
+    for (const m of (membersData ?? []) as Array<{ id: string; display_name: string }>) {
+      memberNameById.set(m.id, m.display_name)
+    }
+  }
+
+  // Resolve gameweek numbers for detected/resolves refs
+  const gwIds = new Set<string>()
+  for (const s of allSteals) {
+    gwIds.add(s.detected_in_gw_id)
+    gwIds.add(s.resolves_in_gw_id)
+  }
+  const gwNumberById = new Map<string, number>([[gameweek.id, gameweek.number]])
+  const missingGwIds = Array.from(gwIds).filter((id) => !gwNumberById.has(id))
+  if (missingGwIds.length > 0) {
+    const { data: gwsData } = await adminSb
+      .from('gameweeks')
+      .select('id, number')
+      .in('id', missingGwIds)
+    for (const g of (gwsData ?? []) as Array<{ id: string; number: number }>) {
+      gwNumberById.set(g.id, g.number)
+    }
+  }
+
+  const viewerIsInAnySteal = allSteals.some((s) =>
+    s.tied_member_ids.includes(memberData.id)
+  )
+  const h2hBannerProps = allSteals.map((s) => ({
+    key: s.id,
+    position: s.position,
+    stage: s.stage,
+    tiedMemberNames: s.tied_member_ids.map((id) => memberNameById.get(id) ?? 'Unknown'),
+    winnerNames: (s.winner_ids ?? []).map((id) => memberNameById.get(id) ?? 'Unknown'),
+    viewerIsTied: s.tied_member_ids.includes(memberData.id),
+    detectedInGwNumber: gwNumberById.get(s.detected_in_gw_id),
+    resolvesInGwNumber: gwNumberById.get(s.resolves_in_gw_id),
+  }))
+  // Silence lint on the single-use viewer flag — kept for potential future inline messaging.
+  void viewerIsInAnySteal
+
   return (
-    <PredictionForm
-      fixtures={fixtures}
-      gameweek={gameweek}
-      existingPredictions={existingPredictions}
-      submissionCount={{ submitted: submittedCount, total: totalMembers }}
-      navGameweeks={navList}
-      currentGw={gwNum}
-      totalGw={totalGw}
-      scoreBreakdowns={scoreBreakdowns}
-      totalPoints={totalPoints}
-      scoredFixtureCount={scoredFixtureCount}
-      activeBonusType={activeBonusType}
-      existingBonusPick={existingBonusPick}
-      bonusAwardDisplay={bonusAwardDisplay}
-      losContext={losContext}
-    />
+    <>
+      {h2hBannerProps.length > 0 && (
+        <div className="space-y-3 mb-6">
+          {h2hBannerProps.map((p) => (
+            <H2HStealBanner
+              key={p.key}
+              position={p.position}
+              stage={p.stage}
+              tiedMemberNames={p.tiedMemberNames}
+              winnerNames={p.winnerNames}
+              viewerIsTied={p.viewerIsTied}
+              detectedInGwNumber={p.detectedInGwNumber}
+              resolvesInGwNumber={p.resolvesInGwNumber}
+            />
+          ))}
+        </div>
+      )}
+      <PredictionForm
+        fixtures={fixtures}
+        gameweek={gameweek}
+        existingPredictions={existingPredictions}
+        submissionCount={{ submitted: submittedCount, total: totalMembers }}
+        navGameweeks={navList}
+        currentGw={gwNum}
+        totalGw={totalGw}
+        scoreBreakdowns={scoreBreakdowns}
+        totalPoints={totalPoints}
+        scoredFixtureCount={scoredFixtureCount}
+        activeBonusType={activeBonusType}
+        existingBonusPick={existingBonusPick}
+        bonusAwardDisplay={bonusAwardDisplay}
+        losContext={losContext}
+      />
+    </>
   )
 }

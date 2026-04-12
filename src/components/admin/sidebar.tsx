@@ -16,6 +16,7 @@ import {
   Upload,
   Menu,
   X,
+  Crown,
 } from 'lucide-react'
 
 interface SidebarProps {
@@ -69,6 +70,11 @@ export function AdminSidebar({ adminEmail }: SidebarProps) {
       href: '/admin/prizes',
       label: 'Prizes',
       icon: Award,
+    },
+    {
+      href: '/admin/los',
+      label: 'Last One Standing',
+      icon: Crown,
     },
     {
       href: '/admin/import',
