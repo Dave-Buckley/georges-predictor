@@ -18,6 +18,8 @@ export interface MemberRow {
   created_at: string
   approved_at: string | null
   approved_by: string | null
+  /** Added by migration 007 — tracks last update time (e.g. when an imported placeholder is claimed) */
+  updated_at: string | null
 }
 
 /** Row shape for the public.admin_security_questions table */
@@ -37,22 +39,26 @@ export interface BlockedEmailRow {
   blocked_by: string | null
 }
 
+/** Union of all valid admin notification types */
+export type AdminNotificationType =
+  | 'new_signup'
+  | 'approval_needed'
+  | 'system'
+  | 'sync_failure'
+  | 'fixture_rescheduled'
+  | 'fixture_moved'
+  | 'result_override'
+  | 'scoring_complete'
+  | 'bonus_reminder'
+  | 'gw_complete'
+  | 'prize_triggered'
+  | 'bonus_award_needed'
+  | 'import_complete'
+
 /** Row shape for the public.admin_notifications table */
 export interface AdminNotificationRow {
   id: string
-  type:
-    | 'new_signup'
-    | 'approval_needed'
-    | 'system'
-    | 'sync_failure'
-    | 'fixture_rescheduled'
-    | 'fixture_moved'
-    | 'result_override'
-    | 'scoring_complete'
-    | 'bonus_reminder'
-    | 'gw_complete'
-    | 'prize_triggered'
-    | 'bonus_award_needed'
+  type: AdminNotificationType
   title: string
   message: string | null
   is_read: boolean
@@ -274,6 +280,27 @@ export interface BonusAwardWithType extends BonusAwardRow {
 export interface PrizeAwardWithDetails extends PrizeAwardRow {
   prize: AdditionalPrizeRow
   member: Pick<MemberRow, 'id' | 'display_name'> | null
+}
+
+// ─── Mid-Season Import Types ──────────────────────────────────────────────────
+
+/** Row shape for the public.pre_season_picks table */
+export interface PreSeasonPickRow {
+  id: string
+  member_id: string
+  season: number
+  /** Ordered array of up to 4 team names. Order matters for Phase 9 scoring. */
+  top4: string[]
+  /** Team name predicted to finish 10th */
+  tenth_place: string | null
+  /** Array of up to 3 team names predicted to be relegated */
+  relegated: string[]
+  /** Array of up to 3 Championship team names predicted to be promoted */
+  promoted: string[]
+  /** Championship promotion playoff winner team name */
+  promoted_playoff_winner: string | null
+  imported_by: string | null
+  imported_at: string
 }
 
 // ─── Database Type (placeholder until `supabase gen types` is run) ────────────
