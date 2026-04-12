@@ -2,17 +2,17 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_plan: — (phase done; awaiting Phase 10 planning)
-status: Phase 9 shipped the full pre-season vertical slice — member submission + admin late-joiner + season-end actuals + calculation + per-member + bulk confirmation, plus a DB-backed Championship list and one-button end-of-season rollover. 439/439 tests green. Build clean. Manual QA for Phase 9 deferred to master sheet.
-stopped_at: Phase 10 context gathered
-last_updated: "2026-04-12T18:11:14.810Z"
+current_plan: Plan 2 of 4 (10-02 Renderers)
+status: Phase 10 Plan 01 shipped — pinned xlsx+react-pdf deps, migration 011 (report tracking + per-member email toggles + member_report_log ledger), typed gatherGameweekData aggregator with pure shapeData transform, Buffer->base64 sendWithAttachments helper, shared test fixtures. 454/454 tests green. Build clean.
+stopped_at: Completed 10-01-PLAN.md
+last_updated: "2026-04-12T18:47:29Z"
 last_activity: 2026-04-12
 progress:
   total_phases: 11
   completed_phases: 9
-  total_plans: 29
-  completed_plans: 29
-  percent: 93
+  total_plans: 33
+  completed_plans: 30
+  percent: 91
 ---
 
 # Project State
@@ -26,13 +26,13 @@ See: .planning/PROJECT.md (updated 2026-04-11)
 
 ## Current Position
 
-Phase: 9 of 11 (Pre-Season Predictions) — COMPLETE
-Current Plan: — (phase done; awaiting Phase 10 planning)
-Total Plans in Phase: 3 (all complete: 09-01, 09-02, 09-03)
-Status: Phase 9 shipped the full pre-season vertical slice — member submission + admin late-joiner + season-end actuals + calculation + per-member + bulk confirmation, plus a DB-backed Championship list and one-button end-of-season rollover. 439/439 tests green. Build clean. Manual QA for Phase 9 deferred to master sheet.
+Phase: 10 of 11 (Reports & Export) — IN PROGRESS
+Current Plan: Plan 2 of 4 (10-02 Renderers)
+Total Plans in Phase: 4 (10-01 complete; 10-02/03/04 pending)
+Status: Phase 10 Plan 01 shipped — pinned xlsx+react-pdf deps, migration 011 (report tracking + per-member email toggles + member_report_log ledger), typed gatherGameweekData aggregator with pure shapeData transform, Buffer->base64 sendWithAttachments helper, shared test fixtures. 454/454 tests green. Build clean.
 Last activity: 2026-04-12
 
-Progress: [█████████░] 93% (9/11 phases; all 29 planned plans shipped — Phases 10 & 11 awaiting planning)
+Progress: [█████████░] 91% (9/11 phases complete + Phase 10 in-progress; 30/33 plans shipped)
 
 **Deferred QA (tracked for end-of-project master QA sheet — `docs/FINAL_QA_CHECKLIST.md`):**
 - Phase 8 Task 3 (08-03): 6 manual UI scenarios (admin LOS page, mobile LOS picker, member /los, H2H banner stages, notification triggers, RLS Network spot-check) — covered in §7, §8
@@ -85,6 +85,7 @@ Progress: [█████████░] 93% (9/11 phases; all 29 planned plan
 | Phase 09-pre-season-predictions P01 | 7 | 3 tasks | 11 files |
 | Phase 09-pre-season-predictions P02 | 4 | 3 tasks | 10 files |
 | Phase 09-pre-season-predictions P03 | 25 | 4 tasks | 14 files |
+| Phase 10-reports-export P01 | 20 | 3 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -191,6 +192,21 @@ Recent decisions affecting current work:
 - [Phase 09-pre-season-predictions P03]: Pre-season display-total aggregation deferred to Phase 10 export-time SUM — no central aggregator today (computeDisplayTotal covers only bonuses/prizes); Phase 10 to SUM pre_season_awards.awarded_points WHERE confirmed=true alongside other sources at read time
 - [Phase 09-pre-season-predictions P03]: isChampionshipTeam refactored from array lookup to async DB query — all callers already in async server-action contexts so no interface gymnastics; all 398 prior tests remained green through the refactor
 - [Phase 09-pre-season-predictions P03]: Manual QA script for Phase 9 (9 sections: member read-only, admin monitoring, late-joiner, actuals entry, calculation, confirmation, Championship+rollover, dashboard card, mobile) deferred to master end-of-project QA sheet at docs/FINAL_QA_CHECKLIST.md §10 — user approved 2026-04-12
+- [Phase 10-reports-export P01]: xlsx pinned with --save-exact (0.18.5, NO caret) — v0.19+ is paid license per Phase 2 decision; package.json now carries "xlsx": "0.18.5" with no range prefix
+- [Phase 10-reports-export P01]: serverExternalPackages: ['@react-pdf/renderer'] registered in next.config.ts preemptively — prevents the "yoga.wasm subpath not defined" class of Vercel server-bundler errors that manifest only in production (10-RESEARCH.md Pitfall 3)
+- [Phase 10-reports-export P01]: Migration 011 admin_notifications CHECK preserves all 20 prior types + adds 3 Phase 10 types (report_send_failed, kickoff_backup_failed, report_render_failed) via drop+re-add ritual (Pitfall 7)
+- [Phase 10-reports-export P01]: member_report_log UNIQUE(member_id, gameweek_id, report_type) enforces idempotent sends at DB level — retryable from the orchestrator without double-sending
+- [Phase 10-reports-export P01]: member_report_log RLS — members SELECT own + admin SELECT all, NO session-role writes (service-role-only via createAdminClient)
+- [Phase 10-reports-export P01]: gatherGameweekData uses single parallel Promise.all of 9 admin-client fetches; post-fetch fixture-id filter on predictions + prediction_scores avoids per-table WHERE-JOIN complexity
+- [Phase 10-reports-export P01]: shapeData exported as pure transform — downstream renderer tests (Plans 02-04) can assert transform logic without mocking admin client
+- [Phase 10-reports-export P01]: h2h_steals query uses .or(detected_in_gw_id.eq.${gw},resolves_in_gw_id.eq.${gw}) — reports surface both newly detected AND resolving-this-week steals in one pass
+- [Phase 10-reports-export P01]: Weekly points aggregation excludes pending bonuses (awarded=null/false) — matches computeDisplayTotal precedent from Phase 6
+- [Phase 10-reports-export P01]: Standings tiebreak on displayName alpha (after totalPoints DESC) — determinism for test assertions and stable ordering
+- [Phase 10-reports-export P01]: Refactor src/lib/email.ts sendEmail to delegate to getResend() singleton — preserves Phase 1 auth email signature verbatim, avoids two Resend clients in same process
+- [Phase 10-reports-export P01]: sendWithAttachments converts Buffer -> base64 at the edge (Resend expects string, not Buffer); graceful null-resend fallback returns error object, never throws
+- [Phase 10-reports-export P01]: Resend mock for constructor-based `new Resend(...)` requires `function(this){ Object.assign(this, mock.client) }` — arrow-function mockImplementation is not construct-callable
+- [Phase 10-reports-export P01]: Shared Phase 10 test fixtures live at tests/reports/fixtures/ — mockGameweekData + mockSupabaseFrom + createResendMock imported by every report test in Plans 02-04
+- [Phase 10-reports-export P01]: Pre-existing lint errors (Phase 8 los/round.ts + Phase 1/2/4 test files) deferred to .planning/phases/10-reports-export/deferred-items.md — out of scope per GSD boundary rules; Phase 10 code lint-clean
 
 ### Pending Todos
 
@@ -206,6 +222,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-04-12T18:11:14.807Z
-Stopped at: Phase 10 context gathered
-Resume file: .planning/phases/10-reports-export/10-CONTEXT.md
+Last session: 2026-04-12T18:47:29Z
+Stopped at: Completed 10-01-PLAN.md
+Resume file: .planning/phases/10-reports-export/10-02-PLAN.md

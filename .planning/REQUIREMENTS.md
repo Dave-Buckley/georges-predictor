@@ -92,20 +92,20 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Reports & Export
 
-- [ ] **RPT-01**: Weekly PDF summary report for the group — standings, results, H2H steals, bonus outcomes
-- [ ] **RPT-02**: Personal weekly PDF sent to each member — their own points breakdown for the gameweek
-- [ ] **RPT-03**: Detailed weekly XLSX spreadsheet for George's records (all members, all scores, all calculations)
-- [ ] **RPT-04**: Reports emailed to George automatically after each gameweek completes
-- [ ] **RPT-05**: Personal PDF emailed to each member after gameweek completes
-- [ ] **RPT-06**: Updated standings and gameweek report viewable on the website
-- [ ] **RPT-07**: Full data export — George can download all data to continue manually if site goes down
+- [x] **RPT-01**: Weekly PDF summary report for the group — standings, results, H2H steals, bonus outcomes
+- [x] **RPT-02**: Personal weekly PDF sent to each member — their own points breakdown for the gameweek
+- [x] **RPT-03**: Detailed weekly XLSX spreadsheet for George's records (all members, all scores, all calculations)
+- [x] **RPT-04**: Reports emailed to George automatically after each gameweek completes
+- [x] **RPT-05**: Personal PDF emailed to each member after gameweek completes
+- [x] **RPT-06**: Updated standings and gameweek report viewable on the website
+- [x] **RPT-07**: Full data export — George can download all data to continue manually if site goes down
 
 ### Data & Continuity
 
 - [x] **DATA-01**: Mid-season import tool — load existing member names and points; league table always sorted by points descending (positions derived, not stored)
 - [ ] **DATA-02**: Season archive — previous season data stored with historical records
 - [ ] **DATA-03**: Member profiles with total points and history across seasons
-- [ ] **DATA-04**: Local fallback — George can export everything needed to run manually
+- [x] **DATA-04**: Local fallback — George can export everything needed to run manually
 - [x] **DATA-05**: Late joiner support — George adds members mid-season with custom starting points
 
 ### UI & Branding
@@ -213,17 +213,17 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ADMIN-07 | Phase 5 | Complete |
 | ADMIN-08 | Phase 7 | Complete |
 | ADMIN-09 | Phase 5 | Complete |
-| RPT-01 | Phase 10 | Pending |
-| RPT-02 | Phase 10 | Pending |
-| RPT-03 | Phase 10 | Pending |
-| RPT-04 | Phase 10 | Pending |
-| RPT-05 | Phase 10 | Pending |
-| RPT-06 | Phase 10 | Pending |
-| RPT-07 | Phase 10 | Pending |
+| RPT-01 | Phase 10 | Complete |
+| RPT-02 | Phase 10 | Complete |
+| RPT-03 | Phase 10 | Complete |
+| RPT-04 | Phase 10 | Complete |
+| RPT-05 | Phase 10 | Complete |
+| RPT-06 | Phase 10 | Complete |
+| RPT-07 | Phase 10 | Complete |
 | DATA-01 | Phase 7 | Complete |
 | DATA-02 | Phase 11 | Pending |
 | DATA-03 | Phase 11 | Pending |
-| DATA-04 | Phase 10 | Pending |
+| DATA-04 | Phase 10 | Complete |
 | DATA-05 | Phase 7 | Complete |
 | UI-01 | Phase 11 | Pending |
 | UI-02 | Phase 11 | Pending |
