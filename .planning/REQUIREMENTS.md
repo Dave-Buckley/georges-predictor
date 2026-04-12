@@ -106,7 +106,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **DATA-02**: Season archive — previous season data stored with historical records
 - [ ] **DATA-03**: Member profiles with total points and history across seasons
 - [ ] **DATA-04**: Local fallback — George can export everything needed to run manually
-- [ ] **DATA-05**: Late joiner support — George adds members mid-season with custom starting points
+- [x] **DATA-05**: Late joiner support — George adds members mid-season with custom starting points
 
 ### UI & Branding
 
@@ -224,7 +224,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DATA-02 | Phase 11 | Pending |
 | DATA-03 | Phase 11 | Pending |
 | DATA-04 | Phase 10 | Pending |
-| DATA-05 | Phase 7 | Pending |
+| DATA-05 | Phase 7 | Complete |
 | UI-01 | Phase 11 | Pending |
 | UI-02 | Phase 11 | Pending |
 | UI-03 | Phase 11 | Pending |

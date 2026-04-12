@@ -18,7 +18,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 4: Scoring Engine** - Pure function scoring library, live results, manual override, point breakdown storage (completed 2026-04-11)
 - [x] **Phase 5: Admin Panel** - George's control dashboard, overrides, bonus management, gameweek close (completed 2026-04-11)
 - [x] **Phase 6: Bonus System** - Weekly bonuses, Golden Glory, Double Bubble, two-phase confirmation (completed 2026-04-11)
-- [ ] **Phase 7: Mid-Season Import** - Load existing standings and late joiners before members onboard (launch blocker)
+- [x] **Phase 7: Mid-Season Import** - Load existing standings and late joiners before members onboard (completed 2026-04-12)
 - [ ] **Phase 8: Last One Standing & H2H** - LOS sub-competition, H2H steal detection and reporting
 - [ ] **Phase 9: Pre-Season Predictions** - Pre-season submission, lockout, end-of-season scoring
 - [ ] **Phase 10: Reports & Export** - Weekly PDF, XLSX, email delivery, on-site report page, full data export
@@ -138,10 +138,10 @@ Plans:
   2. Existing pre-season picks are stored against each member's account and match George's records
   3. A late-joining member added by George mid-season starts with the correct custom point total George specifies
   4. After import, all 48 existing members appear in the standings with correct totals before any new gameweek plays
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 Plans:
-- [ ] 07-01-PLAN.md — Migration 007 (pre_season_picks table, handle_new_user trigger fix, members.updated_at), types, validators, parseImportText pure function with tests
-- [ ] 07-02-PLAN.md — Import server actions (importMembers, clearImportedMembers, importPreSeasonPicks), admin import page with paste/preview/confirm UI, sidebar link
+- [x] 07-01-PLAN.md — Migration 007 (pre_season_picks table, handle_new_user trigger fix, members.updated_at), types, validators, parseImportText pure function with tests
+- [x] 07-02-PLAN.md — Import server actions (importMembers, clearImportedMembers, importPreSeasonPicks), admin import page with paste/preview/confirm UI, sidebar link
 
 ### Phase 8: Last One Standing & H2H
 **Goal**: The Last One Standing sub-competition runs automatically alongside weekly predictions, and H2H steal situations are detected and flagged without manual work from George.
@@ -207,7 +207,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 4. Scoring Engine | 3/3 | Complete   | 2026-04-11 |
 | 5. Admin Panel | 4/4 | Complete   | 2026-04-11 |
 | 6. Bonus System | 3/3 | Complete   | 2026-04-11 |
-| 7. Mid-Season Import | 1/2 | In Progress|  |
+| 7. Mid-Season Import | 2/2 | Complete   | 2026-04-12 |
 | 8. Last One Standing & H2H | 0/TBD | Not started | - |
 | 9. Pre-Season Predictions | 0/TBD | Not started | - |
 | 10. Reports & Export | 0/TBD | Not started | - |
@@ -215,4 +215,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 
 ---
 *Roadmap created: 2026-04-11*
-*Last updated: 2026-04-12 — Phase 7 plans created (2 plans in 2 waves)*
+*Last updated: 2026-04-12 — Phase 7 complete (2/2 plans, admin import page + server actions)*

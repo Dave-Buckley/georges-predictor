@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: planning
-stopped_at: Completed 07-mid-season-import-01-PLAN.md
-last_updated: "2026-04-12T00:01:46.679Z"
-last_activity: 2026-04-11 — Roadmap created, 11 phases derived from 71 v1 requirements
+status: in-progress
+stopped_at: Completed 07-mid-season-import-02-PLAN.md
+last_updated: "2026-04-12T00:00:00.000Z"
+last_activity: 2026-04-12 — Phase 7 Plan 2 complete: admin import page, server actions, DATA-05 regression tests
 progress:
   total_phases: 11
   completed_phases: 6
   total_plans: 23
-  completed_plans: 22
-  percent: 0
+  completed_plans: 23
+  percent: 96
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-11)
 
 **Core value:** Accurate, automated point calculation that removes all manual load from George while keeping him in full control of the competition.
-**Current focus:** Phase 1 — Foundation
+**Current focus:** Phase 7 — Mid-Season Import (complete)
 
 ## Current Position
 
-Phase: 1 of 11 (Foundation)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-04-11 — Roadmap created, 11 phases derived from 71 v1 requirements
+Phase: 7 of 11 (Mid-Season Import)
+Plan: 2 of 2 in current phase — COMPLETE
+Status: Phase 7 complete, ready for Phase 8
+Last activity: 2026-04-12 — Phase 7 Plan 2 complete: admin import page, server actions, DATA-05 regression tests
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [█████████░] 96%
 
 ## Performance Metrics
 
@@ -71,6 +71,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 06-bonus-system P02 | 3 | 2 tasks | 5 files |
 | Phase 06-bonus-system P03 | 3 | 2 tasks | 5 files |
 | Phase 07-mid-season-import P01 | 15 | 2 tasks | 5 files |
+| Phase 07-mid-season-import P02 | 45 | 4 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -140,6 +141,9 @@ Recent decisions affecting current work:
 - [Phase 06-bonus-system]: Double Bubble formula shown as (base + bonus) x 2 in footer for member transparency
 - [Phase 07-mid-season-import]: pre_season_picks uses text arrays for team names (not UUID FKs) — Championship teams not in teams table
 - [Phase 07-mid-season-import]: handle_new_user trigger uses lower(trim()) case-insensitive display_name matching to link imported placeholder rows on registration
+- [Phase 07-mid-season-import P02]: importMembers uses createAdminClient (not session client) — RLS blocks member inserts with user_id=null via session client
+- [Phase 07-mid-season-import P02]: clearImportedMembers targets only user_id IS NULL rows — registered members cannot be accidentally deleted
+- [Phase 07-mid-season-import P02]: importPreSeasonPicks uses case-insensitive name matching and upsert with onConflict member_id,season for idempotent re-import
 
 ### Pending Todos
 
@@ -154,6 +158,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-04-12T00:01:46.676Z
-Stopped at: Completed 07-mid-season-import-01-PLAN.md
+Last session: 2026-04-12T00:00:00.000Z
+Stopped at: Completed 07-mid-season-import-02-PLAN.md
 Resume file: None
