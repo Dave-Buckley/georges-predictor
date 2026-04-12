@@ -4,6 +4,7 @@ import { SyncStatus } from '@/components/admin/sync-status'
 import { CloseGameweekDialog } from '@/components/admin/close-gameweek-dialog'
 import { getCurrentSeason, getUpcomingSeason } from '@/lib/pre-season/seasons'
 import type { MemberRow, AdminNotificationRow, SyncLogRow, GameweekRow } from '@/lib/supabase/types'
+import { DownloadFullExport } from './_components/DownloadFullExport'
 
 export const dynamic = 'force-dynamic'
 
@@ -436,6 +437,14 @@ export default async function AdminDashboardPage() {
             </div>
           ))}
         </div>
+      </section>
+
+      {/* Tools — full-season export, etc. */}
+      <section className="mb-8">
+        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
+          Tools
+        </h2>
+        <DownloadFullExport />
       </section>
 
       {/* Recent notifications */}
