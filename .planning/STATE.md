@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Phase 8 context gathered, ready to plan
-last_updated: "2026-04-12T00:53:30.430Z"
-last_activity: "2026-04-12 — Phase 7 Plan 2 complete: admin import page, server actions, DATA-05 regression tests"
+status: in-progress
+stopped_at: "Completed 08-01-PLAN.md (LOS + H2H foundations) — next up 08-02 (member submission + sync pipeline integration)"
+last_updated: "2026-04-12T15:41:28.004Z"
+last_activity: "2026-04-12 — Phase 8 Plan 1 complete: migration 008 (LOS + H2H tables + RLS), pure evaluators, Zod validators, 41 new tests (full suite 288/288)"
 progress:
   total_phases: 11
   completed_phases: 7
-  total_plans: 23
-  completed_plans: 23
-  percent: 96
+  total_plans: 26
+  completed_plans: 24
+  percent: 92
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-11)
 
 **Core value:** Accurate, automated point calculation that removes all manual load from George while keeping him in full control of the competition.
-**Current focus:** Phase 7 — Mid-Season Import (complete)
+**Current focus:** Phase 8 — Last One Standing + Head-to-Head (in progress)
 
 ## Current Position
 
-Phase: 7 of 11 (Mid-Season Import)
-Plan: 2 of 2 in current phase — COMPLETE
-Status: Phase 7 complete, ready for Phase 8
-Last activity: 2026-04-12 — Phase 7 Plan 2 complete: admin import page, server actions, DATA-05 regression tests
+Phase: 8 of 11 (Last One Standing + Head-to-Head)
+Plan: 1 of 3 in current phase — COMPLETE
+Status: Plan 08-01 complete; next up Plan 08-02 (member submission + sync pipeline integration)
+Last activity: 2026-04-12 — Phase 8 Plan 1 complete: migration 008 (LOS + H2H tables + RLS), pure evaluators, Zod validators, 41 new tests (full suite 288/288)
 
-Progress: [█████████░] 96%
+Progress: [█████████░] 92%
 
 ## Performance Metrics
 
@@ -72,6 +72,7 @@ Progress: [█████████░] 96%
 | Phase 06-bonus-system P03 | 3 | 2 tasks | 5 files |
 | Phase 07-mid-season-import P01 | 15 | 2 tasks | 5 files |
 | Phase 07-mid-season-import P02 | 45 | 4 tasks | 8 files |
+| Phase 08-last-one-standing-h2h P01 | 32 | 3 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -144,6 +145,12 @@ Recent decisions affecting current work:
 - [Phase 07-mid-season-import P02]: importMembers uses createAdminClient (not session client) — RLS blocks member inserts with user_id=null via session client
 - [Phase 07-mid-season-import P02]: clearImportedMembers targets only user_id IS NULL rows — registered members cannot be accidentally deleted
 - [Phase 07-mid-season-import P02]: importPreSeasonPicks uses case-insensitive name matching and upsert with onConflict member_id,season for idempotent re-import
+- [Phase 08-last-one-standing-h2h]: los_picks UPSERT key is (competition_id, member_id, gameweek_id) — Plan 02 server actions must match
+- [Phase 08-last-one-standing-h2h]: evaluateLosRound withholds winner_id until survivors' picks are settled (no pending) — prevents premature winner mid-matchday
+- [Phase 08-last-one-standing-h2h]: availableTeams full-resets to all 20 the moment the picked set covers the pool; duplicates de-duped; out-of-pool ids ignored
+- [Phase 08-last-one-standing-h2h]: detectWeeklyTies filters total <= 0 before dense-ranking (SQL parity); member_ids/winner_ids sorted alphabetically for determinism
+- [Phase 08-last-one-standing-h2h]: Partial unique index los_competitions_one_active ON (status) WHERE status='active' enforces single-active-cycle at DB level
+- [Phase 08-last-one-standing-h2h]: No DB triggers for LOS lifecycle — all orchestration is application-level (Pitfall 5 from 08-RESEARCH.md)
 
 ### Pending Todos
 
@@ -158,6 +165,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-04-12T00:53:30.427Z
-Stopped at: Phase 8 context gathered, ready to plan
-Resume file: .planning/phases/08-last-one-standing-h2h/08-CONTEXT.md
+Last session: 2026-04-12T15:41:28.001Z
+Stopped at: Completed 08-01-PLAN.md (LOS + H2H foundations)
+Resume file: None
