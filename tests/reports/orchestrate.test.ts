@@ -167,20 +167,27 @@ vi.mock('@react-email/components', async (orig) => {
   }
 })
 
-// sendWithAttachments — recorded
+// sendWithAttachments — recorded via vi.hoisted so mock factory can access it.
 interface SendCall {
   to: string | string[]
   subject: string
   attachments?: Array<{ filename: string; content: unknown }>
 }
-const sendCalls: SendCall[] = []
-const sendSpy = vi.fn(async (payload: SendCall) => {
-  sendCalls.push(payload)
-  return { id: 'mock-id' }
+const hoisted = vi.hoisted(() => {
+  const calls: SendCall[] = []
+  return { calls }
 })
+const sendCalls = hoisted.calls
+
 vi.mock('@/lib/email/send-attachments', () => ({
-  sendWithAttachments: sendSpy,
+  sendWithAttachments: vi.fn(async (payload: SendCall) => {
+    hoisted.calls.push(payload)
+    return { id: 'mock-id' }
+  }),
 }))
+
+// Resolved lazily after mock is in place.
+let sendSpy: ReturnType<typeof vi.fn>
 
 // ─── Imports under test (after mocks) ────────────────────────────────────────
 
@@ -189,6 +196,9 @@ import {
   sendPersonalReports,
   sendAdminWeekly,
 } from '@/lib/reports/orchestrate'
+import { sendWithAttachments as sendWithAttachmentsMock } from '@/lib/email/send-attachments'
+
+sendSpy = sendWithAttachmentsMock as unknown as ReturnType<typeof vi.fn>
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -300,13 +310,13 @@ describe('sendPersonalReports', () => {
     expect(notif).toBeDefined()
   })
 
-  it('Test 5: sleeps ≥500ms between consecutive sends (spy on orchestrate.sleep)', async () => {
+  it('Test 5: sleeps ≥500ms between consecutive sends (spy on _pacing.sleep)', async () => {
     seedMembers(3)
 
-    // Spy on the orchestrator's exported `sleep` helper and record its arg.
+    // Spy on the orchestrator's pacing wrapper and record its arg.
     const mod = await import('@/lib/reports/orchestrate')
     const delays: number[] = []
-    const spy = vi.spyOn(mod, 'sleep').mockImplementation(async (ms: number) => {
+    const spy = vi.spyOn(mod._pacing, 'sleep').mockImplementation(async (ms: number) => {
       delays.push(ms)
     })
 
