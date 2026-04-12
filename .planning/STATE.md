@@ -237,6 +237,9 @@ Recent decisions affecting current work:
 
 - [Phase 7] Add "Bucks" (Dave — the builder/backup admin) as a member in mid-season import with points matching the current league leader. Dave needs to use the platform alongside George to QA and catch issues before members use it.
 - [Phase 10] Kickoff-time backup email to George — when the first fixture of each gameweek kicks off (predictions/LOS/bonus all locked at that moment), email George a single document containing every member's predictions, LOS pick, and bonus pick for the gameweek. Disaster-recovery backup so George can run the gameweek manually if the system dies mid-week. Timing variant of RPT-03/RPT-04.
+- [Pre-launch] Real-world state at go-live: imported points tally reflects GW31 finished. GW32 games have been played but scores are NOT in yet. At go-live George (or David) must manually enter GW32 results via the admin fixtures page (editFixture → score override → triggers recalculation). After GW32 is posted, the football-data.org sync takes over automatically from GW33 onwards.
+- [Pre-launch fix — HIGH] Double Bubble display bug in `src/lib/reports/_data/gather-gameweek-data.ts` — `doubleBubbleActive` flag is passed through but `weeklyPoints` is NOT multiplied. PDFs show raw totals on GW10/20/30; XLSX reports are correct. Fix before any real Double Bubble week email ships. Bundle into Phase 11 Plan 01 or treat as standalone fix.
+- [Pre-launch fix — MEDIUM] Add DB CHECK constraint to `bonus_awards.points_awarded`: `CHECK (points_awarded IN (0, 20, 60))`. Currently only code-enforced via the TypeScript return type. Bundle into migration 012 (Phase 11 Plan 01).
 
 ### Blockers/Concerns
 
