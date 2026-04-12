@@ -11,6 +11,7 @@ import { fetchAllMatches, type FootballDataMatch } from './football-data-client'
 import { recalculateFixture } from '@/lib/scoring/recalculate'
 import { runLosRound } from '@/lib/los/round'
 import { detectH2HForGameweek, resolveStealsForGameweek } from '@/lib/h2h/sync-hook'
+import { maybeSendKickoffBackup } from '@/lib/reports/kickoff-backup-hook'
 import type { TeamRow, GameweekRow } from '@/lib/supabase/types'
 
 export interface SyncResult {
@@ -479,6 +480,19 @@ export async function syncFixtures(): Promise<SyncResult> {
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Unknown post-scoring pipeline error'
       errors.push(`Post-scoring pipeline error: ${msg}`)
+    }
+
+    // ── 9c. Kickoff backup hook ──────────────────────────────────────────────
+    // Piggybacks on the existing sync cron. Sends one email (PDF+XLSX) to
+    // George + Dave the first sync after any fixture of a gameweek kicks off.
+    // Idempotent via `gameweeks.kickoff_backup_sent_at`. Wrapped in try/catch so
+    // a failure here never breaks the sync pipeline.
+    try {
+      await maybeSendKickoffBackup(adminClient)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Unknown kickoff backup error'
+      console.error('[sync-fixtures] kickoff backup hook failed:', msg)
+      errors.push(`Kickoff backup hook error: ${msg}`)
     }
 
     // ── 10. Create admin notifications for reschedules/moves ─────────────────
