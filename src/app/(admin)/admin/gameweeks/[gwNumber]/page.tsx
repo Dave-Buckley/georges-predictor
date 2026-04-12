@@ -231,7 +231,7 @@ export default async function SingleGameweekPage({ params }: PageProps) {
           {/* Double Bubble toggle */}
           <div className="flex-shrink-0">
             <p className="text-xs text-gray-500 mb-1">Double Bubble</p>
-            <form action={toggleDoubleBubble} className="inline-flex">
+            <form action={toggleDoubleBubble as unknown as (formData: FormData) => void} className="inline-flex">
               <input type="hidden" name="gameweek_id" value={gameweek.id} />
               <input
                 type="hidden"

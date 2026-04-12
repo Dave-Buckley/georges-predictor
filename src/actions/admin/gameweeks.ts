@@ -61,7 +61,7 @@ export async function getCloseGameweekSummary(
     return { error: 'Failed to fetch fixtures' }
   }
 
-  const allFixtures = (fixtures ?? []) as Array<{
+  const allFixtures = (fixtures ?? []) as unknown as Array<{
     id: string
     status: string
     home_team: { name: string }
@@ -156,7 +156,7 @@ export async function closeGameweek(
     .select('id, status, home_team:teams!home_team_id(name), away_team:teams!away_team_id(name)')
     .eq('gameweek_id', gameweek_id)
 
-  const allFixtures = (fixtures ?? []) as Array<{
+  const allFixtures = (fixtures ?? []) as unknown as Array<{
     id: string
     status: string
     home_team: { name: string }

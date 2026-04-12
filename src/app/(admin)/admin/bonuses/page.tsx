@@ -97,7 +97,7 @@ export default async function BonusesPage() {
           <PlusCircle className="w-4 h-4 text-gray-500" />
           Create Custom Bonus Type
         </h2>
-        <form action={createBonusType} className="flex flex-col sm:flex-row gap-3">
+        <form action={createBonusType as unknown as (formData: FormData) => void} className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1">
             <input
               type="text"
@@ -209,7 +209,7 @@ export default async function BonusesPage() {
                     {/* Double Bubble toggle */}
                     <td className="px-4 py-3 text-center">
                       <form
-                        action={toggleDoubleBubble}
+                        action={toggleDoubleBubble as unknown as (formData: FormData) => void}
                         className="inline-flex items-center justify-center"
                       >
                         <input type="hidden" name="gameweek_id" value={gw.id} />

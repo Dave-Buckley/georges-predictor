@@ -70,7 +70,7 @@ export function ConfirmBonusAwards({
 
           {pendingCount > 0 && (
             <form
-              action={bulkConfirmBonusAwards}
+              action={bulkConfirmBonusAwards as unknown as (formData: FormData) => void}
               onSubmit={(e) => {
                 // Optimistic: form submits normally (server action)
                 void e
@@ -151,7 +151,7 @@ export function ConfirmBonusAwards({
                   <td className="px-4 py-3">
                     {award.awarded === null ? (
                       <div className="flex items-center justify-end gap-2">
-                        <form action={confirmBonusAward}>
+                        <form action={confirmBonusAward as unknown as (formData: FormData) => void}>
                           <input type="hidden" name="award_id" value={award.id} />
                           <input type="hidden" name="awarded" value="true" />
                           <button
@@ -162,7 +162,7 @@ export function ConfirmBonusAwards({
                             Approve
                           </button>
                         </form>
-                        <form action={confirmBonusAward}>
+                        <form action={confirmBonusAward as unknown as (formData: FormData) => void}>
                           <input type="hidden" name="award_id" value={award.id} />
                           <input type="hidden" name="awarded" value="false" />
                           <button

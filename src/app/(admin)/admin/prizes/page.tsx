@@ -50,7 +50,7 @@ const STATUS_STYLES: Record<string, { label: string; className: string }> = {
 
 async function AddCustomPrizeForm() {
   return (
-    <form action={createPrize} className="bg-white border border-gray-200 rounded-2xl p-6 space-y-4">
+    <form action={createPrize as unknown as (formData: FormData) => void} className="bg-white border border-gray-200 rounded-2xl p-6 space-y-4">
       <h2 className="text-lg font-semibold text-gray-900">Add Custom Prize</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>

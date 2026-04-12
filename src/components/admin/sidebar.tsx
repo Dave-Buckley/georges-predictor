@@ -13,6 +13,7 @@ import {
   Star,
   Award,
   BarChart3,
+  Upload,
   Menu,
   X,
 } from 'lucide-react'
@@ -68,6 +69,11 @@ export function AdminSidebar({ adminEmail }: SidebarProps) {
       href: '/admin/prizes',
       label: 'Prizes',
       icon: Award,
+    },
+    {
+      href: '/admin/import',
+      label: 'Import Data',
+      icon: Upload,
     },
     {
       href: '/admin/reports',

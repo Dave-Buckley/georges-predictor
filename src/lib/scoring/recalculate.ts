@@ -116,7 +116,7 @@ export async function recalculateFixture(
       // Skip already-confirmed (true) or already-rejected (false) awards — don't overwrite George's decision.
       if (award.awarded !== null) continue
 
-      const bonusTypeName = (award.bonus_type as { name: string } | null)?.name ?? ''
+      const bonusTypeName = (award.bonus_type as unknown as { name: string } | null)?.name ?? ''
 
       // Find this member's prediction_scores for the same fixture
       const memberScore = scoreRows.find((s: { member_id: string }) => s.member_id === award.member_id)
