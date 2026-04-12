@@ -2,17 +2,17 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_plan: Phase 11 Plan 01 shipped — polish foundation + pre-launch audit fixes
+current_plan: Phase 11 Plan 02 shipped — member profile pages + home rank widget
 status: completed
-stopped_at: Completed 11-01-PLAN.md
-last_updated: "2026-04-12T20:42:53.118Z"
+stopped_at: Completed 11-02-PLAN.md
+last_updated: "2026-04-12T20:58:23.470Z"
 last_activity: 2026-04-12
 progress:
   total_phases: 11
   completed_phases: 10
   total_plans: 37
-  completed_plans: 34
-  percent: 92
+  completed_plans: 35
+  percent: 95
 ---
 
 # Project State
@@ -22,17 +22,17 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-11)
 
 **Core value:** Accurate, automated point calculation that removes all manual load from George while keeping him in full control of the competition.
-**Current focus:** Phase 11 (polish & continuity) — Plan 01 shipped, next up Plan 02 (member profile pages).
+**Current focus:** Phase 11 (polish & continuity) — Plan 02 shipped, next up Plan 03 (season archive wizard) or Plan 04 (copy polish).
 
 ## Current Position
 
 Phase: 11 of 11 (Polish & Continuity) — IN PROGRESS
-Current Plan: Phase 11 Plan 01 shipped — polish foundation + pre-launch audit fixes
-Total Plans in Phase: TBD (01 shipped; 02-0N pending plan-phase)
-Status: Plan 01 complete — see SUMMARY for substantive detail. Migration 012, PL palette, toSlug, MemberLink site-wide, Double Bubble display fix. 554/554 tests green.
+Current Plan: Phase 11 Plan 02 shipped — member profile pages + home rank widget
+Total Plans in Phase: 4 (01, 02 shipped; 03-04 remaining)
+Status: Plan 02 complete — aggregateSeasonStats pure lib + /members/[slug] auth-gated profile page + pure-SVG WeeklyPointsChart + 4 sub-components + HomeRankWidget on dashboard. 588/588 tests green. Build green.
 Last activity: 2026-04-12
 
-Progress: [█████████░] 92% of plans (10/11 phases complete; 34/37 plans shipped; Phase 11 in progress)
+Progress: [██████████] 95% of plans (10/11 phases complete; 35/37 plans shipped; Phase 11 in progress)
 
 **Deferred QA (tracked for end-of-project master QA sheet — `docs/FINAL_QA_CHECKLIST.md`):**
 - Phase 8 Task 3 (08-03): 6 manual UI scenarios (admin LOS page, mobile LOS picker, member /los, H2H banner stages, notification triggers, RLS Network spot-check) — covered in §7, §8
@@ -91,6 +91,7 @@ Progress: [█████████░] 92% of plans (10/11 phases complete; 
 | Phase 10-reports-export P03 | 11 | 3 tasks | 10 files |
 | Phase 10-reports-export P04 | 28 | 3 tasks + 1 deferred QA | 13 files |
 | Phase 11-polish-continuity P01 | 38 min | 4 tasks tasks | 17 files files |
+| Phase 11-polish-continuity P02 | 32 min | 3 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -242,6 +243,10 @@ Recent decisions affecting current work:
 - [Phase 11-polish-continuity P01]: bonus_awards.points_awarded CHECK(0, 20, 60) added via migration 012 section 7 — matches TypeScript return type on calculateBonusPoints, prevents accidental bad manual edits via Supabase direct SQL.
 - [Phase 11-polish-continuity P01]: Home page / re-exports /standings default, but declares 'export const dynamic = force-dynamic' inline — Next 16 Turbopack cannot statically parse 'export { dynamic } from ...' re-exports of route segment config. Blocking fix for build.
 - [Phase 11-polish-continuity P01]: admin_notifications CHECK extended via drop+re-add ritual (Pitfall 3) — preserved all 23 Phase 10 types + added season_archived + season_launched for Phase 11 season-lifecycle flows.
+- [Phase 11-polish-continuity]: [Phase 11-polish-continuity P02]: aggregateSeasonStats pure library takes caller-pre-computed weeklyLeaderboard so cross-member GW-winner calc stays out of the lib — library remains zero-imports and fully unit-testable without DB mocks.
+- [Phase 11-polish-continuity]: [Phase 11-polish-continuity P02]: /members/[slug] uses /login (not plan-specified /signin) matching repo-wide auth convention. Unknown slug renders empty state with link-back to /standings (no 404 throw).
+- [Phase 11-polish-continuity]: [Phase 11-polish-continuity P02]: HomeRankWidget dense-ranks members.starting_points DESC with alpha tiebreak, slices viewer+/-2 clamped at edges, returns null for non-member viewers. Dashboard query wrapped in try/catch — widget hides silently on failure rather than crashing dashboard.
+- [Phase 11-polish-continuity]: [Phase 11-polish-continuity P02]: Vitest 4 vi.hoisted pattern adopted for factory mocks that reference module-scope identifiers — avoids 'Cannot access X before initialization' ReferenceError from vi.mock hoisting before const declarations.
 
 ### Pending Todos
 
@@ -260,6 +265,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-04-12T20:42:53.115Z
-Stopped at: Completed 11-01-PLAN.md
+Last session: 2026-04-12T20:58:23.466Z
+Stopped at: Completed 11-02-PLAN.md
 Resume file: None
