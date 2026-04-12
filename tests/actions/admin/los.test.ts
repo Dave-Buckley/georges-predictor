@@ -270,6 +270,9 @@ describe('reinstateMember', () => {
             }),
           }
         }
+        if (table === 'admin_notifications') {
+          return { insert: vi.fn().mockResolvedValue({ error: null }) }
+        }
         return { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis() }
       }),
     }

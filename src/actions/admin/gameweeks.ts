@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { closeGameweekSchema, reopenGameweekSchema } from '@/lib/validators/gameweeks'
+import { detectH2HForGameweek, resolveStealsForGameweek } from '@/lib/h2h/sync-hook'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -215,6 +216,30 @@ export async function closeGameweek(
       title: `Gameweek ${gwNumber} closed`,
       message: `Closed by admin`,
     })
+
+  // ── Non-blocking H2H integration (Phase 8 Plan 03) ──────────────────────────
+  // Run tie detection for this gameweek + resolution for any steals landing in it.
+  // Errors here MUST NOT fail the close operation — logged via admin_notifications.
+  try {
+    await detectH2HForGameweek(supabase, gameweek_id)
+  } catch (error) {
+    console.error('[closeGameweek] H2H detection failed:', error)
+    await supabase.from('admin_notifications').insert({
+      type: 'system',
+      title: 'H2H detection failed',
+      message: `detectH2HForGameweek threw on GW${gwNumber}: ${String(error)}`,
+    })
+  }
+  try {
+    await resolveStealsForGameweek(supabase, gameweek_id)
+  } catch (error) {
+    console.error('[closeGameweek] H2H steal resolution failed:', error)
+    await supabase.from('admin_notifications').insert({
+      type: 'system',
+      title: 'H2H steal resolution failed',
+      message: `resolveStealsForGameweek threw on GW${gwNumber}: ${String(error)}`,
+    })
+  }
 
   revalidatePath('/admin', 'layout')
 

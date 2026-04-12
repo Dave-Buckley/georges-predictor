@@ -444,12 +444,26 @@ describe('closeGameweek', () => {
         if (table === 'admin_notifications') {
           return {
             insert: vi.fn().mockImplementation((row: Record<string, unknown>) => {
-              capturedNotification = row
+              // Preserve first gw_complete notification — H2H hooks may fire
+              // follow-up 'system' notifications in non-blocking catch blocks.
+              if (!capturedNotification || capturedNotification.type !== 'gw_complete') {
+                capturedNotification = row
+              }
               return Promise.resolve({ error: null })
             }),
           }
         }
-        return { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis() }
+        // H2H hook queries (h2h_steals.select.eq.is, gameweeks.select.eq.single)
+        // gracefully return empty data so post-close hooks don't blow up the test.
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              is: vi.fn().mockResolvedValue({ data: [], error: null }),
+              single: vi.fn().mockResolvedValue({ data: null, error: null }),
+            }),
+          }),
+          eq: vi.fn().mockReturnThis(),
+        }
       }),
     }
 
