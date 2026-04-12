@@ -96,6 +96,72 @@ export function mockGameweekData(
   }
 }
 
+// ─── Full-season export fixture ──────────────────────────────────────────────
+
+import type { FullExportData } from '@/lib/reports/full-export-xlsx'
+
+/**
+ * Minimal 3-gameweek season snapshot for full-export tests.
+ * Shape matches `FullExportData` exported by full-export-xlsx.ts.
+ */
+export function mockFullSeasonData(
+  patch: Partial<FullExportData> = {},
+): FullExportData {
+  const gameweeks = [1, 2, 3].map((n) =>
+    mockGameweekData({ gwNumber: n, gwId: `gw-${n}` }),
+  )
+  const firstMembers = gameweeks[0].standings
+  return {
+    season: '2025-26',
+    gameweeks,
+    preSeasonAwards: firstMembers.map((m, i) => ({
+      memberId: m.memberId,
+      displayName: m.displayName,
+      calculatedPoints: 30 + i,
+      awardedPoints: i % 2 === 0 ? 30 + i : null,
+      confirmed: i % 2 === 0,
+      flags: { all_correct_overall: i === 0 },
+      picks: { top4: ['Arsenal', 'Man City', 'Liverpool', 'Spurs'] },
+    })),
+    membersMasterList: firstMembers.map((m) => ({
+      id: m.memberId,
+      displayName: m.displayName,
+      email: `${m.memberId}@example.com`,
+      totalPoints: m.totalPoints,
+    })),
+    fixturesMasterList: gameweeks.flatMap((gw) =>
+      gw.fixtures.map((f) => ({
+        gwNumber: gw.gwNumber,
+        fixtureId: f.id,
+        home: f.home,
+        away: f.away,
+        kickoffIso: f.kickoffIso,
+        homeScore: f.homeScore,
+        awayScore: f.awayScore,
+        status: f.status,
+      })),
+    ),
+    h2hHistory: [
+      {
+        detectedInGw: 1,
+        resolvesInGw: 2,
+        members: ['m-1', 'm-2'],
+        winner: null,
+        position: 1,
+      },
+    ],
+    losHistory: firstMembers.map((m, i) => ({
+      memberId: m.memberId,
+      displayName: m.displayName,
+      teamsUsed: [`Team${i + 1}`],
+      eliminated: i >= 8,
+      eliminatedAtGw: i >= 8 ? 1 : null,
+    })),
+    generatedAtIso: '2025-09-01T12:00:00Z',
+    ...patch,
+  }
+}
+
 // ─── Supabase .from() chain stub ─────────────────────────────────────────────
 
 /**
