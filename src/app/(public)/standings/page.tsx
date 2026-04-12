@@ -20,6 +20,8 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { gatherGameweekData } from '@/lib/reports/_data/gather-gameweek-data'
 import { MemberLink } from '@/components/shared/member-link'
 import { StandingsHero } from '@/components/hero/standings-hero'
+import { CurrentGameweekBanner } from '@/components/shared/current-gameweek-banner'
+import { getCurrentGameweek } from '@/lib/gameweeks/current'
 
 export const dynamic = 'force-dynamic'
 
@@ -150,12 +152,15 @@ async function getStandingsPageData(): Promise<{
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export default async function StandingsPage() {
-  const { standings, latestGw, fixtures, topWeekly } =
-    await getStandingsPageData()
+  const [{ standings, latestGw, fixtures, topWeekly }, current] = await Promise.all([
+    getStandingsPageData(),
+    getCurrentGameweek(),
+  ])
 
   return (
     <div className="text-white">
       <StandingsHero />
+      <CurrentGameweekBanner current={current} />
       <main className="max-w-4xl mx-auto px-4 py-10 space-y-10">
       {/* ── Header ────────────────────────────────────────────────────────── */}
       <header className="space-y-2">

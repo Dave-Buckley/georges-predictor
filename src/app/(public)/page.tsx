@@ -17,6 +17,8 @@ import Link from 'next/link'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { MemberLink } from '@/components/shared/member-link'
 import { LandingHero } from '@/components/hero/landing-hero'
+import { CurrentGameweekBanner } from '@/components/shared/current-gameweek-banner'
+import { getCurrentGameweek } from '@/lib/gameweeks/current'
 import EndOfSeasonPage from '@/app/(public)/end-of-season/page'
 
 export const dynamic = 'force-dynamic'
@@ -85,11 +87,15 @@ export default async function HomePage() {
     return <EndOfSeasonPage />
   }
 
-  const top = await getTopStandings(5)
+  const [top, current] = await Promise.all([
+    getTopStandings(5),
+    getCurrentGameweek(),
+  ])
 
   return (
     <div className="text-white">
       <LandingHero showCta />
+      <CurrentGameweekBanner current={current} />
 
       <main className="max-w-4xl mx-auto px-4 py-10 space-y-10">
         {/* Top-5 preview */}
