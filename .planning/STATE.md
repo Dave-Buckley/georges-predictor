@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in-progress
-stopped_at: "Completed 08-01-PLAN.md (LOS + H2H foundations) — next up 08-02 (member submission + sync pipeline integration)"
-last_updated: "2026-04-12T15:41:28.004Z"
-last_activity: "2026-04-12 — Phase 8 Plan 1 complete: migration 008 (LOS + H2H tables + RLS), pure evaluators, Zod validators, 41 new tests (full suite 288/288)"
+stopped_at: Completed 08-02-PLAN.md (member submission + sync pipeline integration) — next up 08-03 (admin UI + member status views)
+last_updated: "2026-04-12T15:57:17.324Z"
+last_activity: "2026-04-12 — Phase 8 Plan 2 complete: submitPredictions LOS integration + LosTeamPicker + runLosRound + detectH2HForGameweek/resolveStealsForGameweek + sync.ts wiring, 20 new tests (full suite 308/308)"
 progress:
   total_phases: 11
   completed_phases: 7
   total_plans: 26
-  completed_plans: 24
-  percent: 92
+  completed_plans: 25
+  percent: 96
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-11)
 ## Current Position
 
 Phase: 8 of 11 (Last One Standing + Head-to-Head)
-Plan: 1 of 3 in current phase — COMPLETE
-Status: Plan 08-01 complete; next up Plan 08-02 (member submission + sync pipeline integration)
-Last activity: 2026-04-12 — Phase 8 Plan 1 complete: migration 008 (LOS + H2H tables + RLS), pure evaluators, Zod validators, 41 new tests (full suite 288/288)
+Plan: 2 of 3 in current phase — COMPLETE
+Status: Plan 08-02 complete; next up Plan 08-03 (admin UI + member status views)
+Last activity: 2026-04-12 — Phase 8 Plan 2 complete: submitPredictions LOS integration + LosTeamPicker + runLosRound + detectH2HForGameweek/resolveStealsForGameweek + sync.ts wiring, 20 new tests (full suite 308/308)
 
-Progress: [█████████░] 92%
+Progress: [██████████] 96%
 
 ## Performance Metrics
 
@@ -73,6 +73,7 @@ Progress: [█████████░] 92%
 | Phase 07-mid-season-import P01 | 15 | 2 tasks | 5 files |
 | Phase 07-mid-season-import P02 | 45 | 4 tasks | 8 files |
 | Phase 08-last-one-standing-h2h P01 | 32 | 3 tasks | 13 files |
+| Phase 08-last-one-standing-h2h P02 | 12 | 2 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -151,6 +152,10 @@ Recent decisions affecting current work:
 - [Phase 08-last-one-standing-h2h]: detectWeeklyTies filters total <= 0 before dense-ranking (SQL parity); member_ids/winner_ids sorted alphabetically for determinism
 - [Phase 08-last-one-standing-h2h]: Partial unique index los_competitions_one_active ON (status) WHERE status='active' enforces single-active-cycle at DB level
 - [Phase 08-last-one-standing-h2h]: No DB triggers for LOS lifecycle — all orchestration is application-level (Pitfall 5 from 08-RESEARCH.md)
+- [Phase 08-last-one-standing-h2h]: submitPredictions 4th param losTeamId (default=null) — backward compatible signature extension; response gains top-level losSaved boolean
+- [Phase 08-last-one-standing-h2h]: LOS pre-check (active-comp, eligibility, already-used, fixture resolution) runs BEFORE predictions upsert — ensures mandatory-pick rejection returns saved=0, no partial writes
+- [Phase 08-last-one-standing-h2h]: h2h_steals insert uses plain INSERT + 23505 duplicate-key tolerance for idempotency; matches DB UNIQUE(detected_in_gw_id, position) exactly
+- [Phase 08-last-one-standing-h2h]: Sync pipeline wraps each LOS/H2H orchestrator in try/catch — one failure does not halt others or fail sync_log success path
 
 ### Pending Todos
 
@@ -165,6 +170,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-04-12T15:41:28.001Z
-Stopped at: Completed 08-01-PLAN.md (LOS + H2H foundations)
+Last session: 2026-04-12T15:57:17.321Z
+Stopped at: Completed 08-02-PLAN.md (member submission + sync pipeline integration)
 Resume file: None
