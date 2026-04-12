@@ -223,7 +223,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 7. Mid-Season Import | 2/2 | Complete   | 2026-04-12 |
 | 8. Last One Standing & H2H | 0/3 | In Progress | - |
 | 9. Pre-Season Predictions | 0/3 | Not started | - |
-| 10. Reports & Export | 4/4 | Complete   | 2026-04-12 |
+| 10. Reports & Export | 4/4 | Complete    | 2026-04-12 |
 | 11. Polish & Continuity | 0/TBD | Not started | - |
 
 ---
