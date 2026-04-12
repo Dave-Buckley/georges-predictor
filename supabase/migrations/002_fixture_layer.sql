@@ -164,11 +164,7 @@ CREATE POLICY fixtures_no_edit_after_kickoff
   ON public.fixtures FOR UPDATE
   USING (
     kickoff_time > now()
-    OR EXISTS (
-      SELECT 1 FROM public.members m
-      WHERE m.user_id = auth.uid()
-        AND m.role = 'admin'
-    )
+    OR (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
   );
 
 -- ─── RLS Policies: sync_log ───────────────────────────────────────────────────
