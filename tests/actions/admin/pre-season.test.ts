@@ -66,6 +66,33 @@ const PL_TEAMS = [
   'Leeds United',
 ]
 
+const CHAMPIONSHIP_TEAMS = [
+  'Birmingham City',
+  'Blackburn Rovers',
+  'Bristol City',
+  'Charlton Athletic',
+  'Coventry City',
+  'Derby County',
+  'Hull City',
+  'Ipswich Town',
+  'Leeds United',
+  'Leicester City',
+  'Middlesbrough',
+  'Millwall',
+  'Norwich City',
+  'Oxford United',
+  'Portsmouth',
+  'Preston North End',
+  'Queens Park Rangers',
+  'Sheffield United',
+  'Sheffield Wednesday',
+  'Southampton',
+  'Stoke City',
+  'Swansea City',
+  'Watford',
+  'West Bromwich Albion',
+]
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function mockAdminAuth() {
@@ -84,11 +111,13 @@ function mockNonAdminAuth() {
 
 function mockAdminClientImpl({
   plTeams = PL_TEAMS,
+  championshipTeams = CHAMPIONSHIP_TEAMS,
   upsertError = null as null | { message: string },
   captureUpsert,
   captureConflictOpt,
 }: {
   plTeams?: string[]
+  championshipTeams?: string[]
   upsertError?: null | { message: string }
   captureUpsert?: (payload: unknown) => void
   captureConflictOpt?: (opts: unknown) => void
@@ -103,6 +132,16 @@ function mockAdminClientImpl({
               data: plTeams.map((name) => ({ name })),
               error: null,
             }),
+        }
+      }
+      if (table === 'championship_teams') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({
+              data: championshipTeams.map((name) => ({ name })),
+              error: null,
+            }),
+          }),
         }
       }
       if (table === 'pre_season_picks') {

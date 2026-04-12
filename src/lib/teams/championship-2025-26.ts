@@ -1,12 +1,18 @@
 /**
- * Hardcoded list of Championship teams for the 2025-26 season.
+ * Championship teams for the 2025-26 season.
  *
- * Source-list for the pre-season "promoted" + "promoted playoff winner" picks.
- * Championship teams are not in the `teams` table (which tracks PL teams only),
- * so this constant is the single source of truth for validation.
+ * ⚠️ DEPRECATED as source of truth (Phase 9 Plan 03, 2026-04-12).
  *
- * When a new Championship season begins, the developer replaces this file
- * with the new 24-team list before the pre-season submission window opens.
+ * The `championship_teams` table (migration 010) is now the authoritative
+ * Championship roster. George manages it from /admin/pre-season; the
+ * end-of-season rollover button swaps relegated / promoted teams automatically.
+ *
+ * This constant is preserved as:
+ *   (a) the seed source for migration 010 (keep them in sync if you add teams)
+ *   (b) an offline fallback for tests / edge cases that don't want a DB round-trip
+ *
+ * Callers should prefer the async `isChampionshipTeam(name, season)` helper
+ * in `./championship.ts` which reads the DB.
  */
 
 export const CHAMPIONSHIP_TEAMS_2025_26 = [

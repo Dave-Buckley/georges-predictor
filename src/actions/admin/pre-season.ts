@@ -18,7 +18,7 @@ import {
   seasonActualsSchema,
   confirmPreSeasonAwardSchema,
 } from '@/lib/validators/pre-season'
-import { isChampionshipTeam } from '@/lib/teams/championship-2025-26'
+import { isChampionshipTeam } from '@/lib/teams/championship'
 import { calculatePreSeasonPoints } from '@/lib/pre-season/calculate'
 
 type Result = { success: true } | { error: string }
@@ -83,7 +83,8 @@ export async function setPreSeasonPicksForMember(formData: FormData): Promise<Re
     if (!isPL(t)) return { error: `'${t}' is not a Premier League team` }
   }
   for (const t of [...promoted, promoted_playoff_winner]) {
-    if (!isChampionshipTeam(t)) return { error: `'${t}' is not a Championship team` }
+    if (!(await isChampionshipTeam(t, season)))
+      return { error: `'${t}' is not a Championship team` }
   }
 
   const checkUnique = (arr: string[], label: string): string | null => {

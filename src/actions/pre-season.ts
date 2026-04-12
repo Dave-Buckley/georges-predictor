@@ -25,7 +25,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { submitPreSeasonPicksSchema } from '@/lib/validators/pre-season'
 import { getUpcomingSeason } from '@/lib/pre-season/seasons'
-import { isChampionshipTeam } from '@/lib/teams/championship-2025-26'
+import { isChampionshipTeam } from '@/lib/teams/championship'
 
 type Result = { success: true } | { error: string }
 
@@ -87,7 +87,8 @@ export async function submitPreSeasonPicks(formData: FormData): Promise<Result> 
     if (!isPL(t)) return { error: `'${t}' is not a Premier League team` }
   }
   for (const t of [...promoted, promoted_playoff_winner]) {
-    if (!isChampionshipTeam(t)) return { error: `'${t}' is not a Championship team` }
+    if (!(await isChampionshipTeam(t, season)))
+      return { error: `'${t}' is not a Championship team` }
   }
 
   // 7. Duplicate detection (case-insensitive)

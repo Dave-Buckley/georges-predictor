@@ -70,6 +70,34 @@ const PL_TEAMS = [
   'Leeds United', // also in Championship list — but for PL tests assume in teams table
 ]
 
+// Championship list used by DB-backed isChampionshipTeam helper mock
+const CHAMPIONSHIP_TEAMS = [
+  'Birmingham City',
+  'Blackburn Rovers',
+  'Bristol City',
+  'Charlton Athletic',
+  'Coventry City',
+  'Derby County',
+  'Hull City',
+  'Ipswich Town',
+  'Leeds United',
+  'Leicester City',
+  'Middlesbrough',
+  'Millwall',
+  'Norwich City',
+  'Oxford United',
+  'Portsmouth',
+  'Preston North End',
+  'Queens Park Rangers',
+  'Sheffield United',
+  'Sheffield Wednesday',
+  'Southampton',
+  'Stoke City',
+  'Swansea City',
+  'Watford',
+  'West Bromwich Albion',
+]
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function mockAuthenticated() {
@@ -103,11 +131,13 @@ function mockUpcomingSeason(gw1KickoffIso: string, season = 2026) {
 function mockAdminFor({
   member = { id: MEMBER_ID } as { id: string } | null,
   plTeams = PL_TEAMS,
+  championshipTeams = CHAMPIONSHIP_TEAMS,
   upsertError = null as null | { message: string },
   captureUpsert,
 }: {
   member?: { id: string } | null
   plTeams?: string[]
+  championshipTeams?: string[]
   upsertError?: null | { message: string }
   captureUpsert?: (payload: unknown) => void
 }) {
@@ -130,6 +160,16 @@ function mockAdminFor({
               data: plTeams.map((name) => ({ name })),
               error: null,
             }),
+        }
+      }
+      if (table === 'championship_teams') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({
+              data: championshipTeams.map((name) => ({ name })),
+              error: null,
+            }),
+          }),
         }
       }
       if (table === 'pre_season_picks') {
@@ -348,6 +388,16 @@ describe('submitPreSeasonPicks', () => {
             select: vi
               .fn()
               .mockResolvedValue({ data: PL_TEAMS.map((name) => ({ name })), error: null }),
+          }
+        }
+        if (table === 'championship_teams') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockResolvedValue({
+                data: CHAMPIONSHIP_TEAMS.map((name) => ({ name })),
+                error: null,
+              }),
+            }),
           }
         }
         if (table === 'pre_season_picks') {

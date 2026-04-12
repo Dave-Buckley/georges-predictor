@@ -15,7 +15,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getCurrentSeason, getUpcomingSeason } from '@/lib/pre-season/seasons'
 import { getPreSeasonExportRows } from '@/lib/pre-season/export'
-import { CHAMPIONSHIP_TEAMS_2025_26 } from '@/lib/teams/championship-2025-26'
+import { getChampionshipTeams } from '@/actions/admin/championship'
 import type {
   MemberRow,
   PreSeasonAwardRow,
@@ -31,6 +31,8 @@ import {
   ConfirmPreSeasonAwards,
   type AwardRow as AwardUiRow,
 } from './_components/confirm-pre-season-awards'
+import { ChampionshipManagement } from './_components/championship-management'
+import { EndOfSeasonRollover } from './_components/end-of-season-rollover'
 
 export const dynamic = 'force-dynamic'
 
@@ -59,19 +61,21 @@ export default async function AdminPreSeasonPage() {
   const admin = createAdminClient()
 
   // Load data in parallel (Phase 3 pattern — no waterfalls)
-  const [membersRes, awardsRes, plTeamsRes, exportRows] = await Promise.all([
-    admin
-      .from('members')
-      .select('id, display_name')
-      .eq('approval_status', 'approved')
-      .order('display_name', { ascending: true }),
-    admin
-      .from('pre_season_awards')
-      .select('*')
-      .eq('season', activeSeason.season),
-    admin.from('teams').select('name').order('name', { ascending: true }),
-    getPreSeasonExportRows(activeSeason.season),
-  ])
+  const [membersRes, awardsRes, plTeamsRes, exportRows, championshipTeams] =
+    await Promise.all([
+      admin
+        .from('members')
+        .select('id, display_name')
+        .eq('approval_status', 'approved')
+        .order('display_name', { ascending: true }),
+      admin
+        .from('pre_season_awards')
+        .select('*')
+        .eq('season', activeSeason.season),
+      admin.from('teams').select('name').order('name', { ascending: true }),
+      getPreSeasonExportRows(activeSeason.season),
+      getChampionshipTeams(activeSeason.season),
+    ])
 
   const members =
     (membersRes.data as Pick<MemberRow, 'id' | 'display_name'>[] | null) ?? []
@@ -80,6 +84,8 @@ export default async function AdminPreSeasonPage() {
     (plTeamsRes.data as Array<{ name: string | null }> | null)
       ?.map((t) => ({ name: t.name ?? '' }))
       .filter((t) => t.name.length > 0) ?? []
+
+  const championshipNames: readonly string[] = championshipTeams.map((t) => t.name)
 
   const tableRows = buildAdminPreSeasonRows(members, exportRows)
 
@@ -110,6 +116,10 @@ export default async function AdminPreSeasonPage() {
     return a.member_name.localeCompare(b.member_name)
   })
 
+  const awardsAllConfirmed =
+    awards.length > 0 && awards.every((a) => a.confirmed)
+  const showRollover = actualsLocked // rollover section visible once actuals locked
+
   return (
     <div className="p-6 lg:p-8 max-w-6xl space-y-8">
       <header>
@@ -125,7 +135,7 @@ export default async function AdminPreSeasonPage() {
         <AdminPreSeasonTable
           season={activeSeason.season}
           plTeams={plTeams}
-          championship={CHAMPIONSHIP_TEAMS_2025_26}
+          championship={championshipNames}
           rows={tableRows}
         />
       </section>
@@ -136,7 +146,7 @@ export default async function AdminPreSeasonPage() {
           <SeasonActualsForm
             season={activeSeason.season}
             plTeams={plTeams}
-            championship={CHAMPIONSHIP_TEAMS_2025_26}
+            championship={championshipNames}
             existingActuals={{
               final_top4: activeSeason.final_top4 ?? [],
               final_tenth: activeSeason.final_tenth,
@@ -162,6 +172,27 @@ export default async function AdminPreSeasonPage() {
               awards={awardUiRows}
             />
           )}
+        </section>
+      )}
+
+      {/* ── (d) Championship team management ──────────────────────────── */}
+      <section>
+        <ChampionshipManagement
+          season={activeSeason.season}
+          teams={championshipTeams}
+        />
+      </section>
+
+      {/* ── (e) End-of-season rollover ────────────────────────────────── */}
+      {showRollover && (
+        <section>
+          <EndOfSeasonRollover
+            fromSeason={activeSeason.season}
+            actualsLocked={actualsLocked}
+            awardsAllConfirmed={awardsAllConfirmed}
+            relegated={activeSeason.final_relegated ?? []}
+            promoted={activeSeason.final_promoted ?? []}
+          />
         </section>
       )}
     </div>
