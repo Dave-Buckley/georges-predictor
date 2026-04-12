@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Phase 7 context gathered
-last_updated: "2026-04-11T23:29:20.527Z"
+stopped_at: Completed 07-mid-season-import-01-PLAN.md
+last_updated: "2026-04-12T00:01:46.679Z"
 last_activity: 2026-04-11 — Roadmap created, 11 phases derived from 71 v1 requirements
 progress:
   total_phases: 11
   completed_phases: 6
-  total_plans: 21
-  completed_plans: 21
+  total_plans: 23
+  completed_plans: 22
   percent: 0
 ---
 
@@ -70,6 +70,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 06-bonus-system P01 | 2 | 2 tasks | 5 files |
 | Phase 06-bonus-system P02 | 3 | 2 tasks | 5 files |
 | Phase 06-bonus-system P03 | 3 | 2 tasks | 5 files |
+| Phase 07-mid-season-import P01 | 15 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -137,6 +138,8 @@ Recent decisions affecting current work:
 - [Phase 06-bonus-system]: Bonus upsert uses onConflict gameweek_id,member_id — idempotent, overwrites prior pick on re-submit
 - [Phase 06-bonus-system]: Bonus recalculation only runs on pending awards (awarded=null) — confirmed/rejected awards are never overwritten by auto-calc
 - [Phase 06-bonus-system]: Double Bubble formula shown as (base + bonus) x 2 in footer for member transparency
+- [Phase 07-mid-season-import]: pre_season_picks uses text arrays for team names (not UUID FKs) — Championship teams not in teams table
+- [Phase 07-mid-season-import]: handle_new_user trigger uses lower(trim()) case-insensitive display_name matching to link imported placeholder rows on registration
 
 ### Pending Todos
 
@@ -151,6 +154,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-04-11T23:29:20.524Z
-Stopped at: Phase 7 context gathered
-Resume file: .planning/phases/07-mid-season-import/07-CONTEXT.md
+Last session: 2026-04-12T00:01:46.676Z
+Stopped at: Completed 07-mid-season-import-01-PLAN.md
+Resume file: None

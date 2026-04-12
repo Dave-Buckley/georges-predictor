@@ -102,7 +102,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Data & Continuity
 
-- [ ] **DATA-01**: Mid-season import tool — load existing member names and points; league table always sorted by points descending (positions derived, not stored)
+- [x] **DATA-01**: Mid-season import tool — load existing member names and points; league table always sorted by points descending (positions derived, not stored)
 - [ ] **DATA-02**: Season archive — previous season data stored with historical records
 - [ ] **DATA-03**: Member profiles with total points and history across seasons
 - [ ] **DATA-04**: Local fallback — George can export everything needed to run manually
@@ -220,7 +220,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | RPT-05 | Phase 10 | Pending |
 | RPT-06 | Phase 10 | Pending |
 | RPT-07 | Phase 10 | Pending |
-| DATA-01 | Phase 7 | Pending |
+| DATA-01 | Phase 7 | Complete |
 | DATA-02 | Phase 11 | Pending |
 | DATA-03 | Phase 11 | Pending |
 | DATA-04 | Phase 10 | Pending |
