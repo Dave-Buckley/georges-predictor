@@ -113,6 +113,17 @@ export default function LoginForm() {
             Join the competition
           </Link>
         </p>
+
+        {/* How it works link — for prospective members */}
+        <p className="text-center text-slate-500 text-xs">
+          New here?{' '}
+          <Link
+            href="/how-it-works"
+            className="text-pl-green hover:text-white font-medium transition"
+          >
+            Learn how it works
+          </Link>
+        </p>
       </form>
     </div>
   )

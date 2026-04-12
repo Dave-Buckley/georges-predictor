@@ -199,6 +199,17 @@ export default function SignupForm({ importedNames }: SignupFormProps) {
             Log in here
           </Link>
         </p>
+
+        {/* How it works link — for prospective members */}
+        <p className="text-center text-slate-500 text-xs">
+          Want to know how it works first?{' '}
+          <Link
+            href="/how-it-works"
+            className="text-pl-green hover:text-white font-medium transition"
+          >
+            Read the guide
+          </Link>
+        </p>
       </form>
     </div>
   )

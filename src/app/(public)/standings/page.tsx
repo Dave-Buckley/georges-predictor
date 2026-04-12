@@ -19,6 +19,7 @@ import Link from 'next/link'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { gatherGameweekData } from '@/lib/reports/_data/gather-gameweek-data'
 import { MemberLink } from '@/components/shared/member-link'
+import { StandingsHero } from '@/components/hero/standings-hero'
 
 export const dynamic = 'force-dynamic'
 
@@ -153,12 +154,11 @@ export default async function StandingsPage() {
     await getStandingsPageData()
 
   return (
-    <main className="max-w-4xl mx-auto px-4 py-10 space-y-10 text-white">
+    <div className="text-white">
+      <StandingsHero />
+      <main className="max-w-4xl mx-auto px-4 py-10 space-y-10">
       {/* ── Header ────────────────────────────────────────────────────────── */}
       <header className="space-y-2">
-        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-          George&apos;s Predictor — League Table
-        </h1>
         <p className="text-slate-400 text-sm">
           Premier League predictions season 2025/26.{' '}
           <Link href="/signup" className="text-purple-400 hover:text-purple-300">
@@ -167,6 +167,10 @@ export default async function StandingsPage() {
           {' or '}
           <Link href="/login" className="text-purple-400 hover:text-purple-300">
             log in
+          </Link>
+          {' — '}
+          <Link href="/how-it-works" className="text-pl-green hover:text-white">
+            how it works
           </Link>
           .
         </p>
@@ -288,6 +292,7 @@ export default async function StandingsPage() {
           </p>
         </section>
       )}
-    </main>
+      </main>
+    </div>
   )
 }
