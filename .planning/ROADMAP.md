@@ -155,7 +155,11 @@ Plans:
   5. If a member misses a round without submitting, they are automatically eliminated
   6. When a LOS winner is found, the competition resets and all 20 teams become available again
   7. Tied weekly points leaders are automatically detected and flagged in the following week's report as an H2H steal
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 08-01-PLAN.md — Migration 008 (LOS/H2H tables + RLS), pure LOS evaluators + H2H tie detection (TDD), types, validators
+- [ ] 08-02-PLAN.md — Extend submitPredictions with LOS pick, LosTeamPicker UI, LOS round orchestrator + H2H sync hook wired into sync pipeline
+- [ ] 08-03-PLAN.md — Admin LOS page + admin actions (override/reinstate/reset), member LOS status page, H2H steal banner, closeGameweek H2H wiring
 
 ### Phase 9: Pre-Season Predictions
 **Goal**: Members can submit pre-season predictions (top 4, 10th, relegation, promoted teams) before GW1, predictions lock automatically, and George can confirm end-of-season point awards.
@@ -208,11 +212,11 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 5. Admin Panel | 4/4 | Complete   | 2026-04-11 |
 | 6. Bonus System | 3/3 | Complete   | 2026-04-11 |
 | 7. Mid-Season Import | 2/2 | Complete   | 2026-04-12 |
-| 8. Last One Standing & H2H | 0/TBD | Not started | - |
+| 8. Last One Standing & H2H | 0/3 | In Progress | - |
 | 9. Pre-Season Predictions | 0/TBD | Not started | - |
 | 10. Reports & Export | 0/TBD | Not started | - |
 | 11. Polish & Continuity | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-04-11*
-*Last updated: 2026-04-12 — Phase 7 complete (2/2 plans, admin import page + server actions)*
+*Last updated: 2026-04-12 — Phase 8 planned (3 plans)*
