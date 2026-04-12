@@ -2,15 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: in_progress
-stopped_at: Completed 09-01-PLAN.md
-last_updated: "2026-04-12T20:57:00.000Z"
-last_activity: "2026-04-12 — Phase 9 Plan 1 complete: migration 009 + pure calculatePreSeasonPoints + 4 Zod validators + 24-team Championship constant; 373/373 tests green."
+current_plan: 3
+status: completed
+stopped_at: Completed 09-02-PLAN.md
+last_updated: "2026-04-12T17:21:28.419Z"
+last_activity: 2026-04-12
 progress:
   total_phases: 11
   completed_phases: 8
   total_plans: 29
-  completed_plans: 27
+  completed_plans: 28
   percent: 93
 ---
 
@@ -26,10 +27,10 @@ See: .planning/PROJECT.md (updated 2026-04-11)
 ## Current Position
 
 Phase: 9 of 11 (Pre-Season Predictions) — IN PROGRESS
-Current Plan: 2 of 3 in current phase
+Current Plan: 3
 Total Plans in Phase: 3
 Status: Phase 9 Plan 1 complete (migration 009 + pure lib + validators). Next up: Plan 2 (member submission form + admin late-joiner + lockout wiring).
-Last activity: 2026-04-12 — Phase 9 Plan 1 complete: migration 009 + pure calculatePreSeasonPoints + 4 Zod validators + 24-team Championship constant; 373/373 tests green.
+Last activity: 2026-04-12
 
 Progress: [█████████░] 93%
 
@@ -81,6 +82,7 @@ Progress: [█████████░] 93%
 | Phase 08-last-one-standing-h2h P03 | 120 min | 2 tasks | 13 files |
 | Phase 09-pre-season-predictions P01 | 7 | 3 tasks | 11 files |
 | Phase 09-pre-season-predictions P01 | 7 | 3 tasks | 11 files |
+| Phase 09-pre-season-predictions P02 | 4 | 3 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -176,6 +178,10 @@ Recent decisions affecting current work:
 - [Phase 09-pre-season-predictions P01]: Championship constant CHAMPIONSHIP_TEAMS_2025_26 includes Leeds United (plan starter list) — season-suffixed filename so 2026-27 sits alongside without replacing
 - [Phase 09-pre-season-predictions P01]: Zod v4 .uuid() enforces strict RFC v1-8 regex (version digit required at position 13) — test fixtures must use v4-compliant UUIDs, not all-1s/2s
 - [Phase 09-pre-season-predictions P01]: Migration 009 admin_notifications CHECK preserves all 17 prior types + adds 3 new pre-season types (Pitfall 7 ritual) — seasons + pre_season_awards + audit columns seeded
+- [Phase 09-pre-season-predictions]: JSON payload in FormData (payload field) for both pre-season actions — avoids FormData flat-array encoding of top4/relegated/promoted arrays; client JSON.stringify, server JSON.parse + Zod safeParse
+- [Phase 09-pre-season-predictions]: Shared PreSeasonPicker controlled component under src/app/(member)/pre-season/_components/ imported by both member form and admin late-joiner dialog — avoids ~200-line duplication; state+submit owned by parent
+- [Phase 09-pre-season-predictions]: Lockout check compares upcoming.gw1_kickoff to now() AND asserts season param matches upcoming.season — rejects cross-season submissions
+- [Phase 09-pre-season-predictions]: Admin setPreSeasonPicksForMember has NO lockout check by design — matches Phase 2 editFixture admin_override pattern; records submitted_by_admin=true + imported_by=admin.userId
 
 ### Pending Todos
 
@@ -191,6 +197,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-04-12T20:57:00.000Z
-Stopped at: Completed 09-01-PLAN.md
-Resume file: .planning/phases/09-pre-season-predictions/09-02-PLAN.md
+Last session: 2026-04-12T17:21:28.416Z
+Stopped at: Completed 09-02-PLAN.md
+Resume file: None
