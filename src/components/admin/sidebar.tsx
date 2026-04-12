@@ -10,6 +10,7 @@ import {
   Settings,
   Bell,
   Calendar,
+  CalendarClock,
   Star,
   Award,
   BarChart3,
@@ -81,6 +82,11 @@ export function AdminSidebar({ adminEmail }: SidebarProps) {
       href: '/admin/pre-season',
       label: 'Pre-Season',
       icon: Sparkles,
+    },
+    {
+      href: '/admin/season-rollover',
+      label: 'Season rollover',
+      icon: CalendarClock,
     },
     {
       href: '/admin/import',

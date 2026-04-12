@@ -17,11 +17,22 @@ vi.mock('@/lib/supabase/admin', () => ({
   createAdminClient: mocks.createAdminClient,
 }))
 
-function extractText(node: unknown, depth = 0): string {
+async function extractText(node: unknown, depth = 0): Promise<string> {
   if (depth > 80) return ''
   if (node == null || typeof node === 'boolean') return ''
   if (typeof node === 'string' || typeof node === 'number') return String(node)
-  if (Array.isArray(node)) return node.map((n) => extractText(n, depth + 1)).join(' ')
+  if (node && typeof (node as { then?: unknown }).then === 'function') {
+    try {
+      const resolved = await (node as Promise<unknown>)
+      return extractText(resolved, depth + 1)
+    } catch {
+      return ''
+    }
+  }
+  if (Array.isArray(node)) {
+    const parts = await Promise.all(node.map((n) => extractText(n, depth + 1)))
+    return parts.join(' ')
+  }
   if (typeof node === 'object' && 'type' in (node as object)) {
     const el = node as ReactElement & { type: unknown; props?: { children?: unknown } }
     const children = el.props?.children
@@ -107,7 +118,7 @@ describe('/end-of-season public page', () => {
       }),
     )
     const jsx = await renderPage()
-    const text = extractText(jsx)
+    const text = await extractText(jsx)
     expect(text).toMatch(/Final Standings|final standings/i)
     expect(text).toMatch(/Dave/)
     expect(text).toMatch(/2025/)
@@ -122,7 +133,7 @@ describe('/end-of-season public page', () => {
       }),
     )
     const jsx = await renderPage()
-    const text = extractText(jsx)
+    const text = await extractText(jsx)
     expect(text).toMatch(/no archived season|check back|first season/i)
   })
 })

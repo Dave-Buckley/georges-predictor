@@ -47,12 +47,22 @@ vi.mock('@/lib/supabase/admin', () => ({
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function extractText(node: unknown, depth = 0): string {
+async function extractText(node: unknown, depth = 0): Promise<string> {
   if (depth > 80) return ''
   if (node == null || typeof node === 'boolean') return ''
   if (typeof node === 'string' || typeof node === 'number') return String(node)
+  // Handle thenables (async server components)
+  if (node && typeof (node as { then?: unknown }).then === 'function') {
+    try {
+      const resolved = await (node as Promise<unknown>)
+      return extractText(resolved, depth + 1)
+    } catch {
+      return ''
+    }
+  }
   if (Array.isArray(node)) {
-    return node.map((n) => extractText(n, depth + 1)).join(' ')
+    const parts = await Promise.all(node.map((n) => extractText(n, depth + 1)))
+    return parts.join(' ')
   }
   if (typeof node === 'object' && 'type' in (node as object)) {
     const el = node as ReactElement & { type: unknown; props?: { children?: unknown } }
@@ -60,8 +70,6 @@ function extractText(node: unknown, depth = 0): string {
     if (typeof el.type === 'function') {
       try {
         const result = (el.type as (p: unknown) => unknown)(el.props ?? {})
-        // Result might be a Promise (async components) — call .then synchronously isn't doable;
-        // for these tests we avoid async child components by passing pre-computed props.
         return extractText(result, depth + 1)
       } catch {
         return extractText(children, depth + 1)
@@ -116,22 +124,22 @@ describe('/admin/season-rollover wizard', () => {
 
   it('step 1 renders readiness checklist and ready-to-archive copy', async () => {
     const jsx = await renderStep(1)
-    const text = extractText(jsx)
-    expect(text).toMatch(/Step 1 of 8/i)
+    const text = await extractText(jsx)
+    expect(text).toMatch(/Step\s+1\s+of\s+8/i)
     expect(text).toMatch(/readiness|ready/i)
   })
 
   it('step 3 renders new-season form inputs (season + gw1 kickoff)', async () => {
     const jsx = await renderStep(3)
-    const text = extractText(jsx)
-    expect(text).toMatch(/Step 3 of 8/i)
+    const text = await extractText(jsx)
+    expect(text).toMatch(/Step\s+3\s+of\s+8/i)
     expect(text).toMatch(/gw1|kickoff|new season/i)
   })
 
   it('step 6 includes explicit "points reset to 0" warning for approved members', async () => {
     const jsx = await renderStep(6)
-    const text = extractText(jsx)
-    expect(text).toMatch(/Step 6 of 8/i)
+    const text = await extractText(jsx)
+    expect(text).toMatch(/Step\s+6\s+of\s+8/i)
     expect(text).toMatch(/reset|zero|0/i)
     expect(text).toMatch(/approved/i)
     expect(text).toMatch(/pending/i)
@@ -139,20 +147,20 @@ describe('/admin/season-rollover wizard', () => {
 
   it('step 8 shows launch confirmation copy and warns about side effects', async () => {
     const jsx = await renderStep(8)
-    const text = extractText(jsx)
-    expect(text).toMatch(/Step 8 of 8/i)
+    const text = await extractText(jsx)
+    expect(text).toMatch(/Step\s+8\s+of\s+8/i)
     expect(text).toMatch(/launch/i)
   })
 
   it('default (no step param) renders step 1', async () => {
     const jsx = await renderStep(undefined)
-    const text = extractText(jsx)
-    expect(text).toMatch(/Step 1 of 8/i)
+    const text = await extractText(jsx)
+    expect(text).toMatch(/Step\s+1\s+of\s+8/i)
   })
 
   it('invalid step number falls back to step 1', async () => {
     const jsx = await renderStep(99)
-    const text = extractText(jsx)
-    expect(text).toMatch(/Step 1 of 8/i)
+    const text = await extractText(jsx)
+    expect(text).toMatch(/Step\s+1\s+of\s+8/i)
   })
 })

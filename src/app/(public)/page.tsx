@@ -17,6 +17,7 @@ import Link from 'next/link'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { MemberLink } from '@/components/shared/member-link'
 import { LandingHero } from '@/components/hero/landing-hero'
+import EndOfSeasonPage from '@/app/(public)/end-of-season/page'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,6 +26,24 @@ interface StandingRow {
   display_name: string
   starting_points: number
   rank: number
+}
+
+/**
+ * Detects end-of-season state (Plan 04): the latest season row has
+ * ended_at NOT NULL — meaning the current season is archived and we're
+ * between two seasons.
+ */
+async function isEndOfSeason(): Promise<boolean> {
+  const supabase = createAdminClient()
+  const { data: seasonsRaw } = await supabase
+    .from('seasons')
+    .select('season, ended_at')
+    .order('season', { ascending: false })
+    .limit(1)
+  const rows =
+    (seasonsRaw as Array<{ season: number; ended_at: string | null }> | null) ?? []
+  if (rows.length === 0) return false
+  return rows[0].ended_at !== null
 }
 
 async function getTopStandings(limit = 5): Promise<StandingRow[]> {
@@ -60,6 +79,12 @@ async function getTopStandings(limit = 5): Promise<StandingRow[]> {
 }
 
 export default async function HomePage() {
+  // Plan 04: if the current season is archived and no new season is active,
+  // render the end-of-season summary instead of the landing hero.
+  if (await isEndOfSeason()) {
+    return <EndOfSeasonPage />
+  }
+
   const top = await getTopStandings(5)
 
   return (

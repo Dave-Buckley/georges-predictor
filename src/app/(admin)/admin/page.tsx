@@ -5,6 +5,7 @@ import { CloseGameweekDialog } from '@/components/admin/close-gameweek-dialog'
 import { getCurrentSeason, getUpcomingSeason } from '@/lib/pre-season/seasons'
 import type { MemberRow, AdminNotificationRow, SyncLogRow, GameweekRow } from '@/lib/supabase/types'
 import { DownloadFullExport } from './_components/DownloadFullExport'
+import { getArchiveReadiness } from '@/actions/admin/season-rollover'
 
 export const dynamic = 'force-dynamic'
 
@@ -174,6 +175,32 @@ async function getDashboardData() {
       }
     }
 
+    // ── Season rollover urgency ────────────────────────────────────────────
+    // Card is low-urgency mid-season, high-urgency when the current season
+    // is ready to archive (all GWs closed + pre-season confirmed + LOS
+    // resolved + seasons.ended_at IS NULL).
+    let rolloverUrgent = false
+    let rolloverArchived = false
+    try {
+      if (currentSeason) {
+        const { data: seasonRow } = await supabase
+          .from('seasons')
+          .select('ended_at')
+          .eq('season', currentSeason.season)
+          .maybeSingle()
+        rolloverArchived =
+          (seasonRow as { ended_at: string | null } | null)?.ended_at != null
+        if (!rolloverArchived) {
+          const readiness = await getArchiveReadiness(currentSeason.season)
+          if (!('error' in readiness)) {
+            rolloverUrgent = readiness.readyToArchive
+          }
+        }
+      }
+    } catch {
+      /* non-blocking */
+    }
+
     return {
       totalMembers: members.length,
       pendingCount: members.filter((m) => m.approval_status === 'pending').length,
@@ -189,6 +216,8 @@ async function getDashboardData() {
       nextGwBonusConfirmed,
       pendingPrizeCount,
       preSeasonCard,
+      rolloverUrgent,
+      rolloverArchived,
     }
   } catch {
     return {
@@ -206,6 +235,8 @@ async function getDashboardData() {
       nextGwBonusConfirmed: false,
       pendingPrizeCount: 0,
       preSeasonCard: null,
+      rolloverUrgent: false,
+      rolloverArchived: false,
     }
   }
 }
@@ -225,6 +256,8 @@ export default async function AdminDashboardPage() {
     nextGwBonusConfirmed,
     pendingPrizeCount,
     preSeasonCard,
+    rolloverUrgent,
+    rolloverArchived,
   } = await getDashboardData()
 
   return (
@@ -393,6 +426,43 @@ export default async function AdminDashboardPage() {
               gameweekNumber={activeGw.number}
               isClosed={true}
             />
+          </div>
+        )}
+
+        {/* Season rollover card — urgent when season is ready to archive */}
+        {rolloverUrgent && !rolloverArchived && (
+          <div className="bg-purple-50 border border-purple-200 rounded-2xl p-5 flex items-center justify-between">
+            <div>
+              <p className="font-semibold text-purple-900">
+                Season ready to archive
+              </p>
+              <p className="text-purple-700 text-sm mt-0.5">
+                All gameweeks closed, pre-season confirmed, LOS resolved. Run the rollover
+                wizard to archive and launch next season.
+              </p>
+            </div>
+            <Link
+              href="/admin/season-rollover"
+              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-xl transition whitespace-nowrap"
+            >
+              Open wizard
+            </Link>
+          </div>
+        )}
+        {rolloverArchived && (
+          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5 flex items-center justify-between">
+            <div>
+              <p className="font-semibold text-blue-900">Current season archived</p>
+              <p className="text-blue-700 text-sm mt-0.5">
+                Continue the rollover wizard to define and launch the next season.
+              </p>
+            </div>
+            <Link
+              href="/admin/season-rollover?step=3"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition whitespace-nowrap"
+            >
+              Continue
+            </Link>
           </div>
         )}
 
