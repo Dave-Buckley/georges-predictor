@@ -202,7 +202,9 @@ sendSpy = sendWithAttachmentsMock as unknown as ReturnType<typeof vi.fn>
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function seedMembers(n: number, overrides: Partial<TableState['members'][number]> = {}) {
+type MemberSeed = NonNullable<TableState['members']>[number]
+
+function seedMembers(n: number, overrides: Partial<MemberSeed> = {}) {
   tables.members = Array.from({ length: n }, (_, i) => ({
     id: `m-${i + 1}`,
     display_name: `Member ${String.fromCharCode(65 + i)}`,

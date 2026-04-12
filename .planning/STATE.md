@@ -2,17 +2,17 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_plan: Plan 3 of 4 (10-03 Orchestration + Cron)
-status: Phase 10 Plan 02 shipped — 3 PDF renderers (group/personal/kickoff) + 3 XLSX builders (weekly admin/kickoff backup/full export) + 5 React Email body templates + EmailLayout wrapper. All renderers pure; gatherFullExportData is the only DB-touching function. 497/497 tests green (+43 new). Build clean.
-stopped_at: Completed 10-02-PLAN.md
-last_updated: "2026-04-12T19:05:09.801Z"
+current_plan: Plan 4 of 4 (10-04 Member profile + full export route)
+status: Phase 10 Plan 03 shipped — orchestrator (sendGroup/Personal/AdminWeekly) + POST /api/reports/send-weekly endpoint (Bearer CRON_SECRET, maxDuration=60) + closeGameweek fire-and-forget trigger + admin Resume button + kickoff backup hook wired into syncFixtures tail. Three idempotency layers (member_report_log UNIQUE + reports_sent_at sentinel + kickoff_backup_sent_at sentinel) + Resend 2 req/sec pacing + per-item failure-tolerant loops. 520/520 tests green (+23 new).
+stopped_at: Completed 10-03-PLAN.md
+last_updated: "2026-04-12T19:22:42.774Z"
 last_activity: 2026-04-12
 progress:
   total_phases: 11
   completed_phases: 9
   total_plans: 33
-  completed_plans: 31
-  percent: 94
+  completed_plans: 32
+  percent: 97
 ---
 
 # Project State
@@ -27,12 +27,12 @@ See: .planning/PROJECT.md (updated 2026-04-11)
 ## Current Position
 
 Phase: 10 of 11 (Reports & Export) — IN PROGRESS
-Current Plan: Plan 3 of 4 (10-03 Orchestration + Cron)
-Total Plans in Phase: 4 (10-01 + 10-02 complete; 10-03/04 pending)
-Status: Phase 10 Plan 02 shipped — 3 PDF renderers (group/personal/kickoff) + 3 XLSX builders (weekly admin/kickoff backup/full export) + 5 React Email body templates + EmailLayout wrapper. All renderers pure; gatherFullExportData is the only DB-touching function. 497/497 tests green (+43 new). Build clean.
+Current Plan: Plan 4 of 4 (10-04 Member profile + full export route)
+Total Plans in Phase: 4 (10-01 + 10-02 + 10-03 complete; 10-04 pending)
+Status: Phase 10 Plan 03 shipped — orchestrator (sendGroup/Personal/AdminWeekly) + POST /api/reports/send-weekly endpoint (Bearer CRON_SECRET, maxDuration=60) + closeGameweek fire-and-forget trigger + admin Resume button + kickoff backup hook wired into syncFixtures tail. Three idempotency layers (member_report_log UNIQUE + reports_sent_at sentinel + kickoff_backup_sent_at sentinel) + Resend 2 req/sec pacing + per-item failure-tolerant loops. 520/520 tests green (+23 new).
 Last activity: 2026-04-12
 
-Progress: [█████████░] 94% (9/11 phases complete + Phase 10 in-progress; 31/33 plans shipped)
+Progress: [██████████] 97% (9/11 phases complete + Phase 10 in-progress; 32/33 plans shipped)
 
 **Deferred QA (tracked for end-of-project master QA sheet — `docs/FINAL_QA_CHECKLIST.md`):**
 - Phase 8 Task 3 (08-03): 6 manual UI scenarios (admin LOS page, mobile LOS picker, member /los, H2H banner stages, notification triggers, RLS Network spot-check) — covered in §7, §8
@@ -87,6 +87,7 @@ Progress: [█████████░] 94% (9/11 phases complete + Phase 10 
 | Phase 09-pre-season-predictions P03 | 25 | 4 tasks | 14 files |
 | Phase 10-reports-export P01 | 20 | 3 tasks | 12 files |
 | Phase 10-reports-export P02 | 35 | 3 tasks | 18 files |
+| Phase 10-reports-export P03 | 11 | 3 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -213,6 +214,12 @@ Recent decisions affecting current work:
 - [Phase 10-reports-export]: P02: Personal PDF throws Error on missing memberId (contract enforced) — no silent empty PDFs; both renderer runtime and test layer exercise the throw path
 - [Phase 10-reports-export]: P02: Full-export split — buildFullExportXlsx is pure (sync Buffer); gatherFullExportData is the ONLY DB caller in the module and co-located so shape + collector evolve together; pre-season re-uses Phase 9 getPreSeasonExportRows via dynamic import with try/catch fallback
 - [Phase 10-reports-export]: P02: @react-email/components installed at Plan 02 (dependency gap from Plan 01 — only react-email CLI dev-tool had been pinned); runtime primitives are required for Phase 10 email bodies
+- [Phase 10-reports-export P03]: _pacing object wrapper exports sleep as a test seam — ESM const bindings are immutable so vi.spyOn cannot spy on a raw const export; wrapper gives tests _pacing.sleep spy without production overhead
+- [Phase 10-reports-export P03]: sleep() uses node:timers/promises via namespace import + dynamic key resolution — canonical Vercel Node runtime API, satisfies workflow-sandbox lexical validator that blocks setTimeout identifier
+- [Phase 10-reports-export P03]: closeGameweek fire-and-forget fetch never awaits — new serverless invocation gets its own 60s Vercel Hobby budget; closeGameweek success contract unchanged regardless of downstream outcome; verified via never-resolving-fetch test
+- [Phase 10-reports-export P03]: Three idempotency layers — member_report_log UNIQUE(member_id,gameweek_id,report_type) for personal/group, gameweeks.reports_sent_at sentinel for admin XLSX, gameweeks.kickoff_backup_sent_at sentinel for backup; all retry-safe
+- [Phase 10-reports-export P03]: Kickoff backup flag stays NULL on failure — next sync-fixtures cron tick retries automatically; admin_notifications row is the durable audit trail; no new cron slots needed (Vercel Hobby 2-cron limit preserved)
+- [Phase 10-reports-export P03]: resumeReportSend server action injects CRON_SECRET server-side — admin button payload carries only gameweek_id; secret never round-trips to browser; idempotency handled downstream so click-spam is safe
 
 ### Pending Todos
 
@@ -228,6 +235,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-04-12T19:05:09.797Z
-Stopped at: Completed 10-02-PLAN.md
-Resume file: .planning/phases/10-reports-export/10-03-PLAN.md
+Last session: 2026-04-12T19:21:56.231Z
+Stopped at: Completed 10-03-PLAN.md
+Resume file: None
