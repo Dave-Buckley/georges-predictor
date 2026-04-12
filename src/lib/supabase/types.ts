@@ -106,6 +106,10 @@ export interface TeamRow {
   tla: string | null
   crest_url: string | null
   updated_at: string
+  /** Phase 11 migration 012 — hex primary kit colour for UI accents. */
+  primary_color?: string | null
+  /** Phase 11 migration 012 — hex secondary kit colour (optional). */
+  secondary_color?: string | null
 }
 
 /** Row shape for the public.gameweeks table */

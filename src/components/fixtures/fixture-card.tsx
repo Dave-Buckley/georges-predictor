@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type CSSProperties } from 'react'
 import { Lock, Star } from 'lucide-react'
 import type { FixtureWithTeams } from '@/lib/supabase/types'
 import { formatKickoffTime, formatKickoffDate, isToday } from '@/lib/fixtures/timezone'
@@ -105,6 +105,19 @@ export default function FixtureCard({
     cardClasses += 'border-slate-700 bg-slate-800 '
   }
 
+  // ─── Home-team primary-colour left accent (Phase 11 Plan 01) ─────────────────
+  // Applied only when no other left-border accent is already active so bonus /
+  // warning / live states retain their dedicated colour semantics. Falls back
+  // to transparent when the home team has no seeded primary_color.
+  const homePrimaryColor = fixture.home_team.primary_color ?? null
+  const hasDedicatedLeftAccent = isBonusPick || withinWarningWindow
+  const cardStyle: CSSProperties =
+    !hasDedicatedLeftAccent && homePrimaryColor
+      ? { borderLeft: `4px solid ${homePrimaryColor}` }
+      : !hasDedicatedLeftAccent
+        ? { borderLeft: '4px solid transparent' }
+        : {}
+
   // ─── Countdown formatting ────────────────────────────────────────────────────
 
   function formatCountdown(): string {
@@ -192,7 +205,7 @@ export default function FixtureCard({
   const showBonusStar = bonusActive && !!onBonusToggle && !isTerminal
 
   return (
-    <div className={cardClasses}>
+    <div className={cardClasses} style={cardStyle}>
       {/* Top badges row: Rescheduled + bonus star */}
       {(fixture.is_rescheduled || showBonusStar) && (
         <div className="mb-2 flex justify-between items-center">
