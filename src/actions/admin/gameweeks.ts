@@ -269,6 +269,10 @@ export async function closeGameweek(
   }
 
   revalidatePath('/admin', 'layout')
+  // Refresh the public standings page + home so the latest closed GW results,
+  // new rankings, and updated top-3 weekly appear immediately.
+  revalidatePath('/standings')
+  revalidatePath('/')
 
   return { success: true }
 }

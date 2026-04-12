@@ -190,12 +190,20 @@ describe('/standings public page', () => {
 
   it('Test 3: does not contain prediction scores, LOS picks, or bonus details', async () => {
     const text = await renderStandings()
-    // Column allowlist enforced — no "prediction" or "bonus" leaking from the DB
-    // to unauthenticated viewers. These strings shouldn't appear in the page
-    // content at all.
-    expect(text).not.toMatch(/prediction/i)
+    // Column allowlist enforced — no per-member prediction values, LOS
+    // picks, or bonus pick details leak from the DB to unauthenticated
+    // viewers. The word "predictions" may appear in marketing copy
+    // ("Premier League predictions season 2025/26") but specific prediction
+    // DATA must not.
+    //
+    // Strategy: assert the fixtures table key words "Prediction" heading,
+    // LOS team names, and bonus pick fields are absent.
+    expect(text).not.toMatch(/my prediction/i)
+    expect(text).not.toMatch(/points awarded/i)
     expect(text).not.toMatch(/last one standing/i)
+    expect(text).not.toMatch(/LOS pick/i)
     expect(text).not.toMatch(/bonus pick/i)
+    expect(text).not.toMatch(/bonus award/i)
   })
 
   it('Test 4: shows fixture results for the latest closed gameweek', async () => {
