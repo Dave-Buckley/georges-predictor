@@ -94,7 +94,15 @@ function createUpsertChain(error: unknown = null) {
     upsert: vi.fn().mockResolvedValue({ error }),
     select: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
+    neq: vi.fn().mockReturnThis(),
+    in: vi.fn().mockReturnThis(),
+    is: vi.fn().mockReturnThis(),
+    or: vi.fn().mockReturnThis(),
+    order: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
     single: vi.fn().mockResolvedValue({ data: null, error: null }),
+    maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+    then: (resolve: (v: unknown) => unknown) => resolve({ data: [], error: null }),
   }
 }
 
@@ -212,7 +220,19 @@ describe('submitPredictions', () => {
       }),
     }
     const upsertFn = vi.fn().mockResolvedValue({ error: null })
-    const predictionChain = { upsert: upsertFn }
+    const predictionChain = {
+      upsert: upsertFn,
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      neq: vi.fn().mockReturnThis(),
+      in: vi.fn().mockReturnThis(),
+      or: vi.fn().mockReturnThis(),
+      order: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({ data: null, error: null }),
+      maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+      then: (resolve: (v: unknown) => unknown) => resolve({ data: [], error: null }),
+    }
     mockServerClient.from = vi.fn().mockImplementation((table: string) => {
       if (table === 'members') return memberChain
       return predictionChain

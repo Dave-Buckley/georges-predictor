@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import type { FixtureWithTeams, GameweekRow, GameweekStatus, PredictionScoreRow } from '@/lib/supabase/types'
 import PredictionForm from '@/components/predictions/prediction-form'
+import { getLosContext } from '@/actions/predictions'
 
 // Force dynamic rendering — fixture data + predictions change frequently
 export const dynamic = 'force-dynamic'
@@ -231,6 +232,9 @@ export default async function GameweekPage({ params }: PageProps) {
     }
   }
 
+  // ── Fetch LOS context for this gameweek ─────────────────────────────────────
+  const losContext = await getLosContext(gwNum)
+
   return (
     <PredictionForm
       fixtures={fixtures}
@@ -246,6 +250,7 @@ export default async function GameweekPage({ params }: PageProps) {
       activeBonusType={activeBonusType}
       existingBonusPick={existingBonusPick}
       bonusAwardDisplay={bonusAwardDisplay}
+      losContext={losContext}
     />
   )
 }

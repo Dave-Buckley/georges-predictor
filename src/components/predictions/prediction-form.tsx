@@ -1,12 +1,13 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Users, AlertTriangle, CheckCircle2, XCircle, Loader2, Star, Zap } from 'lucide-react'
+import { Users, AlertTriangle, CheckCircle2, XCircle, Loader2, Star, Zap, Trophy } from 'lucide-react'
 import type { FixtureWithTeams, GameweekRow, GameweekStatus } from '@/lib/supabase/types'
 import { submitPredictions } from '@/actions/predictions'
 import { computeDisplayTotal } from '@/lib/scoring/calculate-bonus'
 import GameweekNav from '@/components/fixtures/gameweek-nav'
 import GameweekView from '@/components/fixtures/gameweek-view'
+import LosTeamPicker, { type LosTeamOption } from '@/components/los/los-team-picker'
 
 interface ScoreBreakdown {
   predicted_home: number
@@ -32,6 +33,12 @@ interface PredictionFormProps {
   activeBonusType?: { id: string; name: string; description: string } | null
   existingBonusPick?: string | null
   bonusAwardDisplay?: { points_awarded: number; awarded: boolean | null; fixture_id: string | null } | null
+  losContext?: {
+    activeCompetition: { id: string; status: string } | null
+    memberStatus: 'active' | 'eliminated' | null
+    availableTeams: LosTeamOption[]
+    currentPickTeamId: string | null
+  } | null
 }
 
 type FeedbackState = {
@@ -62,7 +69,11 @@ export default function PredictionForm({
   activeBonusType = null,
   existingBonusPick = null,
   bonusAwardDisplay = null,
+  losContext = null,
 }: PredictionFormProps) {
+  const losActive = !!losContext?.activeCompetition
+  const losEligible = losActive && losContext?.memberStatus === 'active'
+  const losEliminated = losActive && losContext?.memberStatus === 'eliminated'
 
   // ── Initialise local prediction state from server-provided saved scores ──────
   const [predictions, setPredictions] = useState<
@@ -94,6 +105,9 @@ export default function PredictionForm({
 
   // ── Bonus pick state ────────────────────────────────────────────────────────
   const [bonusFixtureId, setBonusFixtureId] = useState<string | null>(existingBonusPick ?? null)
+
+  // ── LOS pick state ──────────────────────────────────────────────────────────
+  const [losTeamId, setLosTeamId] = useState<string | null>(losContext?.currentPickTeamId ?? null)
 
   // Auto-dismiss feedback banner after 5 seconds
   useEffect(() => {
@@ -154,18 +168,25 @@ export default function PredictionForm({
       }
     }
 
+    // LOS mandatory guard — block client-side when eligible + picker empty
+    if (losEligible && !losTeamId) {
+      setFeedback({ type: 'error', message: 'Pick your Last One Standing team before submitting.' })
+      return
+    }
+
     setIsSubmitting(true)
     setFeedback(null)
 
     try {
-      const result = await submitPredictions(currentGw, validEntries, bonusFixtureId)
+      const result = await submitPredictions(currentGw, validEntries, bonusFixtureId, losTeamId)
 
       if (result.error) {
         setFeedback({ type: 'error', message: result.error })
       } else {
         const skippedMsg = result.skipped > 0 ? ` (${result.skipped} skipped — already kicked off)` : ''
         const bonusMsg = result.bonusSaved ? ' Bonus pick saved.' : ''
-        setFeedback({ type: 'success', message: `Saved ${result.saved} prediction${result.saved !== 1 ? 's' : ''}${skippedMsg}${bonusMsg}` })
+        const losMsg = result.losSaved ? ' LOS pick saved.' : ''
+        setFeedback({ type: 'success', message: `Saved ${result.saved} prediction${result.saved !== 1 ? 's' : ''}${skippedMsg}${bonusMsg}${losMsg}` })
         setSubmitResult({ saved: result.saved, skipped: result.skipped })
         setHasExistingPredictions(true)
         // Mark submitted fixtures as saved
@@ -265,6 +286,33 @@ export default function PredictionForm({
                 Tap the star on a fixture to pick your bonus
               </p>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* 3b. LOS team picker or eliminated banner */}
+      {losEligible && losContext && (
+        <div className="rounded-xl border border-yellow-500/30 bg-gradient-to-br from-slate-800 to-slate-800/60 px-4 py-3">
+          <LosTeamPicker
+            availableTeams={losContext.availableTeams}
+            value={losTeamId}
+            onChange={setLosTeamId}
+            required={true}
+            disabled={isSubmitting}
+          />
+        </div>
+      )}
+
+      {losEliminated && (
+        <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-slate-800/60 border border-slate-700">
+          <Trophy className="w-5 h-5 text-slate-500 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-slate-300">
+              You&apos;ve been eliminated from Last One Standing.
+            </p>
+            <p className="text-xs text-slate-400 mt-0.5">
+              The next competition starts when a winner is found.
+            </p>
           </div>
         </div>
       )}
@@ -401,7 +449,7 @@ export default function PredictionForm({
           <button
             type="button"
             onClick={handleSubmit}
-            disabled={isSubmitting}
+            disabled={isSubmitting || (losEligible && !losTeamId)}
             className="w-full h-12 rounded-xl bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-semibold text-base transition disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isSubmitting ? (

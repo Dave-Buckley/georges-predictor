@@ -267,6 +267,7 @@ describe('submitPredictions — LOS integration', () => {
         // LOS-03: team was used in a prior gameweek of same competition
         selectData: [{ gameweek_id: 'other-gw', team_id: PICKED_TEAM_ID }],
       },
+      gameweeks: { singleData: { id: GAMEWEEK_ID } },
       predictions: {},
     })
 
