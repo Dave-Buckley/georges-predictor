@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: in-progress
-stopped_at: Completed 08-03-PLAN.md (admin LOS + member LOS view + H2H banner) — Phase 8 complete; next up Phase 9 (Historical Data)
-last_updated: "2026-04-12T20:20:00.000Z"
-last_activity: "2026-04-12 — Phase 8 Plan 3 complete: admin LOS page + member /los + H2H banner + closeGameweek H2H hook, full suite 323/323. Task 3 manual QA approved-deferred to end-of-project master QA pass."
+status: completed
+stopped_at: Completed 08-03-PLAN.md (admin LOS + member LOS view + H2H banner) — Phase 8 complete
+last_updated: "2026-04-12T16:20:20.838Z"
+last_activity: "2026-04-12 — Phase 8 Plan 3 complete: admin LOS page + member /los + H2H banner + closeGameweek H2H hook; 323/323 tests green. Task 3 manual QA approved-deferred to end-of-project master QA pass."
 progress:
   total_phases: 11
   completed_phases: 8
