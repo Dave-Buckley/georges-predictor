@@ -4,14 +4,14 @@ milestone: v1.0
 milestone_name: milestone
 current_plan: 3
 status: completed
-stopped_at: Completed 09-02-PLAN.md
-last_updated: "2026-04-12T17:21:28.419Z"
+stopped_at: Completed 09-03-PLAN.md
+last_updated: "2026-04-12T17:54:28.187Z"
 last_activity: 2026-04-12
 progress:
   total_phases: 11
-  completed_phases: 8
+  completed_phases: 9
   total_plans: 29
-  completed_plans: 28
+  completed_plans: 29
   percent: 93
 ---
 
@@ -22,20 +22,21 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-11)
 
 **Core value:** Accurate, automated point calculation that removes all manual load from George while keeping him in full control of the competition.
-**Current focus:** Phase 9 — Pre-Season Predictions (in progress)
+**Current focus:** Phase 9 complete — next up Phase 10 (Reports & Export) planning.
 
 ## Current Position
 
-Phase: 9 of 11 (Pre-Season Predictions) — IN PROGRESS
-Current Plan: 3
-Total Plans in Phase: 3
-Status: Phase 9 Plan 1 complete (migration 009 + pure lib + validators). Next up: Plan 2 (member submission form + admin late-joiner + lockout wiring).
+Phase: 9 of 11 (Pre-Season Predictions) — COMPLETE
+Current Plan: — (phase done; awaiting Phase 10 planning)
+Total Plans in Phase: 3 (all complete: 09-01, 09-02, 09-03)
+Status: Phase 9 shipped the full pre-season vertical slice — member submission + admin late-joiner + season-end actuals + calculation + per-member + bulk confirmation, plus a DB-backed Championship list and one-button end-of-season rollover. 439/439 tests green. Build clean. Manual QA for Phase 9 deferred to master sheet.
 Last activity: 2026-04-12
 
-Progress: [█████████░] 93%
+Progress: [█████████░] 93% (9/11 phases; all 29 planned plans shipped — Phases 10 & 11 awaiting planning)
 
-**Deferred QA (tracked for end-of-project master QA sheet):**
-- Phase 8 Task 3 (08-03): 6 manual UI scenarios (admin LOS page, mobile LOS picker, member /los, H2H banner stages, notification triggers, RLS Network spot-check)
+**Deferred QA (tracked for end-of-project master QA sheet — `docs/FINAL_QA_CHECKLIST.md`):**
+- Phase 8 Task 3 (08-03): 6 manual UI scenarios (admin LOS page, mobile LOS picker, member /los, H2H banner stages, notification triggers, RLS Network spot-check) — covered in §7, §8
+- Phase 9 Task 4 (09-03): 9-section script covering member read-only, admin monitoring, late-joiner flow, actuals entry, calculation, confirmation, Championship management + rollover, dashboard card, mobile — merged into `docs/FINAL_QA_CHECKLIST.md` §10
 
 ## Performance Metrics
 
@@ -83,6 +84,7 @@ Progress: [█████████░] 93%
 | Phase 09-pre-season-predictions P01 | 7 | 3 tasks | 11 files |
 | Phase 09-pre-season-predictions P01 | 7 | 3 tasks | 11 files |
 | Phase 09-pre-season-predictions P02 | 4 | 3 tasks | 10 files |
+| Phase 09-pre-season-predictions P03 | 25 | 4 tasks | 14 files |
 
 ## Accumulated Context
 
@@ -182,6 +184,13 @@ Recent decisions affecting current work:
 - [Phase 09-pre-season-predictions]: Shared PreSeasonPicker controlled component under src/app/(member)/pre-season/_components/ imported by both member form and admin late-joiner dialog — avoids ~200-line duplication; state+submit owned by parent
 - [Phase 09-pre-season-predictions]: Lockout check compares upcoming.gw1_kickoff to now() AND asserts season param matches upcoming.season — rejects cross-season submissions
 - [Phase 09-pre-season-predictions]: Admin setPreSeasonPicksForMember has NO lockout check by design — matches Phase 2 editFixture admin_override pattern; records submitted_by_admin=true + imported_by=admin.userId
+- [Phase 09-pre-season-predictions P03]: DB-backed Championship list added mid-plan (migration 010 + championship_teams table) replacing the hardcoded CHAMPIONSHIP_TEAMS_2025_26 constant from Plan 01 — constant retained as seed/reference only; admin UI now manages the list, zero dev intervention at season boundaries
+- [Phase 09-pre-season-predictions P03]: endOfSeasonRollover reads locked season-end actuals (final_relegated + final_promoted) as the single source of truth — swaps 3 PL ↔ 3 Championship teams in one transaction; idempotent via set-difference pre-checks; sanity-gates reject if any team isn't currently in the expected table
+- [Phase 09-pre-season-predictions P03]: Rollover is application-side only (no DB triggers) — matches Phase 8 LOS decision; two-step preview + confirm dialog prevents accidental swaps
+- [Phase 09-pre-season-predictions P03]: calculatePreSeasonAwards preserves confirmed=true rows' awarded_points on re-calc — only calculated_points and flags are rewritten, protecting George's manual overrides
+- [Phase 09-pre-season-predictions P03]: Pre-season display-total aggregation deferred to Phase 10 export-time SUM — no central aggregator today (computeDisplayTotal covers only bonuses/prizes); Phase 10 to SUM pre_season_awards.awarded_points WHERE confirmed=true alongside other sources at read time
+- [Phase 09-pre-season-predictions P03]: isChampionshipTeam refactored from array lookup to async DB query — all callers already in async server-action contexts so no interface gymnastics; all 398 prior tests remained green through the refactor
+- [Phase 09-pre-season-predictions P03]: Manual QA script for Phase 9 (9 sections: member read-only, admin monitoring, late-joiner, actuals entry, calculation, confirmation, Championship+rollover, dashboard card, mobile) deferred to master end-of-project QA sheet at docs/FINAL_QA_CHECKLIST.md §10 — user approved 2026-04-12
 
 ### Pending Todos
 
@@ -197,6 +206,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-04-12T17:21:28.416Z
-Stopped at: Completed 09-02-PLAN.md
+Last session: 2026-04-12T18:30:00.000Z
+Stopped at: Completed 09-03-PLAN.md
 Resume file: None

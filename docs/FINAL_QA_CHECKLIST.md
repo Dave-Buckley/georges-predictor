@@ -141,12 +141,64 @@ Use this once every phase is built. Walk through each section with `npm run dev`
 
 ## 10. Pre-season predictions (Phase 9)
 
-- [ ] Before GW1, members can submit: top 4, 10th place, 3 relegated, 3 promoted + playoff winner
-- [ ] Pre-season form locks once GW1 kicks off
-- [ ] At season end, George confirms pre-season awards → points applied
-- [ ] Scoring: 30 pts per correct team, bonus for all-correct categories
-- [ ] Pre-season picks exportable for George's records
-- [ ] Mid-season imported pre-season picks display correctly
+Run through this as George on desktop. You'll need a member who has imported 2025-26 picks (via the Phase 7 import) and at least one non-submitted member.
+
+**10.1 Member read-only view** (log in as a submitted member)
+- [ ] `/pre-season` shows a "Locked since GW1" banner once GW1 has kicked off
+- [ ] All 5 category sections render: Top 4, 10th, Relegated, Promoted, Playoff Winner
+- [ ] Team names match the imported spreadsheet data
+- [ ] Team badges render for PL teams (top 4, 10th, relegated); plain coloured name badges OK for Championship (promoted, playoff)
+- [ ] "Pre-Season" link appears in member nav
+
+**10.2 Admin monitoring** (log in as George)
+- [ ] `/admin/pre-season` table shows all ~48 members with submission status
+- [ ] Submitted members show their 12 picks inline
+- [ ] Non-submitted members show a "Set picks" trigger button
+- [ ] "Pre-Season" link appears in admin sidebar (with Crown icon)
+
+**10.3 Late-joiner flow** (as George)
+- [ ] Click "Set picks" for a non-submitted member → dialog opens with 12 pickers
+- [ ] PL team picker shows 20 teams; Championship picker shows 24 teams
+- [ ] Picking "Arsenal" in a promoted slot is blocked (client-side filter)
+- [ ] Submit applies successfully, table updates, "admin-entered" badge appears
+
+**10.4 Actuals entry**
+- [ ] On `/admin/pre-season`, scroll to "Season-end actuals" section (only visible after GW1 kickoff)
+- [ ] 12 team pickers (same PL/Championship split as member form)
+- [ ] Enter season-end actuals → click "Lock actuals"
+- [ ] "Actuals locked {timestamp}" badge appears
+- [ ] "Calculate pre-season awards" button becomes visible
+
+**10.5 Calculation**
+- [ ] Click "Calculate pre-season awards" → success toast with count
+- [ ] Awards confirmation section now shows per-member rows
+- [ ] Flags chips ("All Top 4 ✓", "All Relegated ✓", "All Promoted ✓", "ALL 12 CORRECT 🏆") visible where earned
+- [ ] Admin notification badge (bell icon) increments with `pre_season_awards_ready` / `pre_season_all_correct` / `pre_season_category_correct` entries
+
+**10.6 Confirmation**
+- [ ] Edit one member's awarded_points (e.g., override 240 → 250) → per-row "Apply" makes that row disappear with success toast
+- [ ] Click "Apply all" on remaining rows → all disappear, toast shows count confirmed
+- [ ] Re-running "Calculate pre-season awards" does NOT reset confirmed rows' confirmed flag (idempotency)
+
+**10.7 Championship list + end-of-season rollover**
+- [ ] Championship management section on `/admin/pre-season` lists current-season Championship teams
+- [ ] Add a team → appears in list; duplicate (case-insensitive) is rejected
+- [ ] Rename a team → reflected; remove a team → disappears
+- [ ] "End of season rollover" button is disabled when actuals not locked OR awards not confirmed (with a clear reason message)
+- [ ] Once enabled, clicking it shows a preview dialog: "Will move X, Y, Z from Premier League to Championship / Will move A, B, C from Championship to Premier League"
+- [ ] Confirm → teams swap between `teams` and `championship_teams`; admin notification `season_rollover_complete` logged
+- [ ] Running rollover twice is idempotent (no duplicate swaps)
+
+**10.8 Dashboard card**
+- [ ] `/admin/dashboard` shows the appropriate pre-season card based on state (submissions open / actuals pending / awards pending)
+- [ ] Clicking the card navigates to `/admin/pre-season`
+
+**10.9 Mobile (use Chrome DevTools iPhone 13 emulator)**
+- [ ] `/pre-season` form dropdowns are full-width, no horizontal scroll
+- [ ] All 12 slots accessible via vertical scroll
+- [ ] Submit bar sticks to the bottom and remains tappable
+
+After QA, reset any test data (delete test `pre_season_awards` rows, unlock actuals) if needed.
 
 ---
 
