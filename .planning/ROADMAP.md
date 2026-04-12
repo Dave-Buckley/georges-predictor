@@ -171,7 +171,11 @@ Plans:
   3. At season end, the system calculates 30 points per correct team and surfaces the results for George's confirmation
   4. George can confirm pre-season point awards and they are added to final season totals
   5. Pre-season predictions are included in George's exportable records
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 09-01-PLAN.md - Migration 009 + pure calc lib + validators + Championship constant
+- [ ] 09-02-PLAN.md - Member submission form + read-only view + lockout + admin late-joiner dialog
+- [ ] 09-03-PLAN.md - Admin monitoring + end-of-season actuals + confirmation flow + export hook + dashboard card + nav
 
 ### Phase 10: Reports & Export
 **Goal**: After each gameweek completes, a weekly PDF summary goes to all members, a detailed XLSX goes to George, and all data can be exported as a manual fallback.
@@ -213,7 +217,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 6. Bonus System | 3/3 | Complete   | 2026-04-11 |
 | 7. Mid-Season Import | 2/2 | Complete   | 2026-04-12 |
 | 8. Last One Standing & H2H | 0/3 | In Progress | - |
-| 9. Pre-Season Predictions | 0/TBD | Not started | - |
+| 9. Pre-Season Predictions | 0/3 | Not started | - |
 | 10. Reports & Export | 0/TBD | Not started | - |
 | 11. Polish & Continuity | 0/TBD | Not started | - |
 
