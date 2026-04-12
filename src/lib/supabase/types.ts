@@ -20,6 +20,10 @@ export interface MemberRow {
   approved_by: string | null
   /** Added by migration 007 — tracks last update time (e.g. when an imported placeholder is claimed) */
   updated_at: string | null
+  /** Added by migration 011 — per-member opt-in for weekly personal PDF. */
+  email_weekly_personal: boolean
+  /** Added by migration 011 — per-member opt-in for weekly group standings PDF. */
+  email_weekly_group: boolean
 }
 
 /** Row shape for the public.admin_security_questions table */
@@ -61,6 +65,9 @@ export type AdminNotificationType =
   | 'pre_season_all_correct'
   | 'pre_season_category_correct'
   | 'pre_season_awards_ready'
+  | 'report_send_failed'
+  | 'kickoff_backup_failed'
+  | 'report_render_failed'
 
 /** Row shape for the public.admin_notifications table */
 export interface AdminNotificationRow {
@@ -111,6 +118,10 @@ export interface GameweekRow {
   closed_at: string | null
   closed_by: string | null
   created_at: string
+  /** Added by migration 011 — disaster-recovery kickoff backup send timestamp. */
+  kickoff_backup_sent_at: string | null
+  /** Added by migration 011 — weekly reports batch send timestamp. */
+  reports_sent_at: string | null
 }
 
 /** Row shape for the public.fixtures table */
@@ -420,6 +431,22 @@ export interface H2hStealRow {
   winner_ids: string[] | null
   resolved_at: string | null
   created_at: string
+}
+
+// ─── Reports Types (Phase 10) ────────────────────────────────────────────────
+
+/** Union of valid report types recorded in member_report_log. */
+export type ReportType = 'personal' | 'group' | 'admin_weekly' | 'kickoff_backup'
+
+/** Row shape for the public.member_report_log table (added by migration 011). */
+export interface MemberReportLogRow {
+  id: string
+  member_id: string
+  gameweek_id: string
+  report_type: ReportType
+  sent_at: string
+  /** Populated when the send failed; NULL when the send succeeded. */
+  error: string | null
 }
 
 // ─── Database Type (placeholder until `supabase gen types` is run) ────────────
