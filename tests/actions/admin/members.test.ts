@@ -268,6 +268,97 @@ describe('addMember', () => {
   })
 })
 
+// ─── addMember post-migration-007 (DATA-05 late joiner) ──────────────────────
+
+describe('addMember post-migration-007 (DATA-05 late joiner)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockAdminUser()
+
+    const memberChain = {
+      select: vi.fn().mockReturnThis(),
+      update: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({ data: {}, error: null }),
+    }
+    mockAdminClient.from = vi.fn().mockReturnValue(memberChain)
+    mockAdminClient.auth.admin.createUser = vi.fn().mockResolvedValue({
+      data: { user: { id: 'late-joiner-user-id' } },
+      error: null,
+    })
+    mockAdminClient.auth.admin.inviteUserByEmail = vi.fn().mockResolvedValue({
+      data: {},
+      error: null,
+    })
+  })
+
+  it('addMember with starting_points creates member with correct points', async () => {
+    const updateMock = vi.fn().mockReturnThis()
+    const eqMock = vi.fn().mockResolvedValue({ data: {}, error: null })
+
+    mockAdminClient.from = vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnThis(),
+      update: updateMock,
+      eq: eqMock,
+      single: vi.fn().mockResolvedValue({ data: {}, error: null }),
+    })
+
+    const formData = new FormData()
+    formData.set('display_name', 'Late Joiner Steve')
+    formData.set('email', 'latejoiner@example.com')
+    formData.set('starting_points', '150')
+
+    const { addMember } = await import('@/actions/admin/members')
+    await addMember(formData)
+
+    // Verify createUser was called (the member was created)
+    expect(mockAdminClient.auth.admin.createUser).toHaveBeenCalledWith(
+      expect.objectContaining({
+        email: 'latejoiner@example.com',
+        email_confirm: true,
+      })
+    )
+
+    // Verify the members row was updated with the correct starting_points value
+    expect(updateMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        starting_points: 150,
+        display_name: 'Late Joiner Steve',
+      })
+    )
+  })
+
+  it('addMember creates member that would appear in signup dropdown', async () => {
+    const updateMock = vi.fn().mockReturnThis()
+    const eqMock = vi.fn().mockResolvedValue({ data: {}, error: null })
+
+    mockAdminClient.from = vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnThis(),
+      update: updateMock,
+      eq: eqMock,
+      single: vi.fn().mockResolvedValue({ data: {}, error: null }),
+    })
+
+    const formData = new FormData()
+    formData.set('display_name', 'Signup Visible Member')
+    formData.set('email', 'visible@example.com')
+    formData.set('starting_points', '200')
+
+    const { addMember } = await import('@/actions/admin/members')
+    await addMember(formData)
+
+    // The members row update includes display_name — the same field the signup dropdown queries on.
+    // This confirms late-joiner names are treated identically to imported placeholder names
+    // for the purpose of the signup dropdown (both are in the members table with a display_name).
+    expect(updateMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        display_name: 'Signup Visible Member',
+        approval_status: 'approved',
+      })
+    )
+  })
+})
+
 // ─── removeMember ─────────────────────────────────────────────────────────────
 
 describe('removeMember', () => {
