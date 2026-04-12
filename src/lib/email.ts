@@ -1,6 +1,4 @@
-import { Resend } from 'resend'
-
-const resend = new Resend(process.env.RESEND_API_KEY)
+import { getResend, DEFAULT_FROM } from './email/client'
 
 interface SendEmailOptions {
   to: string
@@ -11,14 +9,24 @@ interface SendEmailOptions {
 /**
  * Sends a transactional email via Resend.
  * Returns { error } if sending failed, or empty object on success.
+ *
+ * Refactored in Phase 10 to route through the shared getResend() singleton
+ * so the client instance is reused across callers (sendEmail, sendWithAttachments,
+ * future report orchestrators).
  */
 export async function sendEmail({
   to,
   subject,
   html,
 }: SendEmailOptions): Promise<{ error?: string }> {
+  const resend = getResend()
+  if (!resend) {
+    console.warn('[sendEmail] RESEND_API_KEY not configured — skipping send')
+    return { error: 'RESEND_API_KEY not configured' }
+  }
+
   const { error } = await resend.emails.send({
-    from: process.env.EMAIL_FROM ?? "George's Predictor <noreply@georges-predictor.com>",
+    from: DEFAULT_FROM,
     to,
     subject,
     html,
