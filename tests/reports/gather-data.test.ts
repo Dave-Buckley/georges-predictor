@@ -187,17 +187,23 @@ describe('gatherGameweekData', () => {
 
     const data = await gatherGameweekData(GW_ID)
 
-    // Alice: starting 50 + 30 (p-1) + 10 (p-2) + 20 (bonus) = 110
-    // Bob:   starting 0  + 10 (p-3) + 0 (pending bonus)     = 10
-    // Charlie: starting 0 + 0 (p-4)                          = 0
+    // GAMEWEEK has double_bubble=true so weekly raw figures are ×2:
+    //   Alice raw weekly: 30 (p-1) + 10 (p-2) + 20 (confirmed bonus) = 60
+    //     doubled = 120 → total = starting 50 + 120 = 170
+    //   Bob raw weekly:   10 (p-3) + 0 (pending bonus excluded)       = 10
+    //     doubled = 20  → total = starting 0  + 20 = 20
+    //   Charlie raw weekly: 0 (p-4)                                   = 0
+    //     doubled = 0   → total = 0
     expect(data.standings.map((s) => s.displayName)).toEqual([
       'Alice',
       'Bob',
       'Charlie',
     ])
     expect(data.standings[0].rank).toBe(1)
-    expect(data.standings[0].totalPoints).toBe(110)
+    expect(data.standings[0].totalPoints).toBe(170)
+    expect(data.standings[0].weeklyPoints).toBe(120)
     expect(data.standings[1].rank).toBe(2)
+    expect(data.standings[1].weeklyPoints).toBe(20)
     expect(data.standings[2].rank).toBe(3)
   })
 
@@ -293,10 +299,12 @@ describe('gatherGameweekData', () => {
 
     const data = await gatherGameweekData(GW_ID)
     expect(data.topWeekly).toHaveLength(3)
-    // Alice weekly: 30+10+20(bonus)=60; Bob: 10; Charlie: 0.
+    // GAMEWEEK.double_bubble=true so weekly figures are ×2:
+    //   Alice: (30+10+20) × 2 = 120; Bob: 10 × 2 = 20; Charlie: 0.
     expect(data.topWeekly[0].memberId).toBe('m-1')
-    expect(data.topWeekly[0].weeklyPoints).toBe(60)
+    expect(data.topWeekly[0].weeklyPoints).toBe(120)
     expect(data.topWeekly[1].memberId).toBe('m-2')
+    expect(data.topWeekly[1].weeklyPoints).toBe(20)
     expect(data.topWeekly[2].memberId).toBe('m-3')
   })
 
@@ -375,5 +383,146 @@ describe('shapeData (pure transform helper)', () => {
     expect(result.gwId).toBe(GW_ID)
     expect(result.gwNumber).toBe(5)
     expect(result.seasonLabel).toBe('2025-26')
+  })
+})
+
+// ─── Phase 11 Plan 01 Task 4: Double Bubble display-multiplier fix ───────────
+//
+// Pre-launch audit identified that `weeklyPoints` was never ×2 even when
+// `gameweeks.double_bubble = true`. Personal PDF + group PDF showed raw
+// totals on GW10/20/30 while admin XLSX doubled correctly — member
+// confusion guaranteed. These tests lock the DISPLAY contract: the
+// aggregator owns the multiplication so every renderer reads the same
+// number. XLSX builders are updated alongside to stop applying their
+// own ×2 (would otherwise produce a 4× bug).
+
+describe('gatherGameweekData — Double Bubble multiplier (Phase 11 Plan 01 Task 4)', () => {
+  const BASE_MEMBERS = [
+    { id: 'm-1', display_name: 'Alice', starting_points: 0 },
+  ]
+  const BASE_FIXTURES = [
+    {
+      id: 'fix-1',
+      gameweek_id: GW_ID,
+      home_team: { id: 't1', name: 'Arsenal' },
+      away_team: { id: 't2', name: 'Chelsea' },
+      kickoff_time: '2025-09-14T14:00:00Z',
+      status: 'FINISHED',
+      home_score: 2,
+      away_score: 1,
+    },
+  ]
+  const BASE_PREDICTIONS = [
+    { id: 'p-1', member_id: 'm-1', fixture_id: 'fix-1', home_score: 2, away_score: 1 },
+  ]
+  const BASE_SCORES = [
+    { prediction_id: 'p-1', fixture_id: 'fix-1', member_id: 'm-1', points_awarded: 40 },
+  ]
+
+  it('applies Double Bubble multiplier to weeklyPoints when gameweek.double_bubble is true', async () => {
+    // Alice: 40 base + 20 confirmed bonus = 60 raw. With ×2 = 120.
+    installMockClient({
+      gameweeks: { ...GAMEWEEK, double_bubble: true, season: 2025 },
+      fixtures: BASE_FIXTURES,
+      predictions: BASE_PREDICTIONS,
+      prediction_scores: BASE_SCORES,
+      bonus_awards: [
+        {
+          gameweek_id: GW_ID,
+          member_id: 'm-1',
+          fixture_id: 'fix-1',
+          awarded: true,
+          points_awarded: 20,
+          bonus_type: { id: 'b-1', name: 'golden_glory' },
+        },
+      ],
+      los_picks: [],
+      h2h_steals: [],
+      members: BASE_MEMBERS,
+      los_competition_members: [],
+    })
+
+    const data = await gatherGameweekData(GW_ID)
+    const alice = data.standings.find((s) => s.memberId === 'm-1')!
+    expect(alice.weeklyPoints).toBe(120)
+    // Top-3 weekly must reflect the SAME doubled number as standings.
+    expect(data.topWeekly[0]?.weeklyPoints).toBe(120)
+  })
+
+  it('does NOT double pending bonuses even when Double Bubble active', async () => {
+    // Alice: 40 base + 20 pending bonus (awarded=null). Pending excluded →
+    // raw 40. With ×2 = 80 (not 120).
+    installMockClient({
+      gameweeks: { ...GAMEWEEK, double_bubble: true },
+      fixtures: BASE_FIXTURES,
+      predictions: BASE_PREDICTIONS,
+      prediction_scores: BASE_SCORES,
+      bonus_awards: [
+        {
+          gameweek_id: GW_ID,
+          member_id: 'm-1',
+          fixture_id: 'fix-1',
+          awarded: null,
+          points_awarded: 0,
+          bonus_type: { id: 'b-1', name: 'golden_glory' },
+        },
+      ],
+      los_picks: [],
+      h2h_steals: [],
+      members: BASE_MEMBERS,
+      los_competition_members: [],
+    })
+
+    const data = await gatherGameweekData(GW_ID)
+    const alice = data.standings.find((s) => s.memberId === 'm-1')!
+    expect(alice.weeklyPoints).toBe(80)
+  })
+
+  it('does NOT apply multiplier when gameweek.double_bubble is false', async () => {
+    // Same data as test 1 but double_bubble=false → weekly stays at 60.
+    installMockClient({
+      gameweeks: { ...GAMEWEEK, double_bubble: false },
+      fixtures: BASE_FIXTURES,
+      predictions: BASE_PREDICTIONS,
+      prediction_scores: BASE_SCORES,
+      bonus_awards: [
+        {
+          gameweek_id: GW_ID,
+          member_id: 'm-1',
+          fixture_id: 'fix-1',
+          awarded: true,
+          points_awarded: 20,
+          bonus_type: { id: 'b-1', name: 'golden_glory' },
+        },
+      ],
+      los_picks: [],
+      h2h_steals: [],
+      members: BASE_MEMBERS,
+      los_competition_members: [],
+    })
+
+    const data = await gatherGameweekData(GW_ID)
+    const alice = data.standings.find((s) => s.memberId === 'm-1')!
+    expect(alice.weeklyPoints).toBe(60)
+  })
+
+  it('keeps doubleBubbleActive flag on returned shape regardless of multiplier application', async () => {
+    installMockClient({
+      gameweeks: { ...GAMEWEEK, double_bubble: true },
+      fixtures: BASE_FIXTURES,
+      predictions: BASE_PREDICTIONS,
+      prediction_scores: BASE_SCORES,
+      bonus_awards: [],
+      los_picks: [],
+      h2h_steals: [],
+      members: BASE_MEMBERS,
+      los_competition_members: [],
+    })
+
+    const data = await gatherGameweekData(GW_ID)
+    expect(data.doubleBubbleActive).toBe(true)
+    // 40 base only × 2 = 80 (no bonus).
+    const alice = data.standings.find((s) => s.memberId === 'm-1')!
+    expect(alice.weeklyPoints).toBe(80)
   })
 })

@@ -156,6 +156,18 @@ export function shapeData(input: ShapeDataInput): GameweekReportData {
     }
   }
 
+  // ─── Double Bubble ×2 (Phase 11 Plan 01 Task 4) ───────────────────────────
+  // Apply the display-layer multiplier once here, before any consumer reads
+  // `weeklyPoints`. Personal PDF, group PDF, admin XLSX, and the public
+  // standings top-3 weekly all pull from this same aggregator so they now
+  // agree on GW10/20/30 numbers. Pending bonuses remain excluded above
+  // (still `awarded === true` gate), so pending picks are NOT doubled.
+  if (gameweek?.double_bubble) {
+    for (const [memberId, pts] of weeklyByMember) {
+      weeklyByMember.set(memberId, pts * 2)
+    }
+  }
+
   // ─── Standings (starting_points + all-time weekly accumulation) ───────────
   // Without a pre-calculated historical total we derive it from
   // starting_points + THIS gw weekly. Callers that need full-history totals
