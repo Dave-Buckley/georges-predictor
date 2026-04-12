@@ -17,6 +17,7 @@ import {
   Menu,
   X,
   Crown,
+  Sparkles,
 } from 'lucide-react'
 
 interface SidebarProps {
@@ -75,6 +76,11 @@ export function AdminSidebar({ adminEmail }: SidebarProps) {
       href: '/admin/los',
       label: 'Last One Standing',
       icon: Crown,
+    },
+    {
+      href: '/admin/pre-season',
+      label: 'Pre-Season',
+      icon: Sparkles,
     },
     {
       href: '/admin/import',

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { SyncStatus } from '@/components/admin/sync-status'
 import { CloseGameweekDialog } from '@/components/admin/close-gameweek-dialog'
+import { getCurrentSeason, getUpcomingSeason } from '@/lib/pre-season/seasons'
 import type { MemberRow, AdminNotificationRow, SyncLogRow, GameweekRow } from '@/lib/supabase/types'
 
 export const dynamic = 'force-dynamic'
@@ -101,6 +102,77 @@ async function getDashboardData() {
 
     const pendingPrizeCount = (pendingPrizes ?? []).length
 
+    // ── Pre-season card state ───────────────────────────────────────────────
+    // Three possible cards, urgency: submissions (info) → actuals (action) →
+    // pending awards (action). We compute all three then pick the first
+    // applicable one at render-time.
+    const [upcomingSeason, currentSeason] = await Promise.all([
+      getUpcomingSeason(),
+      getCurrentSeason(),
+    ])
+
+    let preSeasonCard: null | {
+      kind: 'submissions' | 'actuals' | 'awards'
+      message: string
+      detail: string
+      season: number
+    } = null
+
+    if (upcomingSeason && new Date(upcomingSeason.gw1_kickoff) > new Date()) {
+      // Submissions window open — count submissions
+      const approvedMembers = members.filter((m) => m.approval_status === 'approved')
+      const { data: picksData } = await supabase
+        .from('pre_season_picks')
+        .select('member_id')
+        .eq('season', upcomingSeason.season)
+      const submitted = (picksData ?? []).length
+      if (submitted < approvedMembers.length) {
+        preSeasonCard = {
+          kind: 'submissions',
+          message: `Pre-season submissions: ${submitted}/${approvedMembers.length}`,
+          detail: 'Enter picks for any late-joiners before GW1 kicks off.',
+          season: upcomingSeason.season,
+        }
+      }
+    } else if (currentSeason) {
+      // Post-GW1: check actuals + awards state
+      if (!currentSeason.actuals_locked_at) {
+        // Only show this card when all of this season's PL fixtures are done —
+        // otherwise it's noise. Cheap proxy: the season must be the current
+        // season and we check for any still-scheduled fixtures at all.
+        const { data: scheduledFixtures } = await supabase
+          .from('fixtures')
+          .select('id')
+          .neq('status', 'FINISHED')
+          .limit(1)
+        const allDone = (scheduledFixtures ?? []).length === 0
+        if (allDone) {
+          preSeasonCard = {
+            kind: 'actuals',
+            message: 'Pre-season: enter final standings',
+            detail: `The ${currentSeason.label} season is complete — lock actuals so awards can be calculated.`,
+            season: currentSeason.season,
+          }
+        }
+      } else {
+        // Actuals are locked — show a card if any awards remain unconfirmed
+        const { data: unconfirmedAwards } = await supabase
+          .from('pre_season_awards')
+          .select('id')
+          .eq('season', currentSeason.season)
+          .eq('confirmed', false)
+        const pending = (unconfirmedAwards ?? []).length
+        if (pending > 0) {
+          preSeasonCard = {
+            kind: 'awards',
+            message: `Pre-season: ${pending} award${pending !== 1 ? 's' : ''} pending confirmation`,
+            detail: 'Review each member and apply their award.',
+            season: currentSeason.season,
+          }
+        }
+      }
+    }
+
     return {
       totalMembers: members.length,
       pendingCount: members.filter((m) => m.approval_status === 'pending').length,
@@ -115,6 +187,7 @@ async function getDashboardData() {
       gwIsClosed,
       nextGwBonusConfirmed,
       pendingPrizeCount,
+      preSeasonCard,
     }
   } catch {
     return {
@@ -131,6 +204,7 @@ async function getDashboardData() {
       gwIsClosed: false,
       nextGwBonusConfirmed: false,
       pendingPrizeCount: 0,
+      preSeasonCard: null,
     }
   }
 }
@@ -149,6 +223,7 @@ export default async function AdminDashboardPage() {
     gwIsClosed,
     nextGwBonusConfirmed,
     pendingPrizeCount,
+    preSeasonCard,
   } = await getDashboardData()
 
   return (
@@ -234,6 +309,44 @@ export default async function AdminDashboardPage() {
               className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold rounded-xl transition whitespace-nowrap"
             >
               Review Awards
+            </Link>
+          </div>
+        )}
+
+        {/* Pre-Season card — shown when submissions open / actuals needed / awards pending */}
+        {preSeasonCard && (
+          <div
+            className={`${
+              preSeasonCard.kind === 'submissions'
+                ? 'bg-blue-50 border-blue-200'
+                : 'bg-amber-50 border-amber-200'
+            } border rounded-2xl p-5 flex items-center justify-between`}
+          >
+            <div>
+              <p
+                className={`font-semibold ${
+                  preSeasonCard.kind === 'submissions' ? 'text-blue-900' : 'text-amber-900'
+                }`}
+              >
+                {preSeasonCard.message}
+              </p>
+              <p
+                className={`text-sm mt-0.5 ${
+                  preSeasonCard.kind === 'submissions' ? 'text-blue-700' : 'text-amber-700'
+                }`}
+              >
+                {preSeasonCard.detail}
+              </p>
+            </div>
+            <Link
+              href="/admin/pre-season"
+              className={`${
+                preSeasonCard.kind === 'submissions'
+                  ? 'bg-blue-600 hover:bg-blue-700'
+                  : 'bg-amber-600 hover:bg-amber-700'
+              } px-4 py-2 text-white text-sm font-semibold rounded-xl transition whitespace-nowrap`}
+            >
+              Open
             </Link>
           </div>
         )}
