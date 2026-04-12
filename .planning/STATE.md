@@ -2,17 +2,17 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_plan: Phase 10 fully shipped — ready for Phase 11 planning
-status: Phase 10 Plan 04 shipped — public /standings page (RPT-06, column allowlist, unauth-safe) + member /profile email opt-out page with auto-saving toggles + /api/reports/full-export route handler (admin-session guarded, XLSX streaming, bypasses 4.5MB server-action limit) + admin dashboard "Download full data export" button. Manual QA (Task 4) approved-for-deferral to docs/FINAL_QA_CHECKLIST.md §12 (Reports) — 6 scenarios merged into master QA sheet. 536/536 tests green (+16 from 520 baseline).
-stopped_at: Phase 11 context gathered
-last_updated: "2026-04-12T19:51:42.363Z"
+current_plan: Phase 11 Plan 01 shipped — polish foundation + pre-launch audit fixes
+status: completed
+stopped_at: Completed 11-01-PLAN.md
+last_updated: "2026-04-12T20:42:53.118Z"
 last_activity: 2026-04-12
 progress:
   total_phases: 11
   completed_phases: 10
-  total_plans: 33
-  completed_plans: 33
-  percent: 100
+  total_plans: 37
+  completed_plans: 34
+  percent: 92
 ---
 
 # Project State
@@ -22,17 +22,17 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-11)
 
 **Core value:** Accurate, automated point calculation that removes all manual load from George while keeping him in full control of the competition.
-**Current focus:** Phase 10 complete — next up Phase 11 (polish & branding) planning.
+**Current focus:** Phase 11 (polish & continuity) — Plan 01 shipped, next up Plan 02 (member profile pages).
 
 ## Current Position
 
-Phase: 10 of 11 (Reports & Export) — COMPLETE
-Current Plan: Phase 10 fully shipped — ready for Phase 11 planning
-Total Plans in Phase: 4 (10-01 + 10-02 + 10-03 + 10-04 all complete)
-Status: Phase 10 Plan 04 shipped — public /standings page (RPT-06, column allowlist, unauth-safe) + member /profile email opt-out page with auto-saving toggles + /api/reports/full-export route handler (admin-session guarded, XLSX streaming, bypasses 4.5MB server-action limit) + admin dashboard "Download full data export" button. Manual QA (Task 4) approved-for-deferral to docs/FINAL_QA_CHECKLIST.md §12 (Reports) — 6 scenarios merged into master QA sheet. 536/536 tests green (+16 from 520 baseline).
+Phase: 11 of 11 (Polish & Continuity) — IN PROGRESS
+Current Plan: Phase 11 Plan 01 shipped — polish foundation + pre-launch audit fixes
+Total Plans in Phase: TBD (01 shipped; 02-0N pending plan-phase)
+Status: Plan 01 complete — see SUMMARY for substantive detail. Migration 012, PL palette, toSlug, MemberLink site-wide, Double Bubble display fix. 554/554 tests green.
 Last activity: 2026-04-12
 
-Progress: [██████████] 100% of plans (10/11 phases complete; 33/33 plans shipped; Phase 11 polish/branding pending)
+Progress: [█████████░] 92% of plans (10/11 phases complete; 34/37 plans shipped; Phase 11 in progress)
 
 **Deferred QA (tracked for end-of-project master QA sheet — `docs/FINAL_QA_CHECKLIST.md`):**
 - Phase 8 Task 3 (08-03): 6 manual UI scenarios (admin LOS page, mobile LOS picker, member /los, H2H banner stages, notification triggers, RLS Network spot-check) — covered in §7, §8
@@ -90,6 +90,7 @@ Progress: [██████████] 100% of plans (10/11 phases complete;
 | Phase 10-reports-export P02 | 35 | 3 tasks | 18 files |
 | Phase 10-reports-export P03 | 11 | 3 tasks | 10 files |
 | Phase 10-reports-export P04 | 28 | 3 tasks + 1 deferred QA | 13 files |
+| Phase 11-polish-continuity P01 | 38 min | 4 tasks tasks | 17 files files |
 
 ## Accumulated Context
 
@@ -232,14 +233,23 @@ Recent decisions affecting current work:
 - [Phase 10-reports-export P04]: Profile toggles mirror Phase 5 EmailNotificationToggles idiom verbatim (onChange → form.requestSubmit() → server action → revalidatePath, no submit button); new pattern for per-toggle greyed-out "Not receiving" visual indicator
 - [Phase 10-reports-export P04]: closeGameweek now revalidatePath('/standings') AND revalidatePath('/') — Next 16 revalidatePath is per-path not recursive; both the dedicated page and the home re-export must be explicitly invalidated
 - [Phase 10-reports-export P04]: Manual QA script for Phase 10 (6 scenarios: email send E2E, kickoff backup, public standings, profile opt-out, full export, failure handling + mobile PDF) deferred to master end-of-project QA sheet at docs/FINAL_QA_CHECKLIST.md §12 — user approved 2026-04-12 (matches Phase 8 §7-8 and Phase 9 §10 deferral precedent)
+- [Phase 11-polish-continuity P01]: toSlug app-helper + Postgres functional UNIQUE index use aligned expressions — app uses /\s+/ collapse, DB uses replace(x,' ','-'); they agree for any well-formed trimmed single-space display_name. Double-space edge cases documented in migration comments.
+- [Phase 11-polish-continuity P01]: Migration 012 team-colour seed guarded with IS NULL on every UPDATE so admin-edited primary_color / secondary_color values survive migration re-runs. Wikipedia infobox hex values for all 20 current-season PL teams.
+- [Phase 11-polish-continuity P01]: FixtureCard home-team primary_color applied as 4px left-border accent; existing bonus / warning / live accents retain priority via hasDedicatedLeftAccent guard; transparent fallback when team has no seeded colour.
+- [Phase 11-polish-continuity P01]: MemberLink default className includes hover:text-pl-green — Phase 11 PL-green accent is applied at link level, not globally. Caller className merges AFTER defaults.
+- [Phase 11-polish-continuity P01]: /members/[slug] target page intentionally 404s until Plan 02 ships — per locked CONTEXT decision. Safe during mid-phase dev.
+- [Phase 11-polish-continuity P01]: Double Bubble x2 multiplier applied exactly once inside gatherGameweekData (single source of truth). Personal PDF, group PDF, admin XLSX Standings sheet, public /standings top-3 weekly all read the same doubled weeklyPoints. XLSX Scores-sheet 'Total' column calculates independently from raw per-fixture pointsAwarded/bonusPointsAwarded — no 4x double-doubling regression.
+- [Phase 11-polish-continuity P01]: bonus_awards.points_awarded CHECK(0, 20, 60) added via migration 012 section 7 — matches TypeScript return type on calculateBonusPoints, prevents accidental bad manual edits via Supabase direct SQL.
+- [Phase 11-polish-continuity P01]: Home page / re-exports /standings default, but declares 'export const dynamic = force-dynamic' inline — Next 16 Turbopack cannot statically parse 'export { dynamic } from ...' re-exports of route segment config. Blocking fix for build.
+- [Phase 11-polish-continuity P01]: admin_notifications CHECK extended via drop+re-add ritual (Pitfall 3) — preserved all 23 Phase 10 types + added season_archived + season_launched for Phase 11 season-lifecycle flows.
 
 ### Pending Todos
 
 - [Phase 7] Add "Bucks" (Dave — the builder/backup admin) as a member in mid-season import with points matching the current league leader. Dave needs to use the platform alongside George to QA and catch issues before members use it.
 - [Phase 10] Kickoff-time backup email to George — when the first fixture of each gameweek kicks off (predictions/LOS/bonus all locked at that moment), email George a single document containing every member's predictions, LOS pick, and bonus pick for the gameweek. Disaster-recovery backup so George can run the gameweek manually if the system dies mid-week. Timing variant of RPT-03/RPT-04.
 - [Pre-launch] Real-world state at go-live: imported points tally reflects GW31 finished. GW32 games have been played but scores are NOT in yet. At go-live George (or David) must manually enter GW32 results via the admin fixtures page (editFixture → score override → triggers recalculation). After GW32 is posted, the football-data.org sync takes over automatically from GW33 onwards.
-- [Pre-launch fix — HIGH] Double Bubble display bug in `src/lib/reports/_data/gather-gameweek-data.ts` — `doubleBubbleActive` flag is passed through but `weeklyPoints` is NOT multiplied. PDFs show raw totals on GW10/20/30; XLSX reports are correct. Fix before any real Double Bubble week email ships. Bundle into Phase 11 Plan 01 or treat as standalone fix.
-- [Pre-launch fix — MEDIUM] Add DB CHECK constraint to `bonus_awards.points_awarded`: `CHECK (points_awarded IN (0, 20, 60))`. Currently only code-enforced via the TypeScript return type. Bundle into migration 012 (Phase 11 Plan 01).
+- ~~[Pre-launch fix — HIGH] Double Bubble display bug in `gather-gameweek-data.ts`~~ — **SHIPPED in Phase 11 Plan 01 Task 4 (commit 4aa73f3)**
+- ~~[Pre-launch fix — MEDIUM] Add DB CHECK constraint to `bonus_awards.points_awarded`~~ — **SHIPPED in Phase 11 Plan 01 Task 1 migration 012 section 7 (commit 38bb700)**
 
 ### Blockers/Concerns
 
@@ -250,6 +260,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-04-12T19:51:42.360Z
-Stopped at: Phase 11 context gathered
-Resume file: .planning/phases/11-polish-continuity/11-CONTEXT.md
+Last session: 2026-04-12T20:42:53.115Z
+Stopped at: Completed 11-01-PLAN.md
+Resume file: None
