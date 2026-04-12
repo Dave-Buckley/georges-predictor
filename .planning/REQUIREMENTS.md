@@ -72,11 +72,11 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Pre-Season Predictions
 
-- [ ] **PRE-01**: Members submit pre-season predictions — top 4, 10th place, 3 relegated, 3 promoted + playoff winner
-- [ ] **PRE-02**: Pre-season predictions locked before GW1
-- [ ] **PRE-03**: Pre-season points calculated at season end — 30pts per correct team, bonuses for all correct
+- [x] **PRE-01**: Members submit pre-season predictions — top 4, 10th place, 3 relegated, 3 promoted + playoff winner
+- [x] **PRE-02**: Pre-season predictions locked before GW1
+- [x] **PRE-03**: Pre-season points calculated at season end — 30pts per correct team, bonuses for all correct
 - [ ] **PRE-04**: George confirms pre-season point awards
-- [ ] **PRE-05**: Pre-season predictions logged in exportable format for George's records
+- [x] **PRE-05**: Pre-season predictions logged in exportable format for George's records
 
 ### Admin Panel
 
@@ -199,11 +199,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | LOS-05 | Phase 8 | Complete |
 | LOS-06 | Phase 8 | Complete |
 | LOS-07 | Phase 8 | Complete |
-| PRE-01 | Phase 9 | Pending |
-| PRE-02 | Phase 9 | Pending |
-| PRE-03 | Phase 9 | Pending |
+| PRE-01 | Phase 9 | Complete |
+| PRE-02 | Phase 9 | Complete |
+| PRE-03 | Phase 9 | Complete |
 | PRE-04 | Phase 9 | Pending |
-| PRE-05 | Phase 9 | Pending |
+| PRE-05 | Phase 9 | Complete |
 | ADMIN-01 | Phase 1 | Complete |
 | ADMIN-02 | Phase 5 | Complete |
 | ADMIN-03 | Phase 5 | Complete |

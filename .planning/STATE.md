@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Phase 9 context gathered
-last_updated: "2026-04-12T16:29:10.009Z"
-last_activity: "2026-04-12 — Phase 8 Plan 3 complete: admin LOS page + member /los + H2H banner + closeGameweek H2H hook; 323/323 tests green. Task 3 manual QA approved-deferred to end-of-project master QA pass."
+status: in_progress
+stopped_at: Completed 09-01-PLAN.md
+last_updated: "2026-04-12T20:57:00.000Z"
+last_activity: "2026-04-12 — Phase 9 Plan 1 complete: migration 009 + pure calculatePreSeasonPoints + 4 Zod validators + 24-team Championship constant; 373/373 tests green."
 progress:
   total_phases: 11
   completed_phases: 8
-  total_plans: 26
-  completed_plans: 26
-  percent: 100
+  total_plans: 29
+  completed_plans: 27
+  percent: 93
 ---
 
 # Project State
@@ -21,16 +21,17 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-11)
 
 **Core value:** Accurate, automated point calculation that removes all manual load from George while keeping him in full control of the competition.
-**Current focus:** Phase 8 — Last One Standing + Head-to-Head (in progress)
+**Current focus:** Phase 9 — Pre-Season Predictions (in progress)
 
 ## Current Position
 
-Phase: 8 of 11 (Last One Standing + Head-to-Head) — COMPLETE
-Plan: 3 of 3 in current phase — COMPLETE
-Status: Phase 8 complete (all 3 plans done). Next up: Phase 9 (Historical Data) — run `/gsd:plan-phase 09` then `/gsd:discuss-phase 09`.
-Last activity: 2026-04-12 — Phase 8 Plan 3 complete: admin LOS page + member /los + H2H banner + closeGameweek H2H hook; 323/323 tests green. Task 3 manual QA approved-deferred to end-of-project master QA pass.
+Phase: 9 of 11 (Pre-Season Predictions) — IN PROGRESS
+Current Plan: 2 of 3 in current phase
+Total Plans in Phase: 3
+Status: Phase 9 Plan 1 complete (migration 009 + pure lib + validators). Next up: Plan 2 (member submission form + admin late-joiner + lockout wiring).
+Last activity: 2026-04-12 — Phase 9 Plan 1 complete: migration 009 + pure calculatePreSeasonPoints + 4 Zod validators + 24-team Championship constant; 373/373 tests green.
 
-Progress: [██████████] 100%
+Progress: [█████████░] 93%
 
 **Deferred QA (tracked for end-of-project master QA sheet):**
 - Phase 8 Task 3 (08-03): 6 manual UI scenarios (admin LOS page, mobile LOS picker, member /los, H2H banner stages, notification triggers, RLS Network spot-check)
@@ -78,6 +79,8 @@ Progress: [██████████] 100%
 | Phase 08-last-one-standing-h2h P01 | 32 | 3 tasks | 13 files |
 | Phase 08-last-one-standing-h2h P02 | 12 | 2 tasks | 11 files |
 | Phase 08-last-one-standing-h2h P03 | 120 min | 2 tasks | 13 files |
+| Phase 09-pre-season-predictions P01 | 7 | 3 tasks | 11 files |
+| Phase 09-pre-season-predictions P01 | 7 | 3 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -166,6 +169,13 @@ Recent decisions affecting current work:
 - [Phase 08-last-one-standing-h2h P03]: setLosPickForMember bypasses kickoff guard (admin correction) but enforces team-not-already-used-in-cycle
 - [Phase 08-last-one-standing-h2h P03]: H2HStealBanner three-stage variants (detected / resolving / resolved) driven purely by row state (detected_in_gw_id, resolves_in_gw_id, resolved_at) — no extra schema columns
 - [Phase 08-last-one-standing-h2h P03]: Admin LOS table ordering computed client-side (active-first teams-used-ASC alpha tiebreak, eliminated after eliminated_at_gw-DESC alpha) — server fetch stays single-JOIN simple
+- [Phase 09-pre-season-predictions P01]: Pre-season types extended in src/lib/supabase/types.ts (project's canonical types file) — plan-specified src/lib/types/database.ts does not exist in repo
+- [Phase 09-pre-season-predictions P01]: calculatePreSeasonPoints is pure with zero imports (mirrors Phase 4 scoring idiom) — 30 pts flat per correct, set-equality for unordered categories, 4 flags including all_correct_overall when total === 12
+- [Phase 09-pre-season-predictions P01]: Source-list validation (PL vs Championship) deferred to server actions in Plan 02 — PL team list requires DB access; keeping Zod schemas pure-static avoids DB coupling at the validator layer
+- [Phase 09-pre-season-predictions P01]: getPreSeasonExportRows uses map-merge of picks + awards (not single JOIN) — tolerates picks-exist-without-award case, returns null points gracefully
+- [Phase 09-pre-season-predictions P01]: Championship constant CHAMPIONSHIP_TEAMS_2025_26 includes Leeds United (plan starter list) — season-suffixed filename so 2026-27 sits alongside without replacing
+- [Phase 09-pre-season-predictions P01]: Zod v4 .uuid() enforces strict RFC v1-8 regex (version digit required at position 13) — test fixtures must use v4-compliant UUIDs, not all-1s/2s
+- [Phase 09-pre-season-predictions P01]: Migration 009 admin_notifications CHECK preserves all 17 prior types + adds 3 new pre-season types (Pitfall 7 ritual) — seasons + pre_season_awards + audit columns seeded
 
 ### Pending Todos
 
@@ -181,6 +191,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-04-12T16:29:10.006Z
-Stopped at: Phase 9 context gathered
-Resume file: .planning/phases/09-pre-season-predictions/09-CONTEXT.md
+Last session: 2026-04-12T20:57:00.000Z
+Stopped at: Completed 09-01-PLAN.md
+Resume file: .planning/phases/09-pre-season-predictions/09-02-PLAN.md
