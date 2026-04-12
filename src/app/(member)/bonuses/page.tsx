@@ -6,6 +6,7 @@ import type {
   PrizeAwardWithDetails,
   GameweekRow,
 } from '@/lib/supabase/types'
+import { MemberLink } from '@/components/shared/member-link'
 
 export const dynamic = 'force-dynamic'
 
@@ -230,7 +231,13 @@ export default async function BonusesPage() {
                       <span className="text-base">🏆</span>
                       <div>
                         <p className="text-green-300 text-xs font-medium">Winner!</p>
-                        <p className="text-white text-sm font-semibold">{winner}</p>
+                        <p className="text-white text-sm font-semibold">
+                          {winner === 'Someone' ? (
+                            'Someone'
+                          ) : (
+                            <MemberLink displayName={winner} className="text-white font-semibold" />
+                          )}
+                        </p>
                       </div>
                     </div>
                   ) : (

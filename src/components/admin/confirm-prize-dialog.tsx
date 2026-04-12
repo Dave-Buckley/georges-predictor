@@ -5,6 +5,7 @@ import * as Dialog from '@radix-ui/react-dialog'
 import { X, Trophy, CheckCircle } from 'lucide-react'
 import { confirmPrize } from '@/actions/admin/prizes'
 import type { PrizeAwardWithDetails, AdditionalPrizeRow } from '@/lib/supabase/types'
+import { MemberLink } from '@/components/shared/member-link'
 
 interface ConfirmPrizeDialogProps {
   award: PrizeAwardWithDetails
@@ -100,7 +101,14 @@ export function ConfirmPrizeDialog({ award }: ConfirmPrizeDialogProps) {
                   <span className="text-3xl">{prizeEmoji}</span>
                   <div>
                     <p className="font-semibold text-gray-900">{prizeName}</p>
-                    <p className="text-sm text-gray-500">Triggered for: {memberName}</p>
+                    <p className="text-sm text-gray-500">
+                      Triggered for:{' '}
+                      {memberName === 'Group' ? (
+                        <span>Group</span>
+                      ) : (
+                        <MemberLink displayName={memberName} className="text-sm text-gray-700" />
+                      )}
+                    </p>
                   </div>
                 </div>
                 {prize?.description && (

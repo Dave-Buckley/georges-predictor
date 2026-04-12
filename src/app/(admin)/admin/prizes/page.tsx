@@ -2,6 +2,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import type { AdditionalPrizeRow, PrizeAwardWithDetails } from '@/lib/supabase/types'
 import { ConfirmPrizeDialog } from '@/components/admin/confirm-prize-dialog'
 import { createPrize } from '@/actions/admin/prizes'
+import { MemberLink } from '@/components/shared/member-link'
 
 export const dynamic = 'force-dynamic'
 
@@ -262,7 +263,13 @@ export default async function AdminPrizesPage() {
                           <span className="font-medium text-gray-900">{prize?.name ?? '—'}</span>
                         </div>
                       </td>
-                      <td className="px-5 py-4 text-gray-600">{memberName}</td>
+                      <td className="px-5 py-4 text-gray-600">
+                        {memberName === 'Group' ? (
+                          'Group'
+                        ) : (
+                          <MemberLink displayName={memberName} className="text-gray-700" />
+                        )}
+                      </td>
                       <td className="px-5 py-4 text-gray-500">
                         {new Date(award.triggered_at).toLocaleDateString('en-GB', {
                           day: '2-digit',
@@ -318,7 +325,13 @@ export default async function AdminPrizesPage() {
                           <span className="font-medium text-gray-900">{prize?.name ?? '—'}</span>
                         </div>
                       </td>
-                      <td className="px-5 py-4 text-gray-600">{memberName}</td>
+                      <td className="px-5 py-4 text-gray-600">
+                        {memberName === 'Group' ? (
+                          'Group'
+                        ) : (
+                          <MemberLink displayName={memberName} className="text-gray-700" />
+                        )}
+                      </td>
                       <td className="px-5 py-4 text-gray-500">
                         {new Date(award.triggered_at).toLocaleDateString('en-GB', {
                           day: '2-digit',

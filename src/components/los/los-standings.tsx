@@ -1,5 +1,7 @@
 import { Users } from 'lucide-react'
 
+import { MemberLink } from '@/components/shared/member-link'
+
 export interface LosStandingRow {
   member_id: string
   display_name: string
@@ -84,7 +86,10 @@ export function LosStandings({ members, viewerMemberId }: LosStandingsProps) {
                   isActive ? 'text-white' : 'text-slate-500 line-through'
                 }`}
               >
-                {m.display_name}
+                <MemberLink
+                  displayName={m.display_name}
+                  className={isActive ? 'text-white' : 'text-slate-500'}
+                />
                 {isViewer && (
                   <span className="ml-2 text-xs text-yellow-400">(you)</span>
                 )}

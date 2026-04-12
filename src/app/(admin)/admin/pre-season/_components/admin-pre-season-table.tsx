@@ -8,6 +8,7 @@
 
 import { LateJoinerPicksDialog } from '@/components/admin/late-joiner-picks-dialog'
 import type { PreSeasonExportRow } from '@/lib/pre-season/export'
+import { MemberLink } from '@/components/shared/member-link'
 
 export interface AdminPreSeasonTableProps {
   season: number
@@ -151,7 +152,7 @@ export function AdminPreSeasonTable({
               rows.map((row) => (
                 <tr key={row.member_id} className="bg-white hover:bg-gray-50">
                   <td className="px-4 py-3 font-medium text-gray-900">
-                    {row.member_name}
+                    <MemberLink displayName={row.member_name} className="font-medium text-gray-900" />
                   </td>
                   <td className="px-4 py-3">
                     {row.submitted ? (

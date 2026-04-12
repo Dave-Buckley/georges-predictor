@@ -1,6 +1,7 @@
 'use client'
 
 import type { FixtureWithTeams } from '@/lib/supabase/types'
+import { MemberLink } from '@/components/shared/member-link'
 
 interface PredictionEntry {
   member_id: string
@@ -104,7 +105,7 @@ export function PredictionsTable({ members, fixtures, predictions }: Predictions
                         }`}
                         title={hasSubmitted ? 'Has submitted' : 'No predictions submitted'}
                       />
-                      <span className="text-sm">{member.display_name}</span>
+                      <MemberLink displayName={member.display_name} className="text-sm" />
                     </div>
                   </td>
 

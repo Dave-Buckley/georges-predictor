@@ -18,6 +18,7 @@ import Link from 'next/link'
 
 import { createAdminClient } from '@/lib/supabase/admin'
 import { gatherGameweekData } from '@/lib/reports/_data/gather-gameweek-data'
+import { MemberLink } from '@/components/shared/member-link'
 
 export const dynamic = 'force-dynamic'
 
@@ -196,7 +197,7 @@ export default async function StandingsPage() {
                     {m.rank}
                   </td>
                   <td className="px-4 py-3 text-white font-medium">
-                    {m.display_name}
+                    <MemberLink displayName={m.display_name} className="text-white font-medium" />
                   </td>
                   <td className="px-4 py-3 text-right text-purple-300 font-bold">
                     {m.starting_points}
@@ -263,7 +264,8 @@ export default async function StandingsPage() {
                   className="flex items-center justify-between px-4 py-3"
                 >
                   <span className="text-slate-300 font-medium">
-                    {i + 1}. {t.displayName}
+                    {i + 1}.{' '}
+                    <MemberLink displayName={t.displayName} className="text-slate-300 font-medium" />
                   </span>
                   <span className="text-purple-300 font-bold tabular-nums">
                     {t.weeklyPoints} pts

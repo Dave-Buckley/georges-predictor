@@ -8,6 +8,7 @@ import {
   reinstateMember,
   resetCompetitionManually,
 } from '@/actions/admin/los'
+import { MemberLink } from '@/components/shared/member-link'
 
 export interface AdminLosMember {
   member_id: string
@@ -189,7 +190,9 @@ export function AdminLosTable({
                 return (
                   <tr key={m.member_id} className={isActive ? '' : 'bg-gray-50/70'}>
                     <td className="px-4 py-3">
-                      <p className="font-medium text-gray-900">{m.display_name}</p>
+                      <p className="font-medium text-gray-900">
+                        <MemberLink displayName={m.display_name} className="font-medium text-gray-900" />
+                      </p>
                       {m.email && (
                         <p className="text-xs text-gray-400">{m.email}</p>
                       )}

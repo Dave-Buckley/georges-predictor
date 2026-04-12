@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import type { MemberRow } from '@/lib/supabase/types'
 import { MemberActions } from './member-actions'
+import { MemberLink } from '@/components/shared/member-link'
 
 type FilterTab = 'all' | 'pending' | 'approved'
 
@@ -155,7 +156,7 @@ export function MemberTable({ members }: MemberTableProps) {
                 return (
                   <tr key={member.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-4 whitespace-nowrap">
-                      <span className="font-semibold text-gray-900">{member.display_name}</span>
+                      <MemberLink displayName={member.display_name} className="font-semibold text-gray-900" />
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
                       <span className="text-sm text-gray-600">{member.email}</span>

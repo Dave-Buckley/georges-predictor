@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { CheckCircle, XCircle, Clock } from 'lucide-react'
 import { confirmBonusAward, bulkConfirmBonusAwards } from '@/actions/admin/bonuses'
+import { MemberLink } from '@/components/shared/member-link'
 
 interface BonusAwardItem {
   id: string
@@ -120,7 +121,7 @@ export function ConfirmBonusAwards({
               filteredAwards.map((award) => (
                 <tr key={award.id} className="bg-white hover:bg-gray-50 transition-colors">
                   <td className="px-4 py-3 font-medium text-gray-900">
-                    {award.member_display_name}
+                    <MemberLink displayName={award.member_display_name} className="text-gray-900 font-medium" />
                   </td>
                   <td className="px-4 py-3 text-gray-600">
                     <div>
