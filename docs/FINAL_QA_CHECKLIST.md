@@ -215,18 +215,77 @@ After QA, reset any test data (delete test `pre_season_awards` rows, unlock actu
 
 ## 12. Reports (Phase 10)
 
-- [ ] After gameweek closes, George receives an email with:
-  - [ ] Weekly summary PDF (group standings, results, H2H, bonuses)
-  - [ ] Detailed XLSX spreadsheet (all members, all scores, all calcs)
-- [ ] Each member receives their personal PDF email
-- [ ] Reports render correctly on mobile email clients
+Run through these as George on desktop with `npm run dev` running, `RESEND_API_KEY` set to a real Resend account, `ADMIN_EMAIL_GEORGE` + `ADMIN_EMAIL_DAVE` pointed at test inboxes you control, `NEXT_PUBLIC_APP_URL=http://localhost:3000`, migration 011 applied, and a test gameweek with every fixture FINISHED + bonus awards confirmed ready to close.
+
+**12.1 Weekly email send end-to-end (RPT-01, RPT-02, RPT-03, RPT-04, RPT-05)**
+- [ ] Click "Close gameweek" in `/admin` — admin UI returns in under 5s (fire-and-forget trigger does NOT block)
+- [ ] Within 30-60s, every opted-in member's inbox receives a "GW{N} — your weekly breakdown" email with a personal PDF attachment
+- [ ] Every opted-in member also receives the group PDF email (group standings, results, H2H, bonuses)
+- [ ] George + Dave each receive the admin XLSX email with an .xlsx attachment
+- [ ] Personal PDF contains the member's own predictions, scores, rank, H2H callout (if applicable)
+- [ ] Group PDF contains league standings, fixture results, H2H steals, bonus summary
+- [ ] Admin XLSX opens cleanly in Excel / Numbers / Sheets (no corruption warnings, all sheets present)
 - [ ] PDF includes the note: "George — double-check API scores weekly, you can edit them"
-- [ ] Reports also viewable on the website
+- [ ] Click "Close gameweek" a second time on the same closed GW — NO duplicate emails (member_report_log UNIQUE + reports_sent_at sentinel enforce idempotency)
 
-### Export & fallback
+**12.2 Kickoff backup (DATA-04 kickoff variant)**
+- [ ] Manually transition one fixture's status from SCHEDULED → IN_PLAY via admin fixtures page
+- [ ] Wait for the next `/api/sync-fixtures` cron tick (or trigger manually via curl with `CRON_SECRET`)
+- [ ] George + Dave each receive ONE email with subject "Backup — GW{N} all predictions as of kickoff"
+- [ ] Email contains BOTH a .pdf AND a .xlsx attachment
+- [ ] Trigger sync again → NO second email fires (kickoff_backup_sent_at sentinel persists)
+- [ ] `admin_notifications` table shows no `kickoff_backup_failed` rows for this gameweek
 
-- [ ] George can export all data as a spreadsheet from the admin panel
-- [ ] Exported data is enough to run the competition manually if the site is down
+**12.3 Public /standings (RPT-06)**
+- [ ] Open an incognito window (no session cookie), visit `http://localhost:3000/standings`
+- [ ] Page renders WITHOUT redirecting to /login
+- [ ] League table displays every member: display_name, total_points, derived rank (1, 2, 3…)
+- [ ] Latest closed GW fixture results shown (home team, away team, home score, away score)
+- [ ] Top-3 weekly scorers section shows 3 display_names
+- [ ] If no gameweeks are closed yet, page shows "Awaiting first closed gameweek…" instead of crashing
+- [ ] Open DevTools Network tab, inspect the /standings HTML response — NO prediction score numbers leaked, NO LOS team names leaked, NO bonus data leaked, NO H2H details leaked (column allowlist enforced)
+- [ ] Visit `http://localhost:3000/` — home page renders the same standings view (re-export)
+
+**12.4 Member /profile email opt-out**
+- [ ] Log in as a test member, visit `/profile`
+- [ ] Display name + email shown as read-only info panels (NOT editable)
+- [ ] Toggle "Weekly personal PDF email" OFF → auto-saves with no submit button → greyed-out "Not receiving" label appears
+- [ ] Toggle "Weekly group PDF email" OFF → same behaviour
+- [ ] Close a gameweek as admin → verify this member receives NO weekly personal / group email (while other opted-in members still do)
+- [ ] Toggle both back ON → next gameweek close delivers both emails as normal
+- [ ] Verify a critical email path (request password reset) STILL fires regardless of these toggles
+- [ ] "Profile" link visible in member nav
+
+**12.5 Full data export (RPT-07, DATA-04)**
+- [ ] On `/admin` dashboard, scroll to the "Tools" section and click "Download full data export"
+- [ ] File downloads as `georges-predictor-full-export-{YYYY-MM-DD}.xlsx`
+- [ ] File size is reasonable (typically 0.5-2 MB, well above any empty-response threshold)
+- [ ] Open in Excel — no corruption warnings
+- [ ] Every expected sheet is present: Members, Gameweeks, Fixtures, Predictions, Scores, Bonuses, Prizes, LOS, Pre-Season, README
+- [ ] README sheet has manual-run instructions George can follow if the site is down
+- [ ] Scroll through one Predictions sheet — George can read every prediction for every GW for every member
+- [ ] Log out, hit `/api/reports/full-export` directly in an incognito tab → returns 401 JSON (admin-guard enforced)
+- [ ] Log in as a non-admin member, hit the same URL → also 401 (role check, not just session check)
+
+**12.6 Failure handling + resume**
+- [ ] Intentionally break `RESEND_API_KEY` (set to `re_invalid_test`) and click "Close gameweek" on a fresh test GW
+- [ ] `closeGameweek` itself still returns success (fire-and-forget decouples the trigger from the send)
+- [ ] `admin_notifications` table gets rows with type `report_send_failed` or `report_render_failed` per-member
+- [ ] Fix `RESEND_API_KEY` back to the real value
+- [ ] On the closed GW's admin page, click "Resume report send" → endpoint re-runs the orchestrator
+- [ ] ONLY the members who never got an email receive one this time (member_report_log UNIQUE guards against duplicate sends to already-delivered members)
+- [ ] Double-click the Resume button (click-spam) → still no duplicate sends
+
+**12.7 Mobile PDF + email rendering**
+- [ ] Forward the personal PDF email to your phone
+- [ ] Open the attached PDF on iOS Mail (Safari preview) → readable, no clipping, predictions visible
+- [ ] Open the attached PDF on Android Gmail (Chrome preview) → readable, no clipping
+- [ ] Group PDF same two checks on both platforms
+- [ ] Email body (the text before the attachment) renders correctly on both — no broken CSS, no missing images
+- [ ] H2H callout banner (if applicable for the test member) is visible and readable on phone
+- [ ] Reports are also viewable on the website (link back to /gameweeks/[n] from the email body)
+
+After Phase 10 QA, reset any test data: clear `member_report_log` rows, reset `reports_sent_at` and `kickoff_backup_sent_at` sentinels on the test gameweek, and delete any test rows in `admin_notifications` generated during the failure-handling step.
 
 ---
 

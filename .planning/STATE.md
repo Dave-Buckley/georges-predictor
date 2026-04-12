@@ -2,17 +2,17 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_plan: Plan 4 of 4 (10-04 Member profile + full export route)
-status: Phase 10 Plan 03 shipped — orchestrator (sendGroup/Personal/AdminWeekly) + POST /api/reports/send-weekly endpoint (Bearer CRON_SECRET, maxDuration=60) + closeGameweek fire-and-forget trigger + admin Resume button + kickoff backup hook wired into syncFixtures tail. Three idempotency layers (member_report_log UNIQUE + reports_sent_at sentinel + kickoff_backup_sent_at sentinel) + Resend 2 req/sec pacing + per-item failure-tolerant loops. 520/520 tests green (+23 new).
-stopped_at: Completed 10-03-PLAN.md
-last_updated: "2026-04-12T19:22:42.774Z"
+current_plan: Phase 10 complete — ready for Phase 11 (polish & branding) planning
+status: Phase 10 Plan 04 shipped — public /standings page (RPT-06, column allowlist enforced, unauth-safe, home page re-exports) + member /profile email opt-out page with auto-saving toggles + /api/reports/full-export route handler (admin-session guarded, XLSX streaming, bypasses 4.5MB server-action limit) + admin dashboard "Download full data export" button. Manual QA (Task 4) approved-for-deferral to docs/FINAL_QA_CHECKLIST.md §12 (Reports) — 6 scenarios merged into master QA sheet. Phase 10 complete (4/4 plans). 536/536 tests green (+16).
+stopped_at: Completed 10-04-PLAN.md — Phase 10 complete
+last_updated: "2026-04-12T23:45:00.000Z"
 last_activity: 2026-04-12
 progress:
   total_phases: 11
-  completed_phases: 9
+  completed_phases: 10
   total_plans: 33
-  completed_plans: 32
-  percent: 97
+  completed_plans: 33
+  percent: 100
 ---
 
 # Project State
@@ -22,21 +22,22 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-11)
 
 **Core value:** Accurate, automated point calculation that removes all manual load from George while keeping him in full control of the competition.
-**Current focus:** Phase 9 complete — next up Phase 10 (Reports & Export) planning.
+**Current focus:** Phase 10 complete — next up Phase 11 (polish & branding) planning.
 
 ## Current Position
 
-Phase: 10 of 11 (Reports & Export) — IN PROGRESS
-Current Plan: Plan 4 of 4 (10-04 Member profile + full export route)
-Total Plans in Phase: 4 (10-01 + 10-02 + 10-03 complete; 10-04 pending)
-Status: Phase 10 Plan 03 shipped — orchestrator (sendGroup/Personal/AdminWeekly) + POST /api/reports/send-weekly endpoint (Bearer CRON_SECRET, maxDuration=60) + closeGameweek fire-and-forget trigger + admin Resume button + kickoff backup hook wired into syncFixtures tail. Three idempotency layers (member_report_log UNIQUE + reports_sent_at sentinel + kickoff_backup_sent_at sentinel) + Resend 2 req/sec pacing + per-item failure-tolerant loops. 520/520 tests green (+23 new).
+Phase: 10 of 11 (Reports & Export) — COMPLETE
+Current Plan: Phase 10 fully shipped — ready for Phase 11 planning
+Total Plans in Phase: 4 (10-01 + 10-02 + 10-03 + 10-04 all complete)
+Status: Phase 10 Plan 04 shipped — public /standings page (RPT-06, column allowlist, unauth-safe) + member /profile email opt-out page with auto-saving toggles + /api/reports/full-export route handler (admin-session guarded, XLSX streaming, bypasses 4.5MB server-action limit) + admin dashboard "Download full data export" button. Manual QA (Task 4) approved-for-deferral to docs/FINAL_QA_CHECKLIST.md §12 (Reports) — 6 scenarios merged into master QA sheet. 536/536 tests green (+16 from 520 baseline).
 Last activity: 2026-04-12
 
-Progress: [██████████] 97% (9/11 phases complete + Phase 10 in-progress; 32/33 plans shipped)
+Progress: [██████████] 100% of plans (10/11 phases complete; 33/33 plans shipped; Phase 11 polish/branding pending)
 
 **Deferred QA (tracked for end-of-project master QA sheet — `docs/FINAL_QA_CHECKLIST.md`):**
 - Phase 8 Task 3 (08-03): 6 manual UI scenarios (admin LOS page, mobile LOS picker, member /los, H2H banner stages, notification triggers, RLS Network spot-check) — covered in §7, §8
 - Phase 9 Task 4 (09-03): 9-section script covering member read-only, admin monitoring, late-joiner flow, actuals entry, calculation, confirmation, Championship management + rollover, dashboard card, mobile — merged into `docs/FINAL_QA_CHECKLIST.md` §10
+- Phase 10 Task 4 (10-04): 6 scenarios covering real email send end-to-end (personal + group PDF + admin XLSX), kickoff backup (first-fixture trigger + both attachments + idempotency), public /standings (incognito + column allowlist), member /profile opt-out, full data export (admin download + Excel round-trip), failure handling (broken Resend key + resume button), mobile PDF rendering — merged into `docs/FINAL_QA_CHECKLIST.md` §12 (expanded)
 
 ## Performance Metrics
 
@@ -88,6 +89,7 @@ Progress: [██████████] 97% (9/11 phases complete + Phase 10 
 | Phase 10-reports-export P01 | 20 | 3 tasks | 12 files |
 | Phase 10-reports-export P02 | 35 | 3 tasks | 18 files |
 | Phase 10-reports-export P03 | 11 | 3 tasks | 10 files |
+| Phase 10-reports-export P04 | 28 | 3 tasks + 1 deferred QA | 13 files |
 
 ## Accumulated Context
 
@@ -220,6 +222,16 @@ Recent decisions affecting current work:
 - [Phase 10-reports-export P03]: Three idempotency layers — member_report_log UNIQUE(member_id,gameweek_id,report_type) for personal/group, gameweeks.reports_sent_at sentinel for admin XLSX, gameweeks.kickoff_backup_sent_at sentinel for backup; all retry-safe
 - [Phase 10-reports-export P03]: Kickoff backup flag stays NULL on failure — next sync-fixtures cron tick retries automatically; admin_notifications row is the durable audit trail; no new cron slots needed (Vercel Hobby 2-cron limit preserved)
 - [Phase 10-reports-export P03]: resumeReportSend server action injects CRON_SECRET server-side — admin button payload carries only gameweek_id; secret never round-trips to browser; idempotency handled downstream so click-spam is safe
+- [Phase 10-reports-export P04]: /standings uses createAdminClient + explicit column allowlist (`'id, display_name, total_points'`) rather than anon client + public-read RLS — keeps RLS locked everywhere else; the ONE public surface is bounded by the SELECT projection, not by policy
+- [Phase 10-reports-export P04]: Home page (/) reduced to a thin `export { default } from './standings/page'` re-export — replaces 221-line marketing landing; competition is invite-only so a marketing page is dead weight, George wanted the table as landing
+- [Phase 10-reports-export P04]: /standings top-3 reuses gatherGameweekData from Plan 01 — guarantees the number on the public page matches the number in the group PDF email (single source of truth for "weekly scorers")
+- [Phase 10-reports-export P04]: updateEmailPreferences encodes checkbox flags as `'true' | 'false'` Zod literal union in FormData; server action coerces to boolean; partial update semantics so per-toggle auto-save can't stale-overwrite the other flag
+- [Phase 10-reports-export P04]: /api/reports/full-export uses inline admin check (`user.app_metadata?.role === 'admin'`) not a `requireAdmin()` helper — route handler context + consistency with Plan 03's /api/reports/send-weekly auth pattern
+- [Phase 10-reports-export P04]: Route handler streams XLSX via `new NextResponse(new Uint8Array(buf), {...})` — sidesteps Next.js 4.5MB server-action response limit that would truncate the full-season export; pattern reusable for any future admin download > 4.5MB
+- [Phase 10-reports-export P04]: Download button is plain `<a href download>` anchor (filename from Content-Disposition) — browser-native download, no fetch+blob, no memory bloat, no progress-bar UX wanted for a ~1-2MB file
+- [Phase 10-reports-export P04]: Profile toggles mirror Phase 5 EmailNotificationToggles idiom verbatim (onChange → form.requestSubmit() → server action → revalidatePath, no submit button); new pattern for per-toggle greyed-out "Not receiving" visual indicator
+- [Phase 10-reports-export P04]: closeGameweek now revalidatePath('/standings') AND revalidatePath('/') — Next 16 revalidatePath is per-path not recursive; both the dedicated page and the home re-export must be explicitly invalidated
+- [Phase 10-reports-export P04]: Manual QA script for Phase 10 (6 scenarios: email send E2E, kickoff backup, public standings, profile opt-out, full export, failure handling + mobile PDF) deferred to master end-of-project QA sheet at docs/FINAL_QA_CHECKLIST.md §12 — user approved 2026-04-12 (matches Phase 8 §7-8 and Phase 9 §10 deferral precedent)
 
 ### Pending Todos
 
@@ -235,6 +247,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-04-12T19:21:56.231Z
-Stopped at: Completed 10-03-PLAN.md
+Last session: 2026-04-12T23:45:00.000Z
+Stopped at: Completed 10-04-PLAN.md — Phase 10 complete (4/4 plans shipped), ready for Phase 11 (polish & branding) planning
 Resume file: None
