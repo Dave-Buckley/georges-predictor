@@ -57,7 +57,7 @@ Requirements for initial release. Each maps to roadmap phases.
 ### H2H Steals
 
 - [x] **H2H-01**: Tool automatically detects tied weekly winners
-- [ ] **H2H-02**: H2H steals flagged in the gameweek report for the following week
+- [x] **H2H-02**: H2H steals flagged in the gameweek report for the following week
 - [x] **H2H-03**: H2H steal resolved in following gameweek — highest scorer between tied players wins
 
 ### Last One Standing
@@ -65,10 +65,10 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **LOS-01**: Members pick one team to win each week alongside their predictions
 - [x] **LOS-02**: If the team wins, member progresses; draw or loss = eliminated
 - [x] **LOS-03**: Once a team is picked, it cannot be picked again until all 20 PL teams have been used
-- [ ] **LOS-04**: Tool tracks each member's elimination status and team usage history
+- [x] **LOS-04**: Tool tracks each member's elimination status and team usage history
 - [x] **LOS-05**: If member misses a round without submitting, they are eliminated
 - [x] **LOS-06**: When a winner is found, competition resets and all teams become available again
-- [ ] **LOS-07**: George can view and manage LOS status for all members
+- [x] **LOS-07**: George can view and manage LOS status for all members
 
 ### Pre-Season Predictions
 
@@ -190,15 +190,15 @@ Which phases cover which requirements. Updated during roadmap creation.
 | BONUS-06 | Phase 6 | Complete |
 | BONUS-07 | Phase 6 | Complete |
 | H2H-01 | Phase 8 | Complete |
-| H2H-02 | Phase 8 | Pending |
+| H2H-02 | Phase 8 | Complete |
 | H2H-03 | Phase 8 | Complete |
 | LOS-01 | Phase 8 | Complete |
 | LOS-02 | Phase 8 | Complete |
 | LOS-03 | Phase 8 | Complete |
-| LOS-04 | Phase 8 | Pending |
+| LOS-04 | Phase 8 | Complete |
 | LOS-05 | Phase 8 | Complete |
 | LOS-06 | Phase 8 | Complete |
-| LOS-07 | Phase 8 | Pending |
+| LOS-07 | Phase 8 | Complete |
 | PRE-01 | Phase 9 | Pending |
 | PRE-02 | Phase 9 | Pending |
 | PRE-03 | Phase 9 | Pending |

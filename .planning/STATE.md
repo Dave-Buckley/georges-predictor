@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in-progress
-stopped_at: Completed 08-02-PLAN.md (member submission + sync pipeline integration) — next up 08-03 (admin UI + member status views)
-last_updated: "2026-04-12T15:57:17.324Z"
-last_activity: "2026-04-12 — Phase 8 Plan 2 complete: submitPredictions LOS integration + LosTeamPicker + runLosRound + detectH2HForGameweek/resolveStealsForGameweek + sync.ts wiring, 20 new tests (full suite 308/308)"
+stopped_at: Completed 08-03-PLAN.md (admin LOS + member LOS view + H2H banner) — Phase 8 complete; next up Phase 9 (Historical Data)
+last_updated: "2026-04-12T20:20:00.000Z"
+last_activity: "2026-04-12 — Phase 8 Plan 3 complete: admin LOS page + member /los + H2H banner + closeGameweek H2H hook, full suite 323/323. Task 3 manual QA approved-deferred to end-of-project master QA pass."
 progress:
   total_phases: 11
-  completed_phases: 7
+  completed_phases: 8
   total_plans: 26
-  completed_plans: 25
-  percent: 96
+  completed_plans: 26
+  percent: 100
 ---
 
 # Project State
@@ -25,12 +25,15 @@ See: .planning/PROJECT.md (updated 2026-04-11)
 
 ## Current Position
 
-Phase: 8 of 11 (Last One Standing + Head-to-Head)
-Plan: 2 of 3 in current phase — COMPLETE
-Status: Plan 08-02 complete; next up Plan 08-03 (admin UI + member status views)
-Last activity: 2026-04-12 — Phase 8 Plan 2 complete: submitPredictions LOS integration + LosTeamPicker + runLosRound + detectH2HForGameweek/resolveStealsForGameweek + sync.ts wiring, 20 new tests (full suite 308/308)
+Phase: 8 of 11 (Last One Standing + Head-to-Head) — COMPLETE
+Plan: 3 of 3 in current phase — COMPLETE
+Status: Phase 8 complete (all 3 plans done). Next up: Phase 9 (Historical Data) — run `/gsd:plan-phase 09` then `/gsd:discuss-phase 09`.
+Last activity: 2026-04-12 — Phase 8 Plan 3 complete: admin LOS page + member /los + H2H banner + closeGameweek H2H hook; 323/323 tests green. Task 3 manual QA approved-deferred to end-of-project master QA pass.
 
-Progress: [██████████] 96%
+Progress: [██████████] 100%
+
+**Deferred QA (tracked for end-of-project master QA sheet):**
+- Phase 8 Task 3 (08-03): 6 manual UI scenarios (admin LOS page, mobile LOS picker, member /los, H2H banner stages, notification triggers, RLS Network spot-check)
 
 ## Performance Metrics
 
@@ -74,6 +77,7 @@ Progress: [██████████] 96%
 | Phase 07-mid-season-import P02 | 45 | 4 tasks | 8 files |
 | Phase 08-last-one-standing-h2h P01 | 32 | 3 tasks | 13 files |
 | Phase 08-last-one-standing-h2h P02 | 12 | 2 tasks | 11 files |
+| Phase 08-last-one-standing-h2h P03 | 120 min | 2 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -156,6 +160,12 @@ Recent decisions affecting current work:
 - [Phase 08-last-one-standing-h2h]: LOS pre-check (active-comp, eligibility, already-used, fixture resolution) runs BEFORE predictions upsert — ensures mandatory-pick rejection returns saved=0, no partial writes
 - [Phase 08-last-one-standing-h2h]: h2h_steals insert uses plain INSERT + 23505 duplicate-key tolerance for idempotency; matches DB UNIQUE(detected_in_gw_id, position) exactly
 - [Phase 08-last-one-standing-h2h]: Sync pipeline wraps each LOS/H2H orchestrator in try/catch — one failure does not halt others or fail sync_log success path
+- [Phase 08-last-one-standing-h2h P03]: Admin LOS actions match Phase 5 bonuses idiom verbatim (requireAdmin + createAdminClient + Zod parse + revalidatePath) — zero drift
+- [Phase 08-last-one-standing-h2h P03]: closeGameweek H2H integration is non-blocking — detectH2HForGameweek + resolveStealsForGameweek failures log admin_notifications type='system' metadata, close op always succeeds
+- [Phase 08-last-one-standing-h2h P03]: resetCompetitionManually accepts winner_id?: string | null — null = explicit George-override reset with no winner (no prize)
+- [Phase 08-last-one-standing-h2h P03]: setLosPickForMember bypasses kickoff guard (admin correction) but enforces team-not-already-used-in-cycle
+- [Phase 08-last-one-standing-h2h P03]: H2HStealBanner three-stage variants (detected / resolving / resolved) driven purely by row state (detected_in_gw_id, resolves_in_gw_id, resolved_at) — no extra schema columns
+- [Phase 08-last-one-standing-h2h P03]: Admin LOS table ordering computed client-side (active-first teams-used-ASC alpha tiebreak, eliminated after eliminated_at_gw-DESC alpha) — server fetch stays single-JOIN simple
 
 ### Pending Todos
 
@@ -170,6 +180,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-04-12T15:57:17.321Z
-Stopped at: Completed 08-02-PLAN.md (member submission + sync pipeline integration)
+Last session: 2026-04-12T20:20:00.000Z
+Stopped at: Completed 08-03-PLAN.md (admin LOS + member LOS view + H2H banner) — Phase 8 complete
 Resume file: None
