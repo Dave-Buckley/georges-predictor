@@ -13,8 +13,13 @@
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { setPreSeasonPicksForMemberSchema } from '@/lib/validators/pre-season'
+import {
+  setPreSeasonPicksForMemberSchema,
+  seasonActualsSchema,
+  confirmPreSeasonAwardSchema,
+} from '@/lib/validators/pre-season'
 import { isChampionshipTeam } from '@/lib/teams/championship-2025-26'
+import { calculatePreSeasonPoints } from '@/lib/pre-season/calculate'
 
 type Result = { success: true } | { error: string }
 
@@ -120,4 +125,329 @@ export async function setPreSeasonPicksForMember(formData: FormData): Promise<Re
 
   revalidatePath('/admin/pre-season')
   return { success: true }
+}
+
+// ─── setSeasonActuals ─────────────────────────────────────────────────────────
+
+/**
+ * Admin enters end-of-season actuals (final_top4/tenth/relegated/promoted/playoff).
+ * Sets actuals_locked_at=now() so calculatePreSeasonAwards becomes available.
+ * Can be called multiple times (UPDATE with idempotent semantics).
+ */
+export async function setSeasonActuals(formData: FormData): Promise<Result> {
+  const auth = await requireAdmin()
+  if ('error' in auth) return auth
+
+  const payloadRaw = formData.get('payload')
+  if (typeof payloadRaw !== 'string') return { error: 'Invalid payload' }
+  let payload: unknown
+  try {
+    payload = JSON.parse(payloadRaw)
+  } catch {
+    return { error: 'Invalid JSON' }
+  }
+
+  const parsed = seasonActualsSchema.safeParse(payload)
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? 'Invalid input' }
+  }
+
+  const {
+    season,
+    final_top4,
+    final_tenth,
+    final_relegated,
+    final_promoted,
+    final_playoff_winner,
+  } = parsed.data
+
+  const admin = createAdminClient()
+  const nowIso = new Date().toISOString()
+
+  const { error: updateErr } = await admin
+    .from('seasons')
+    .update({
+      final_top4,
+      final_tenth,
+      final_relegated,
+      final_promoted,
+      final_playoff_winner,
+      actuals_locked_at: nowIso,
+    })
+    .eq('season', season)
+
+  if (updateErr) return { error: updateErr.message }
+
+  revalidatePath('/admin/pre-season')
+  return { success: true }
+}
+
+// ─── calculatePreSeasonAwards ─────────────────────────────────────────────────
+
+interface CalcSuccess {
+  success: true
+  awardsCreated: number
+  flagsEmitted: { all_correct: number; category: number }
+}
+
+interface PickDbRow {
+  member_id: string
+  season: number
+  top4: string[] | null
+  tenth_place: string | null
+  relegated: string[] | null
+  promoted: string[] | null
+  promoted_playoff_winner: string | null
+}
+
+/**
+ * Iterates all members with pre_season_picks for the season, invokes
+ * calculatePreSeasonPoints, upserts pre_season_awards rows (confirmed=false
+ * for new rows; already-confirmed rows keep their confirmed + awarded_points).
+ * Emits admin_notifications for all-correct + category-correct flags
+ * (failures wrapped in try/catch — do not fail the calc). Idempotent.
+ */
+export async function calculatePreSeasonAwards(
+  formData: FormData,
+): Promise<CalcSuccess | { error: string }> {
+  const auth = await requireAdmin()
+  if ('error' in auth) return auth
+
+  const season = Number(formData.get('season'))
+  if (!Number.isInteger(season)) return { error: 'Invalid season' }
+
+  const admin = createAdminClient()
+
+  // Fetch season row; gate on actuals_locked_at
+  const { data: seasonRow } = await admin
+    .from('seasons')
+    .select('*')
+    .eq('season', season)
+    .single()
+
+  const sr = seasonRow as
+    | {
+        season: number
+        final_top4: string[]
+        final_tenth: string | null
+        final_relegated: string[]
+        final_promoted: string[]
+        final_playoff_winner: string | null
+        actuals_locked_at: string | null
+      }
+    | null
+
+  if (!sr || !sr.actuals_locked_at) {
+    return { error: 'Season-end actuals are not locked yet' }
+  }
+
+  const actuals = {
+    final_top4: sr.final_top4 ?? [],
+    final_tenth: sr.final_tenth ?? '',
+    final_relegated: sr.final_relegated ?? [],
+    final_promoted: sr.final_promoted ?? [],
+    final_playoff_winner: sr.final_playoff_winner ?? '',
+  }
+
+  // Fetch all picks for this season
+  const { data: picksData } = await admin
+    .from('pre_season_picks')
+    .select(
+      'member_id, season, top4, tenth_place, relegated, promoted, promoted_playoff_winner',
+    )
+    .eq('season', season)
+
+  const picks = (picksData as PickDbRow[] | null) ?? []
+
+  let flagsAllCorrect = 0
+  let flagsCategory = 0
+
+  for (const row of picks) {
+    const score = calculatePreSeasonPoints(
+      {
+        top4: row.top4 ?? [],
+        tenth_place: row.tenth_place ?? '',
+        relegated: row.relegated ?? [],
+        promoted: row.promoted ?? [],
+        promoted_playoff_winner: row.promoted_playoff_winner ?? '',
+      },
+      actuals,
+    )
+
+    // Check for existing award — preserve confirmed + awarded_points if confirmed
+    const { data: existingRaw } = await admin
+      .from('pre_season_awards')
+      .select('confirmed')
+      .eq('member_id', row.member_id)
+      .eq('season', season)
+      .maybeSingle()
+    const existing = existingRaw as { confirmed: boolean } | null
+    const preserveConfirmed = existing?.confirmed === true
+
+    // Build upsert payload — omit awarded_points + confirmed fields when preserving
+    const upsertPayload: Record<string, unknown> = {
+      member_id: row.member_id,
+      season,
+      calculated_points: score.totalPoints,
+      flags: score.flags,
+    }
+    if (!preserveConfirmed) {
+      upsertPayload.awarded_points = score.totalPoints
+      upsertPayload.confirmed = false
+      upsertPayload.confirmed_by = null
+      upsertPayload.confirmed_at = null
+    }
+
+    await admin
+      .from('pre_season_awards')
+      .upsert(upsertPayload, { onConflict: 'member_id,season' })
+
+    // Emit notifications (Pattern 5 — failures swallowed)
+    try {
+      if (score.flags.all_correct_overall) {
+        await admin.from('admin_notifications').insert({
+          type: 'pre_season_all_correct',
+          title: `Pre-season: all 12 correct`,
+          message: `Member ${row.member_id} got every pre-season pick right for ${season}.`,
+          member_id: row.member_id,
+        })
+        flagsAllCorrect++
+      } else {
+        const cats: string[] = []
+        if (score.flags.all_top4_correct) cats.push('top4')
+        if (score.flags.all_relegated_correct) cats.push('relegated')
+        if (score.flags.all_promoted_correct) cats.push('promoted')
+        if (cats.length) {
+          await admin.from('admin_notifications').insert({
+            type: 'pre_season_category_correct',
+            title: `Pre-season: category-correct (${cats.join(', ')})`,
+            message: `Member ${row.member_id} got an entire category correct for ${season}.`,
+            member_id: row.member_id,
+          })
+          flagsCategory++
+        }
+      }
+    } catch {
+      /* notification failure does not fail calc */
+    }
+  }
+
+  // Single "awards_ready" notification
+  try {
+    await admin.from('admin_notifications').insert({
+      type: 'pre_season_awards_ready',
+      title: `Pre-season awards calculated`,
+      message: `Season ${season}: ${picks.length} award${picks.length !== 1 ? 's' : ''} ready for George to confirm.`,
+    })
+  } catch {
+    /* noop */
+  }
+
+  revalidatePath('/admin/pre-season')
+  return {
+    success: true,
+    awardsCreated: picks.length,
+    flagsEmitted: { all_correct: flagsAllCorrect, category: flagsCategory },
+  }
+}
+
+// ─── confirmPreSeasonAward ────────────────────────────────────────────────────
+
+/**
+ * Confirms a single member's pre-season award. Override points optional —
+ * defaults to calculated_points. Idempotent (upsert).
+ */
+export async function confirmPreSeasonAward(formData: FormData): Promise<Result> {
+  const auth = await requireAdmin()
+  if ('error' in auth) return auth
+
+  const parsed = confirmPreSeasonAwardSchema.safeParse(
+    Object.fromEntries(formData.entries()),
+  )
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? 'Invalid input' }
+  }
+  const { member_id, season, override_points } = parsed.data
+
+  const admin = createAdminClient()
+  const { data: existingRaw } = await admin
+    .from('pre_season_awards')
+    .select('calculated_points')
+    .eq('member_id', member_id)
+    .eq('season', season)
+    .maybeSingle()
+  const existing = existingRaw as { calculated_points: number } | null
+  if (!existing) {
+    return { error: 'No calculated award found — run calculation first' }
+  }
+
+  const awarded = override_points ?? existing.calculated_points
+
+  const { error: upsertErr } = await admin.from('pre_season_awards').upsert(
+    {
+      member_id,
+      season,
+      awarded_points: awarded,
+      confirmed: true,
+      confirmed_by: auth.userId,
+      confirmed_at: new Date().toISOString(),
+    },
+    { onConflict: 'member_id,season' },
+  )
+  if (upsertErr) return { error: upsertErr.message }
+
+  revalidatePath('/admin/pre-season')
+  return { success: true }
+}
+
+// ─── bulkConfirmPreSeasonAwards ───────────────────────────────────────────────
+
+interface BulkSuccess {
+  success: true
+  confirmedCount: number
+}
+
+/**
+ * Confirms every unconfirmed pre_season_awards row for the given season,
+ * using each row's calculated_points as awarded_points. Idempotent —
+ * already-confirmed rows are skipped (filtered at the SQL level via
+ * .eq('confirmed', false)).
+ */
+export async function bulkConfirmPreSeasonAwards(
+  formData: FormData,
+): Promise<BulkSuccess | { error: string }> {
+  const auth = await requireAdmin()
+  if ('error' in auth) return auth
+
+  const season = Number(formData.get('season'))
+  if (!Number.isInteger(season)) return { error: 'Invalid season' }
+
+  const admin = createAdminClient()
+  const { data: pendingRaw } = await admin
+    .from('pre_season_awards')
+    .select('member_id, calculated_points')
+    .eq('season', season)
+    .eq('confirmed', false)
+
+  const pending =
+    (pendingRaw as Array<{ member_id: string; calculated_points: number }> | null) ?? []
+
+  let confirmedCount = 0
+  const nowIso = new Date().toISOString()
+  for (const row of pending) {
+    const { error } = await admin
+      .from('pre_season_awards')
+      .update({
+        awarded_points: row.calculated_points,
+        confirmed: true,
+        confirmed_by: auth.userId,
+        confirmed_at: nowIso,
+      })
+      .eq('member_id', row.member_id)
+      .eq('season', season)
+    if (!error) confirmedCount++
+  }
+
+  revalidatePath('/admin/pre-season')
+  return { success: true, confirmedCount }
 }
