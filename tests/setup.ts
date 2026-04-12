@@ -71,6 +71,9 @@ vi.mock('next/headers', () => ({
   cookies: vi.fn().mockResolvedValue(mockCookieStore),
 }))
 
+// `server-only` is aliased to tests/stubs/server-only.ts in vitest.config.ts
+// (vi.mock runs too late — vite's import-analysis resolves modules first).
+
 // Mock resend
 vi.mock('resend', () => ({
   Resend: vi.fn().mockImplementation(() => ({

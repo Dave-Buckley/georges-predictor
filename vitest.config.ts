@@ -11,6 +11,11 @@ export default defineConfig({
     include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx'],
   },
   resolve: {
-    alias: { '@': path.resolve(__dirname, './src') },
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+      // Stub `server-only` so test files can import modules that use it as
+      // a hard guard. Real module throws when imported outside an RSC build.
+      'server-only': path.resolve(__dirname, './tests/stubs/server-only.ts'),
+    },
   },
 })

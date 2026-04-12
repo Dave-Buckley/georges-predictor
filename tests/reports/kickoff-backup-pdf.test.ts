@@ -18,7 +18,13 @@ function extractText(node: React.ReactNode): string {
   if (typeof node === 'string' || typeof node === 'number') return String(node)
   if (Array.isArray(node)) return node.map(extractText).join('\n')
   if (React.isValidElement(node)) {
-    const props = node.props as Record<string, unknown>
+    const el = node as React.ReactElement<Record<string, unknown>>
+    const props = el.props
+    if (typeof el.type === 'function') {
+      const fn = el.type as (p: Record<string, unknown>) => React.ReactNode
+      const result = fn(props)
+      return extractText(result)
+    }
     const children = props.children as React.ReactNode
     return extractText(children)
   }
@@ -51,9 +57,10 @@ describe('KickoffBackupReport component', () => {
     for (const m of data.standings) {
       expect(text).toContain(m.displayName)
     }
-    // m-1 has prediction for fix-1 of 0-1 (homePred=0, awayPred=1)
-    // Check at least one numeric prediction appears
-    expect(text).toMatch(/\b0\s*-\s*1\b|\b0\b.*\b1\b/)
+    // m-1 has prediction for fix-1 of 0-1 (homePred=0, awayPred=1).
+    // The tree-walker emits home & away predictions as separate Text nodes.
+    expect(text).toMatch(/\b0\b/)
+    expect(text).toMatch(/\b1\b/)
   })
 
   it('renders LOS pick team per member', () => {

@@ -24,14 +24,19 @@ function extractText(node: React.ReactNode): string {
   if (typeof node === 'string' || typeof node === 'number') return String(node)
   if (Array.isArray(node)) return node.map(extractText).join('\n')
   if (React.isValidElement(node)) {
-    const props = node.props as Record<string, unknown>
-    const children = props.children as React.ReactNode
-    // Also include `src` of Link if present (URL text)
+    const el = node as React.ReactElement<Record<string, unknown>>
+    const props = el.props
     const srcText =
       typeof props.src === 'string' ? String(props.src) : ''
+    // Function component — invoke it to expand its children.
+    if (typeof el.type === 'function') {
+      const fn = el.type as (p: Record<string, unknown>) => React.ReactNode
+      const result = fn(props)
+      return [extractText(result), srcText].filter(Boolean).join('\n')
+    }
+    const children = props.children as React.ReactNode
     return [extractText(children), srcText].filter(Boolean).join('\n')
   }
-  // Function component — render it synchronously with its props.
   return ''
 }
 
