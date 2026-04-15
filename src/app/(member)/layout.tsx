@@ -114,9 +114,12 @@ export default async function MemberLayout({ children }: MemberLayoutProps) {
             >
               Dashboard
             </Link>
-            <span className="px-4 py-3 text-sm text-slate-600 whitespace-nowrap cursor-not-allowed">
+            <Link
+              href="/gameweeks"
+              className="px-4 py-3 text-sm font-medium text-slate-300 hover:text-white whitespace-nowrap border-b-2 border-transparent hover:border-purple-500 transition"
+            >
               My Predictions
-            </span>
+            </Link>
             <Link
               href="/bonuses"
               className="px-4 py-3 text-sm font-medium text-slate-300 hover:text-white whitespace-nowrap border-b-2 border-transparent hover:border-purple-500 transition"
@@ -135,9 +138,12 @@ export default async function MemberLayout({ children }: MemberLayoutProps) {
             >
               Pre-Season
             </Link>
-            <span className="px-4 py-3 text-sm text-slate-600 whitespace-nowrap cursor-not-allowed">
+            <Link
+              href="/standings"
+              className="px-4 py-3 text-sm font-medium text-slate-300 hover:text-white whitespace-nowrap border-b-2 border-transparent hover:border-purple-500 transition"
+            >
               League Table
-            </span>
+            </Link>
             <Link
               href="/profile"
               className="px-4 py-3 text-sm font-medium text-slate-300 hover:text-white whitespace-nowrap border-b-2 border-transparent hover:border-purple-500 transition"
