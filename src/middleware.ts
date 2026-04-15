@@ -40,8 +40,15 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
   // ─── Protect /admin/* routes ────────────────────────────────────────────────
-  // Allow /admin/login through (otherwise login page would redirect-loop)
-  if (pathname.startsWith('/admin') && !pathname.startsWith('/admin/login')) {
+  // Allow /admin/login and /admin/reset-password through so:
+  //  - login page doesn't redirect-loop
+  //  - users who click a password-recovery email link can actually set a new
+  //    password without being bounced back to login (recovery session is
+  //    established by Supabase when the email token is consumed).
+  const isPublicAdminRoute =
+    pathname.startsWith('/admin/login') ||
+    pathname.startsWith('/admin/reset-password')
+  if (pathname.startsWith('/admin') && !isPublicAdminRoute) {
     const isAdmin = user?.app_metadata?.role === 'admin'
     if (!user || !isAdmin) {
       const redirectUrl = new URL('/admin/login', request.url)

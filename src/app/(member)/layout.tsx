@@ -73,6 +73,7 @@ export default async function MemberLayout({ children }: MemberLayoutProps) {
   }
 
   const memberRow = member as MemberRow
+  const isAdmin = user.app_metadata?.role === 'admin'
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-950">
@@ -90,6 +91,14 @@ export default async function MemberLayout({ children }: MemberLayoutProps) {
             <span className="text-slate-400 text-sm hidden sm:block">
               {memberRow.display_name}
             </span>
+            {isAdmin && (
+              <Link
+                href="/admin"
+                className="text-sm font-semibold text-purple-300 hover:text-white transition px-3 py-2 rounded-lg border border-purple-500/40 hover:bg-purple-500/10"
+              >
+                Admin
+              </Link>
+            )}
             <LogoutButton />
           </div>
         </div>

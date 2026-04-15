@@ -30,8 +30,14 @@ export function LandingHero({ showCta = true }: LandingHeroProps) {
         {showCta && (
           <div className="flex flex-wrap justify-center sm:justify-start gap-3 pt-2">
             <Link
-              href="/login"
+              href="/signup"
               className="inline-block rounded-xl bg-pl-green px-6 py-3 font-semibold text-pl-purple hover:bg-white transition"
+            >
+              Sign up
+            </Link>
+            <Link
+              href="/login"
+              className="inline-block rounded-xl border border-pl-green px-6 py-3 font-semibold text-pl-green hover:bg-pl-green/10 transition"
             >
               Sign in
             </Link>
