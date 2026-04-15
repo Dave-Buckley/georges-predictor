@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>George's Predictor — Admin Guide</title>
+<style>
+  @page { size: A4; margin: 1.8cm 1.5cm; }
+  :root {
+    --purple: #3D195B;
+    --purple-light: #5a2e7c;
+    --green: #00FF87;
+    --amber: #f5c000;
+    --red: #dc2626;
+    --ink: #1a1a1a;
+    --muted: #555;
+    --rule: #ddd;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 11pt;
+    line-height: 1.5;
+    color: var(--ink);
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 24px;
+    background: #fff;
+  }
+  .hero {
+    background: linear-gradient(135deg, var(--purple) 0%, var(--purple-light) 100%);
+    color: #fff;
+    padding: 32px 28px;
+    border-radius: 12px;
+    margin-bottom: 28px;
+  }
+  .hero h1 { margin: 0 0 6px 0; font-size: 26pt; letter-spacing: -0.5px; }
+  .hero .tag { color: var(--green); font-weight: 600; font-size: 12pt; }
+  .hero .url {
+    display: inline-block;
+    margin-top: 14px;
+    padding: 8px 14px;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 8px;
+    font-family: ui-monospace, "SF Mono", Consolas, monospace;
+    color: #fff;
+    font-size: 10pt;
+  }
+  h2 {
+    font-size: 15pt;
+    margin-top: 28px;
+    margin-bottom: 10px;
+    color: var(--purple);
+    border-bottom: 2px solid var(--green);
+    padding-bottom: 4px;
+    page-break-after: avoid;
+  }
+  h3 {
+    font-size: 12pt;
+    margin-top: 18px;
+    margin-bottom: 6px;
+    color: var(--purple-light);
+    page-break-after: avoid;
+  }
+  p, li { margin: 6px 0; }
+  ol, ul { padding-left: 24px; }
+  ol li, ul li { margin-bottom: 4px; }
+  code {
+    background: #f4f0fa;
+    border: 1px solid #e2d9ef;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-family: ui-monospace, "SF Mono", Consolas, monospace;
+    font-size: 10pt;
+  }
+  .callout {
+    background: #fff8e6;
+    border-left: 4px solid var(--amber);
+    padding: 10px 14px;
+    margin: 14px 0;
+    border-radius: 4px;
+  }
+  .callout.red {
+    background: #fdf0f0;
+    border-left-color: var(--red);
+  }
+  .callout.green {
+    background: #ebfbf2;
+    border-left-color: #00aa55;
+  }
+  .callout.purple {
+    background: #f7f0ff;
+    border-left-color: var(--purple);
+  }
+  .weekly {
+    background: #fefcf3;
+    border: 1px solid #f5c000;
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin: 14px 0;
+    page-break-inside: avoid;
+  }
+  .weekly h3 { margin-top: 0; color: #8b6a00; }
+  .weekly ol li { margin-bottom: 6px; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+    font-size: 10pt;
+  }
+  th, td {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--rule);
+    text-align: left;
+    vertical-align: top;
+  }
+  th { background: #f7f5fb; color: var(--purple); font-weight: 600; }
+  hr { border: 0; border-top: 1px solid var(--rule); margin: 22px 0; }
+  .footer {
+    margin-top: 32px;
+    padding-top: 16px;
+    border-top: 1px solid var(--rule);
+    color: var(--muted);
+    font-size: 9pt;
+    text-align: center;
+  }
+  @media print {
+    body { padding: 0; }
+    .hero { page-break-inside: avoid; }
+    .weekly { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>Admin Guide</h1>
+  <div class="tag">George's Predictor — running the league week to week</div>
+  <div class="url">https://georges-predictor.vercel.app/admin</div>
+</div>
+
+<p>Everything you need to run the season. Each week takes about 10 minutes of your time if you stick to the routine in section 1. Fixtures, scores and league-table updates all happen automatically — you just step in for the things only a human can decide: approvals, bonuses, prizes, and the end-of-week close.</p>
+
+<h2>1. Weekly routine</h2>
+
+<div class="weekly">
+  <h3>What to do each matchweek</h3>
+  <ol>
+    <li><strong>Wednesday before gameweek</strong> — set the bonus for the upcoming week (Admin → Gameweeks → pick the gameweek → <em>Set bonus</em>).</li>
+    <li><strong>Friday morning</strong> — site auto-syncs fixtures from football-data.org. Spot-check the latest sync time on the admin dashboard.</li>
+    <li><strong>After every match finishes</strong> — scores come in automatically. Check a handful against the BBC live scores to catch any data glitches. You can manually edit a score from Admin → Gameweeks → the gameweek → tap a fixture.</li>
+    <li><strong>After the final whistle of the gameweek</strong> — go to Admin → Bonuses, confirm each member's bonus award (thumbs-up/down for each). Then go to Admin → Dashboard and click <em>Close gameweek</em>. This fires the weekly email report to everyone and locks the week.</li>
+    <li><strong>Anytime</strong> — approve new signups as they come in. You'll get an email notification. Admin → Members → Pending tab → Approve.</li>
+  </ol>
+</div>
+
+<div class="callout">
+  <strong>Rule of thumb:</strong> don't close the gameweek until you've (a) confirmed all bonus awards and (b) spot-checked at least 3 match scores against a live source. Reopening a closed gameweek is possible but undoes the email report.
+</div>
+
+<h2>2. Approving new members</h2>
+
+<p>When someone signs up you (and Dave) get an email. Click the link, or go to <strong>Admin → Members</strong> and open the <em>Pending</em> tab.</p>
+
+<ol>
+  <li>Check the display name — does it match someone from last year?</li>
+  <li>If yes: approve. Their carry-over points stay attached.</li>
+  <li>If they typed a brand-new name when they should have picked from the list: <strong>don't approve yet</strong>. Message them on WhatsApp to confirm. If they're actually an existing member, you can fix it by editing their display name in Admin → Members → edit (type their real league name) and updating their starting points.</li>
+  <li>If they're a genuine newbie: approve with 0 starting points. They're in.</li>
+  <li>Approving sends them a magic login link automatically. They should get it within a minute — tell them to check spam if not.</li>
+</ol>
+
+<div class="callout red">
+  <strong>Reject only if you don't know them.</strong> Rejected emails are blocked from re-registering under the same address.
+</div>
+
+<h2>3. Setting the weekly bonus</h2>
+
+<p>Every gameweek has one active bonus. Members apply it to one fixture of their choice. Set it <strong>before the first kickoff</strong> of the gameweek or members can't pick.</p>
+
+<ol>
+  <li>Admin → Gameweeks → pick the upcoming gameweek.</li>
+  <li>Click <strong>Set bonus</strong>.</li>
+  <li>Pick one of the types from the dropdown. Scroll to see them all.</li>
+  <li>Confirm. Members can now choose their fixture.</li>
+</ol>
+
+<p>Bonus types (from the dropdown):</p>
+
+<table>
+  <thead>
+    <tr><th>Name</th><th>What it rewards</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Double Bubble</td><td>Exact score on bonus pick — points double.</td></tr>
+    <tr><td>Clean Sheet</td><td>Pick a team; bonus if they concede 0.</td></tr>
+    <tr><td>Goals Galore</td><td>3+ goals in the match.</td></tr>
+    <tr><td>Golden Glory</td><td>Exact score on bonus pick — 60 pts.</td></tr>
+    <tr><td>Banker</td><td>Safer: correct result on bonus pick.</td></tr>
+  </tbody>
+</table>
+
+<h2>4. Scoring &amp; manual overrides</h2>
+
+<p>Scores sync from football-data.org. 99% of the time they're right. Occasionally a match ends with a VAR decision that shifts a score, or a data provider lag leaves a result briefly wrong.</p>
+
+<p><strong>Check every week.</strong> When Friday's fixture sync runs, eyeball a few past-week results against the BBC or Sky live scores. If you spot a mismatch:</p>
+
+<ol>
+  <li>Admin → Gameweeks → pick the affected gameweek.</li>
+  <li>Tap the fixture with the wrong score.</li>
+  <li>Click <strong>Edit</strong>, enter the correct score, save.</li>
+  <li>The system automatically recalculates every member's points for that fixture.</li>
+</ol>
+
+<div class="callout green">
+  <strong>You can edit scores even after the gameweek is closed.</strong> Recalculation is automatic. Members' points update on the standings page within a minute.
+</div>
+
+<h2>5. Closing a gameweek</h2>
+
+<p>Closing finalises the week and triggers the weekly email report to all members. Do this <strong>once all matches have finished</strong> and <strong>all bonus awards are confirmed</strong>.</p>
+
+<ol>
+  <li>Admin → Dashboard. If all fixtures have finished, you'll see a green <em>"GW ready to close"</em> card.</li>
+  <li>Click <strong>Close gameweek</strong>.</li>
+  <li>The dialog shows you a summary: fixtures played, bonus awards granted, total points distributed. Confirm.</li>
+  <li>Weekly emails go out automatically to everyone who opted in.</li>
+</ol>
+
+<div class="callout">
+  <strong>If a match is rescheduled mid-week:</strong> the sync will move it automatically. If it can't finish during this gameweek's window, the site will tell you there's a blocker when you try to close — the match gets marked postponed and dropped from scoring, which unblocks the close.
+</div>
+
+<h2>6. Prizes</h2>
+
+<p>Prizes are one-off awards that trigger on specific moments (e.g. "first to hit 100 pts", "best gameweek of the month"). Admin → Prizes shows any triggered prizes waiting for your confirmation.</p>
+
+<ol>
+  <li>Review each triggered prize with the snapshot it was calculated from.</li>
+  <li>Approve to announce, or reject if the data looks wrong.</li>
+  <li>Approved prizes show up on the member's profile page and in the next weekly email.</li>
+</ol>
+
+<h2>7. Managing members</h2>
+
+<p>Admin → Members lets you edit anyone's row:</p>
+<ul>
+  <li><strong>Display name</strong> — how they appear on the league table.</li>
+  <li><strong>Email</strong> — where reminders and magic links go.</li>
+  <li><strong>Starting points</strong> — their carry-over score. Change this if you ever need to fix an import error.</li>
+  <li><strong>Approval status</strong> — Approved / Pending / Rejected.</li>
+</ul>
+
+<p>Members can edit their own name, email and email-reminder preference from their Profile page. But you can override anything they've set.</p>
+
+<h2>8. Pre-season picks</h2>
+
+<p>Each season opens with pre-season predictions (top 4, 10th, bottom 3, promoted teams). Members submit via their Pre-Season page before GW1. Scored at season end.</p>
+
+<p>Admin → Pre-Season lets you:</p>
+<ul>
+  <li>See who's submitted and who hasn't.</li>
+  <li>Enter the actual standings once the season finishes.</li>
+  <li>Confirm each member's earned awards.</li>
+</ul>
+
+<h2>9. End of season</h2>
+
+<p>When the final gameweek closes, Admin → Season Rollover runs a step-by-step wizard: archive this season, enter actuals, confirm pre-season awards, launch next season. Takes about 15 minutes.</p>
+
+<h2>10. Things to watch out for</h2>
+
+<h3>"Failed to send magic link" on approval</h3>
+<p>If the member's email already exists in Supabase (rare — happens if you delete+readd), the system falls back to a regular email. Message them directly if unsure, or ask Dave to reset their password from the backend.</p>
+
+<h3>A match score looks wrong after sync</h3>
+<p>Don't wait — fix it manually (section 4). Members get confused fast when their points jump around.</p>
+
+<h3>Nobody can log in</h3>
+<p>Check the admin dashboard's <em>Fixture Sync</em> card. If the last sync is more than 2 days old, the service may have paused — redeploy or contact Dave.</p>
+
+<h3>"I didn't get my weekly email"</h3>
+<p>Most likely spam. If you've closed the gameweek and they still don't have it, check Admin → Recent notifications for any "report send failed" entries.</p>
+
+<div class="footer">
+  George's Predictor — admin guide · contact Dave (Bucks) for anything that looks broken · georges-predictor.vercel.app
+</div>
+
+</body>
+</html>

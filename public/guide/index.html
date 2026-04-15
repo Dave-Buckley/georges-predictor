@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>George's Predictor — Member Guide</title>
+<style>
+  @page { size: A4; margin: 1.8cm 1.5cm; }
+  :root {
+    --purple: #3D195B;
+    --purple-light: #5a2e7c;
+    --green: #00FF87;
+    --ink: #1a1a1a;
+    --muted: #555;
+    --rule: #ddd;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 11pt;
+    line-height: 1.5;
+    color: var(--ink);
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 24px;
+    background: #fff;
+  }
+  .hero {
+    background: linear-gradient(135deg, var(--purple) 0%, var(--purple-light) 100%);
+    color: #fff;
+    padding: 32px 28px;
+    border-radius: 12px;
+    margin-bottom: 28px;
+  }
+  .hero h1 { margin: 0 0 6px 0; font-size: 28pt; letter-spacing: -0.5px; }
+  .hero .tag { color: var(--green); font-weight: 600; font-size: 12pt; }
+  .hero .url {
+    display: inline-block;
+    margin-top: 14px;
+    padding: 8px 14px;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 8px;
+    font-family: ui-monospace, "SF Mono", Consolas, monospace;
+    color: #fff;
+  }
+  h2 {
+    font-size: 15pt;
+    margin-top: 28px;
+    margin-bottom: 10px;
+    color: var(--purple);
+    border-bottom: 2px solid var(--green);
+    padding-bottom: 4px;
+    page-break-after: avoid;
+  }
+  h3 {
+    font-size: 12pt;
+    margin-top: 18px;
+    margin-bottom: 6px;
+    color: var(--purple-light);
+    page-break-after: avoid;
+  }
+  p, li { margin: 6px 0; }
+  ol, ul { padding-left: 24px; }
+  ol li, ul li { margin-bottom: 4px; }
+  code {
+    background: #f4f0fa;
+    border: 1px solid #e2d9ef;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-family: ui-monospace, "SF Mono", Consolas, monospace;
+    font-size: 10pt;
+  }
+  .callout {
+    background: #fff8e6;
+    border-left: 4px solid #f5c000;
+    padding: 10px 14px;
+    margin: 14px 0;
+    border-radius: 4px;
+  }
+  .callout.green {
+    background: #ebfbf2;
+    border-left-color: #00aa55;
+  }
+  .callout.purple {
+    background: #f7f0ff;
+    border-left-color: var(--purple);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+    font-size: 10pt;
+  }
+  th, td {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--rule);
+    text-align: left;
+  }
+  th { background: #f7f5fb; color: var(--purple); font-weight: 600; }
+  .pill {
+    display: inline-block;
+    background: var(--green);
+    color: var(--purple);
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 10pt;
+  }
+  hr { border: 0; border-top: 1px solid var(--rule); margin: 22px 0; }
+  .footer {
+    margin-top: 32px;
+    padding-top: 16px;
+    border-top: 1px solid var(--rule);
+    color: var(--muted);
+    font-size: 9pt;
+    text-align: center;
+  }
+  .step {
+    background: #faf8fe;
+    border: 1px solid #e9e1f4;
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 10px;
+  }
+  .step .num {
+    display: inline-block;
+    width: 26px;
+    height: 26px;
+    line-height: 26px;
+    text-align: center;
+    background: var(--purple);
+    color: #fff;
+    border-radius: 50%;
+    font-weight: 700;
+    margin-right: 10px;
+  }
+  figure {
+    margin: 14px 0 8px;
+    padding: 8px;
+    background: #faf8fe;
+    border: 1px solid #e9e1f4;
+    border-radius: 10px;
+    text-align: center;
+    page-break-inside: avoid;
+  }
+  figure img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(61,25,91,0.12);
+  }
+  figcaption {
+    font-size: 9.5pt;
+    color: var(--muted);
+    margin-top: 6px;
+    font-style: italic;
+  }
+  @media print {
+    body { padding: 0; }
+    .hero { page-break-inside: avoid; }
+    .step { page-break-inside: avoid; }
+    h2 { page-break-before: auto; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>George's Predictor</h1>
+  <div class="tag">Weekly Premier League predictions with your mates — 10 years strong</div>
+  <div class="url">https://georges-predictor.vercel.app</div>
+</div>
+
+<p>Welcome to the online version of George's Predictor. Everything you used to track in a spreadsheet is now in a single site — scores auto-sync from the Premier League on Friday mornings, and the league table updates live as games finish. Takes about 2 minutes to get set up.</p>
+
+<h2>1. Getting signed up</h2>
+
+<div class="step"><span class="num">1</span> Open <code>https://georges-predictor.vercel.app</code> in any browser (phone or laptop both fine).</div>
+<div class="step"><span class="num">2</span> Click the green <strong>Sign up</strong> button at the top of the page.</div>
+<div class="step"><span class="num">3</span> <strong>Pick your name from the dropdown list.</strong> Scroll through — we've pre-loaded everyone who was in last year's league, with all your points so far. <em>If your name is already there, pick it — don't type it fresh, or you'll end up with a duplicate and lose your points.</em></div>
+<div class="step"><span class="num">4</span> Enter your email address.</div>
+<div class="step"><span class="num">5</span> <strong>Optional:</strong> set a password. If you skip this, you'll log in via one-time "magic links" emailed to you (no password to remember). If you set one, you can log in either way.</div>
+<div class="step"><span class="num">6</span> Submit. George gets a notification to approve you.</div>
+
+<figure>
+  <img src="gp-img-signup.png" alt="The signup page — pick your name from the list, enter email, optional password">
+  <figcaption>The signup page at <code>georges-predictor.vercel.app/signup</code>.</figcaption>
+</figure>
+
+<div class="callout">
+  <strong>Approval email:</strong> Once George approves, you'll get an email with a login link. <strong>Check your spam/junk folder</strong> if it doesn't land within a few minutes — the sender is a no-reply address which some providers filter by default.
+</div>
+
+<h2>2. Logging in</h2>
+
+<p>Two ways in:</p>
+<ul>
+  <li><strong>Magic link</strong> — enter your email, click the link in your inbox. No password needed.</li>
+  <li><strong>Password</strong> — if you set one during signup, use email + password. Faster on repeat logins.</li>
+</ul>
+
+<p>Forgot your password? On the admin/login side there's a "Forgot password?" link. For magic-link users, just request a fresh link any time.</p>
+
+<h2>3. Making predictions</h2>
+
+<div class="step"><span class="num">1</span> Once logged in, click <strong>My Predictions</strong> in the top navigation.</div>
+<div class="step"><span class="num">2</span> You'll see every fixture for the current gameweek with a score input next to each (home / away).</div>
+<div class="step"><span class="num">3</span> Use the <strong>+/−</strong> buttons or type a number. Fill every fixture.</div>
+<div class="step"><span class="num">4</span> Hit <strong>Save predictions</strong> at the bottom. You can edit any time up to kickoff of each individual match — once a match kicks off, that prediction is locked.</div>
+
+<div class="callout green">
+  <strong>Deadline reminders</strong> go out by email if you opted in at signup. You can change the opt-in any time from your profile page.
+</div>
+
+<h2>4. Scoring</h2>
+
+<table>
+  <thead>
+    <tr><th>Outcome</th><th>Points</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Correct result (W / D / L)</td><td><span class="pill">10 pts</span></td></tr>
+    <tr><td>Correct exact score</td><td><span class="pill">30 pts</span></td></tr>
+    <tr><td>Bonus applied correctly</td><td><span class="pill">20 pts</span> (varies by bonus)</td></tr>
+    <tr><td>Golden Glory</td><td><span class="pill">60 pts</span></td></tr>
+  </tbody>
+</table>
+
+<p>Points appear next to each prediction as results come in. Your gameweek total updates at the bottom of the page.</p>
+
+<h2>5. Bonuses</h2>
+
+<p>Each gameweek, George sets one "active bonus". You pick <em>one</em> fixture to apply it to before kickoff (a star icon marks your choice). If the bonus hits, you get extra points. Examples of bonus types:</p>
+<ul>
+  <li><strong>Double Bubble</strong> — predict an exact score; points double if correct.</li>
+  <li><strong>Clean Sheet</strong> — pick a team; bonus if they don't concede.</li>
+  <li><strong>Golden Glory</strong> — 60 pts if you nail the exact score on your bonus pick.</li>
+</ul>
+
+<h2>6. Last One Standing (LOS)</h2>
+
+<p>Pick one team to win each week. Lose, and you're out. Can't pick the same team twice in the season. Winner walks off with the LOS prize.</p>
+
+<h2>7. The league table</h2>
+
+<p>The <strong>League Table</strong> shows live standings — starting points from last season + any you've earned this season. Top of the pile gets the crown highlight.</p>
+
+<figure>
+  <img src="gp-img-standings.png" alt="League standings showing rank, name, points for every member">
+  <figcaption>The live league table at <code>georges-predictor.vercel.app/standings</code>.</figcaption>
+</figure>
+
+<h2>8. Common questions</h2>
+
+<h3>My points show 0 — what happened?</h3>
+<p>You probably typed your name in yourself instead of picking it from the list. Message George on WhatsApp. He can fix it in under a minute.</p>
+
+<h3>I didn't get the email to log in</h3>
+<p>Check your spam or junk folder first. Still nothing? Message George and he'll send you a fresh link.</p>
+
+<h3>Can I change my predictions?</h3>
+<p>Yes — as long as the match hasn't kicked off. Once a match starts, that one is locked, but the rest of the week's matches are still open until they kick off.</p>
+
+<h3>What happens if a match is postponed?</h3>
+<p>Nothing for you to do. The site spots it and takes that match out of the week's scoring. You won't be penalised.</p>
+
+<h3>How do I change my email or stop email reminders?</h3>
+<p>Click <strong>Profile</strong> at the top of the page. You can change your email, your name, and turn reminder emails on or off.</p>
+
+<h2>9. Need help?</h2>
+
+<p>Any problems — message George on WhatsApp. Typical fixes take under a minute on the admin side.</p>
+
+<div class="footer">
+  George's Predictor — 2025/26 season · georges-predictor.vercel.app
+</div>
+
+</body>
+</html>

@@ -1,17 +1,16 @@
-import { formatInTimeZone, getTimezoneOffset } from 'date-fns-tz'
+import { formatInTimeZone } from 'date-fns-tz'
 
 const LONDON_TZ = 'Europe/London'
 
 /**
- * Returns the London timezone abbreviation for a given UTC date.
- * Returns "BST" during British Summer Time (UTC+1) and "GMT" in winter (UTC+0).
- *
- * Note: The 'zzz' token in date-fns-tz returns "GMT+1" in Node.js environments
- * due to ICU data limitations, so we derive the label from the UTC offset instead.
+ * UK-time label for display. We label every kickoff as "GMT" year-round
+ * even when the real offset is BST (UTC+1) — casual audience doesn't need
+ * the DST nuance and "GMT" is the more familiar label. Local times are
+ * still computed in Europe/London so clock readings are correct against
+ * broadcast listings.
  */
-function getLondonTzAbbr(date: Date): string {
-  const offsetMs = getTimezoneOffset(LONDON_TZ, date)
-  return offsetMs === 0 ? 'GMT' : 'BST'
+function getLondonTzAbbr(_date: Date): string {
+  return 'GMT'
 }
 
 /**

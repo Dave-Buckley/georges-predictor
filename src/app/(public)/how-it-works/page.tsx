@@ -318,6 +318,22 @@ export default function HowItWorksPage() {
           <FAQ />
         </section>
 
+        {/* ── Printable guide ──────────────────────────────────────────── */}
+        <section className="rounded-2xl bg-slate-900 border border-slate-700 p-6 sm:p-7 text-center space-y-3">
+          <h3 className="text-xl font-semibold text-white">Want the printable version?</h3>
+          <p className="text-slate-400 text-sm">
+            Download the full members guide as a PDF — good to share or print.
+          </p>
+          <a
+            href="/guide/members-guide.pdf"
+            target="_blank"
+            rel="noopener"
+            className="inline-block rounded-xl bg-pl-green px-6 py-3 font-semibold text-pl-purple hover:bg-white transition"
+          >
+            Download members guide (PDF)
+          </a>
+        </section>
+
         {/* ── Close / CTA ─────────────────────────────────────────────── */}
         <section className="rounded-2xl bg-gradient-to-br from-pl-purple to-pl-purple-dark border border-pl-purple-light p-6 sm:p-8 text-center space-y-4">
           <h3 className="text-2xl font-bold text-white">

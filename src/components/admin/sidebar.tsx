@@ -161,12 +161,20 @@ export function AdminSidebar({ adminEmail }: SidebarProps) {
         })}
       </nav>
 
-      {/* Admin info at bottom */}
-      {adminEmail && (
-        <div className="px-4 py-4 border-t border-white/10">
+      {/* Admin guide link + email */}
+      <div className="px-4 py-4 border-t border-white/10 space-y-2">
+        <a
+          href="/admin-guide/admin-guide.pdf"
+          target="_blank"
+          rel="noopener"
+          className="block text-xs font-medium text-purple-300 hover:text-white transition"
+        >
+          Admin guide (PDF) →
+        </a>
+        {adminEmail && (
           <p className="text-xs text-white/40 truncate">{adminEmail}</p>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 

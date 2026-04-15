@@ -110,6 +110,17 @@ export default function SignupForm({ importedNames }: SignupFormProps) {
   // ── Form ────────────────────────────────────────────────────────────────────
   return (
     <div className="w-full max-w-md mx-auto">
+      <div className="mb-6 rounded-xl bg-purple-500/10 border border-purple-500/30 px-4 py-3 text-sm text-slate-200 flex items-center justify-between gap-3">
+        <span>First time here? Read the joining guide.</span>
+        <a
+          href="/guide/members-guide.pdf"
+          target="_blank"
+          rel="noopener"
+          className="text-purple-300 hover:text-purple-200 font-medium underline underline-offset-2 whitespace-nowrap"
+        >
+          Open PDF →
+        </a>
+      </div>
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-6">
 
         {/* Name picker */}
