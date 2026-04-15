@@ -37,6 +37,7 @@ export default function SignupForm({ importedNames }: SignupFormProps) {
       email: '',
       is_new_member: false,
       email_opt_in: true,
+      password: '',
     },
   })
 
@@ -49,6 +50,7 @@ export default function SignupForm({ importedNames }: SignupFormProps) {
     formData.set('email', data.email)
     formData.set('is_new_member', String(data.is_new_member))
     formData.set('email_opt_in', String(data.email_opt_in))
+    if (data.password) formData.set('password', data.password)
     const response = await signUpMember(formData)
     setServerResult(response)
   }
@@ -153,6 +155,31 @@ export default function SignupForm({ importedNames }: SignupFormProps) {
           />
           {errors.email && (
             <p className="text-red-400 text-sm">{errors.email.message}</p>
+          )}
+        </div>
+
+        {/* Optional password */}
+        <div className="space-y-2">
+          <label
+            htmlFor="password"
+            className="block text-sm font-medium text-slate-300"
+          >
+            Password{' '}
+            <span className="text-slate-500 text-xs font-normal">
+              (optional — or skip and use magic email links)
+            </span>
+          </label>
+          <input
+            id="password"
+            type="password"
+            autoComplete="new-password"
+            placeholder="Leave blank to use magic-link login"
+            disabled={isSubmitting}
+            {...register('password')}
+            className="w-full rounded-xl bg-slate-800 border border-slate-600 px-4 py-4 text-white text-lg placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50 transition"
+          />
+          {errors.password && (
+            <p className="text-red-400 text-sm">{errors.password.message}</p>
           )}
         </div>
 

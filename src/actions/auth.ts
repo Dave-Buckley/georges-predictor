@@ -1,8 +1,20 @@
 'use server'
 
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { signupSchema, loginSchema } from '@/lib/validators/auth'
+import { createAdminClient } from '@/lib/supabase/admin'
+import {
+  signupSchema,
+  loginSchema,
+  passwordLoginSchema,
+} from '@/lib/validators/auth'
 import { sendAdminSignupNotification } from '@/lib/email'
+
+function normalizeName(s: string): string {
+  return s
+    .toLowerCase()
+    .trim()
+    .replace(/[\s\-_.'’"]/g, '')
+}
 
 // ─── Sign Up Member ───────────────────────────────────────────────────────────
 
@@ -27,7 +39,8 @@ export async function signUpMember(
     return { error: firstError }
   }
 
-  const { display_name, email, email_opt_in } = result.data
+  const { display_name, email, email_opt_in, is_new_member, password } =
+    result.data
 
   const supabase = await createServerSupabaseClient()
 
@@ -41,21 +54,55 @@ export async function signUpMember(
     return { error: 'This email address cannot be used for registration' }
   }
 
-  // Sign up via magic link OTP — creates auth.users record + triggers members row creation
-  const { error: otpError } = await supabase.auth.signInWithOtp({
-    email,
-    options: {
-      shouldCreateUser: true,
-      data: {
-        display_name,
-        email_opt_in,
-      },
-    },
-  })
+  // Duplicate-name guard for "I'm new" signups: if the typed name matches
+  // (after stripping spaces/punctuation, case-insensitive) any existing
+  // member or placeholder, assume the user should have picked from the list
+  // instead. Prevents the Stuart Lenton / Stu split we hit on day one.
+  if (is_new_member) {
+    const admin = createAdminClient()
+    const { data: existingNames } = await admin
+      .from('members')
+      .select('display_name')
+    const needle = normalizeName(display_name)
+    const match = (existingNames ?? []).find(
+      (m: { display_name: string }) =>
+        normalizeName(m.display_name) === needle,
+    ) as { display_name: string } | undefined
+    if (match) {
+      return {
+        error: `"${match.display_name}" already exists in the league. If that's you, go back and pick your name from the list. Otherwise, pick a different name.`,
+      }
+    }
+  }
 
-  if (otpError) {
-    console.error('[signUpMember] Supabase OTP error:', otpError.message)
-    return { error: 'Something went wrong. Please try again.' }
+  // Password path (optional): creates an auth user with a password. Email
+  // confirmation is still required, but the user can log in with email+password
+  // afterwards instead of waiting on magic links every time.
+  if (password) {
+    const { error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { display_name, email_opt_in },
+      },
+    })
+    if (signUpError) {
+      console.error('[signUpMember] signUp error:', signUpError.message)
+      return { error: 'Something went wrong. Please try again.' }
+    }
+  } else {
+    // Magic-link OTP path — creates auth.users record + triggers members row creation
+    const { error: otpError } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        shouldCreateUser: true,
+        data: { display_name, email_opt_in },
+      },
+    })
+    if (otpError) {
+      console.error('[signUpMember] Supabase OTP error:', otpError.message)
+      return { error: 'Something went wrong. Please try again.' }
+    }
   }
 
   // Fire-and-forget: email George. If Resend fails, signup still succeeds.
@@ -108,6 +155,38 @@ export async function requestMagicLink(
     // Supabase returns a generic error if the email is not registered.
     // Surface a helpful message to the member.
     return { error: 'No account found with this email. Have you signed up?' }
+  }
+
+  return { success: true }
+}
+
+// ─── Login With Password ──────────────────────────────────────────────────────
+
+/**
+ * Logs a member in with email + password. Alternative to the magic-link flow
+ * for members who set a password during signup (or later via /profile).
+ */
+export async function loginWithPassword(
+  formData: FormData,
+): Promise<{ success?: boolean; error?: string }> {
+  const raw = {
+    email: formData.get('email'),
+    password: formData.get('password'),
+  }
+
+  const result = passwordLoginSchema.safeParse(raw)
+  if (!result.success) {
+    const firstError = result.error.issues[0]?.message ?? 'Invalid input'
+    return { error: firstError }
+  }
+
+  const { email, password } = result.data
+  const supabase = await createServerSupabaseClient()
+
+  const { error } = await supabase.auth.signInWithPassword({ email, password })
+  if (error) {
+    console.error('[loginWithPassword] error:', error.message)
+    return { error: 'Email or password is incorrect.' }
   }
 
   return { success: true }

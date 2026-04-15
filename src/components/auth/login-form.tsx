@@ -1,35 +1,52 @@
 'use client'
 
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { loginSchema, type LoginInput } from '@/lib/validators/auth'
-import { requestMagicLink } from '@/actions/auth'
+import { requestMagicLink, loginWithPassword } from '@/actions/auth'
+
+type Mode = 'magic' | 'password'
 
 export default function LoginForm() {
+  const router = useRouter()
+  const [mode, setMode] = useState<Mode>('magic')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [result, setResult] = useState<{
     success?: boolean
     error?: string
   } | null>(null)
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<LoginInput>({
-    resolver: zodResolver(loginSchema),
-  })
-
-  async function onSubmit(data: LoginInput) {
+  async function handleMagic(e: React.FormEvent) {
+    e.preventDefault()
     setResult(null)
-    const formData = new FormData()
-    formData.set('email', data.email)
-    const response = await requestMagicLink(formData)
+    setIsSubmitting(true)
+    const fd = new FormData()
+    fd.set('email', email)
+    const response = await requestMagicLink(fd)
     setResult(response)
+    setIsSubmitting(false)
   }
 
-  if (result?.success) {
+  async function handlePassword(e: React.FormEvent) {
+    e.preventDefault()
+    setResult(null)
+    setIsSubmitting(true)
+    const fd = new FormData()
+    fd.set('email', email)
+    fd.set('password', password)
+    const response = await loginWithPassword(fd)
+    if (response.success) {
+      router.push('/dashboard')
+      router.refresh()
+      return
+    }
+    setResult(response)
+    setIsSubmitting(false)
+  }
+
+  if (result?.success && mode === 'magic') {
     return (
       <div className="w-full max-w-md mx-auto">
         <div className="rounded-2xl bg-slate-800 border border-slate-700 p-8 text-center space-y-4">
@@ -64,7 +81,31 @@ export default function LoginForm() {
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <div className="mb-6 flex rounded-xl bg-slate-800 border border-slate-700 p-1">
+        <button
+          type="button"
+          onClick={() => { setMode('magic'); setResult(null) }}
+          className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition ${
+            mode === 'magic' ? 'bg-purple-600 text-white' : 'text-slate-300 hover:text-white'
+          }`}
+        >
+          Magic link
+        </button>
+        <button
+          type="button"
+          onClick={() => { setMode('password'); setResult(null) }}
+          className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition ${
+            mode === 'password' ? 'bg-purple-600 text-white' : 'text-slate-300 hover:text-white'
+          }`}
+        >
+          Password
+        </button>
+      </div>
+
+      <form
+        onSubmit={mode === 'magic' ? handleMagic : handlePassword}
+        className="space-y-6"
+      >
         {/* Email input */}
         <div className="space-y-2">
           <label
@@ -79,13 +120,33 @@ export default function LoginForm() {
             autoComplete="email"
             placeholder="you@example.com"
             disabled={isSubmitting}
-            {...register('email')}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
             className="w-full rounded-xl bg-slate-800 border border-slate-600 px-4 py-4 text-white text-lg placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50 transition"
           />
-          {errors.email && (
-            <p className="text-red-400 text-sm">{errors.email.message}</p>
-          )}
         </div>
+
+        {mode === 'password' && (
+          <div className="space-y-2">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-slate-300"
+            >
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              autoComplete="current-password"
+              disabled={isSubmitting}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="w-full rounded-xl bg-slate-800 border border-slate-600 px-4 py-4 text-white text-lg placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50 transition"
+            />
+          </div>
+        )}
 
         {/* Server error */}
         {result?.error && (
@@ -100,7 +161,9 @@ export default function LoginForm() {
           disabled={isSubmitting}
           className="w-full rounded-xl bg-purple-600 hover:bg-purple-500 disabled:bg-purple-600/50 disabled:cursor-not-allowed px-6 py-4 text-white font-semibold text-lg transition focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 focus:ring-offset-slate-900"
         >
-          {isSubmitting ? 'Sending link...' : 'Send me a login link'}
+          {isSubmitting
+            ? mode === 'magic' ? 'Sending link...' : 'Signing in...'
+            : mode === 'magic' ? 'Send me a login link' : 'Sign in'}
         </button>
 
         {/* Signup link */}
