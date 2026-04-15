@@ -386,16 +386,49 @@ export async function sendAdminWeekly(gwId: string): Promise<SendSummary> {
     return summary
   }
 
-  const standingsSummary = data.standings
-    .slice(0, 3)
-    .map((s) => `${s.rank}. ${s.displayName} (${s.totalPoints})`)
-    .join(' · ')
+  const participants = data.standings.filter((s) => s.weeklyPoints > 0)
+  const totalWeeklyPoints = data.standings.reduce(
+    (acc, s) => acc + s.weeklyPoints,
+    0,
+  )
+  const participantCount = participants.length
+  const avgWeeklyPoints =
+    participantCount > 0 ? totalWeeklyPoints / participantCount : 0
+  const zeroPointCount = data.standings.filter(
+    (s) => s.weeklyPoints === 0,
+  ).length
+  const biggestMover =
+    data.standings.length > 0
+      ? [...data.standings].sort(
+          (a, b) => b.weeklyPoints - a.weeklyPoints,
+        )[0]
+      : null
 
   const html = await renderEmail(
     AdminWeeklyEmail({
       gwNumber: data.gwNumber,
-      standingsSummary,
       doubleBubbleActive: data.doubleBubbleActive,
+      topWeekly: data.topWeekly.map((t) => ({
+        displayName: t.displayName,
+        weeklyPoints: t.weeklyPoints,
+      })),
+      standings: data.standings.map((s) => ({
+        rank: s.rank,
+        displayName: s.displayName,
+        totalPoints: s.totalPoints,
+        weeklyPoints: s.weeklyPoints,
+      })),
+      totalWeeklyPoints,
+      participantCount,
+      avgWeeklyPoints,
+      zeroPointCount,
+      biggestMover:
+        biggestMover && biggestMover.weeklyPoints > 0
+          ? {
+              displayName: biggestMover.displayName,
+              weeklyPoints: biggestMover.weeklyPoints,
+            }
+          : null,
     }),
   )
 

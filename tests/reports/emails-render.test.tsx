@@ -61,16 +61,41 @@ describe('email templates', () => {
     expect(html).toMatch(/2\s*\/\s*50/)
   })
 
-  it('AdminWeeklyEmail surfaces Double Bubble banner when active', async () => {
+  it('AdminWeeklyEmail surfaces Double Bubble banner, top scorer and league table', async () => {
     const html = await render(
       <AdminWeeklyEmail
         gwNumber={5}
-        standingsSummary="Member A leads on 120."
         doubleBubbleActive={true}
+        topWeekly={[
+          { displayName: 'Member A', weeklyPoints: 18 },
+          { displayName: 'Member B', weeklyPoints: 12 },
+        ]}
+        standings={[
+          {
+            rank: 1,
+            displayName: 'Member A',
+            totalPoints: 120,
+            weeklyPoints: 18,
+          },
+          {
+            rank: 2,
+            displayName: 'Member B',
+            totalPoints: 110,
+            weeklyPoints: 12,
+          },
+        ]}
+        totalWeeklyPoints={30}
+        participantCount={2}
+        avgWeeklyPoints={15}
+        zeroPointCount={0}
+        biggestMover={{ displayName: 'Member A', weeklyPoints: 18 }}
       />,
     )
     expect(html).toContain('Double Bubble')
-    expect(html).toContain('Member A leads')
+    expect(html).toContain('Member A')
+    expect(html).toContain('Highest performer')
+    expect(html).toContain('Current league table')
+    expect(html).toContain('120')
   })
 
   it('KickoffBackupEmail carries disaster-recovery framing', async () => {

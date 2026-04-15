@@ -145,6 +145,12 @@ export default async function MemberLayout({ children }: MemberLayoutProps) {
               League Table
             </Link>
             <Link
+              href="/compare"
+              className="px-4 py-3 text-sm font-medium text-slate-300 hover:text-white whitespace-nowrap border-b-2 border-transparent hover:border-purple-500 transition"
+            >
+              Compare
+            </Link>
+            <Link
               href="/profile"
               className="px-4 py-3 text-sm font-medium text-slate-300 hover:text-white whitespace-nowrap border-b-2 border-transparent hover:border-purple-500 transition"
             >
