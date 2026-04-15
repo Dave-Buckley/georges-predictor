@@ -36,7 +36,9 @@ export default function PredictionInputs({
   function handleIncrement(side: 'home' | 'away') {
     const current = side === 'home' ? homeScore : awayScore
     const other = side === 'home' ? awayScore : homeScore
-    const next = current === null ? 0 : Math.min(20, current + 1)
+    // First press of + on an empty score should land on 1, not 0 — otherwise
+    // members have to click + twice to get their first goal recorded.
+    const next = current === null ? 1 : Math.min(20, current + 1)
     if (side === 'home') onChange(fixtureId, next, other)
     else onChange(fixtureId, other, next)
   }

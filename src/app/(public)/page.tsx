@@ -49,7 +49,7 @@ async function isEndOfSeason(): Promise<boolean> {
   return rows[0].ended_at !== null
 }
 
-async function getTopStandings(limit = 5): Promise<StandingRow[]> {
+async function getTopStandings(limit = Infinity): Promise<StandingRow[]> {
   const supabase = createAdminClient()
 
   // COLUMN ALLOWLIST — same discipline as /standings. No predictions /
@@ -96,7 +96,7 @@ export default async function HomePage() {
   const isAdmin = user?.app_metadata?.role === 'admin'
 
   const [top, current] = await Promise.all([
-    getTopStandings(5),
+    getTopStandings(),
     getCurrentGameweek(),
   ])
 
@@ -110,13 +110,13 @@ export default async function HomePage() {
         <section className="space-y-3">
           <div className="flex items-baseline justify-between gap-4">
             <h2 className="text-lg sm:text-xl font-semibold text-slate-200">
-              Top of the table
+              League table
             </h2>
             <Link
               href="/standings"
               className="text-sm text-pl-green hover:text-white transition"
             >
-              View full standings →
+              Latest results →
             </Link>
           </div>
           <div className="rounded-2xl border border-slate-700 bg-slate-900 overflow-hidden">
