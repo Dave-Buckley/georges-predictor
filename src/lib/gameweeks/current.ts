@@ -20,33 +20,41 @@ export async function getCurrentGameweek(): Promise<CurrentGameweek | null> {
   try {
     const supabase = createAdminClient()
 
-    const { data: openGws } = await supabase
+    // "Current" = earliest gameweek that still has at least one non-terminal
+    // fixture. Relying on gameweeks.closed_at alone breaks mid-season deploys
+    // where admin-close hasn't been run for historical GWs, making GW1 look
+    // "in progress" forever.
+    const { data: gws } = await supabase
       .from('gameweeks')
       .select('id, number')
-      .is('closed_at', null)
       .order('number', { ascending: true })
-      .limit(1)
 
-    const openGw = (openGws ?? [])[0] as
-      | { id: string; number: number }
-      | undefined
+    for (const gw of (gws ?? []) as Array<{ id: string; number: number }>) {
+      const { count: liveCount } = await supabase
+        .from('fixtures')
+        .select('id', { count: 'exact', head: true })
+        .eq('gameweek_id', gw.id)
+        .not('status', 'in', '(FINISHED,CANCELLED,POSTPONED)')
 
-    if (!openGw) return null
+      if ((liveCount ?? 0) === 0) continue
 
-    const nowIso = new Date().toISOString()
-    const { data: kickedFixtures } = await supabase
-      .from('fixtures')
-      .select('id')
-      .eq('gameweek_id', openGw.id)
-      .lte('kickoff_time', nowIso)
-      .limit(1)
+      const nowIso = new Date().toISOString()
+      const { data: kickedFixtures } = await supabase
+        .from('fixtures')
+        .select('id')
+        .eq('gameweek_id', gw.id)
+        .lte('kickoff_time', nowIso)
+        .limit(1)
 
-    const hasKickedOff = ((kickedFixtures ?? []) as Array<unknown>).length > 0
+      const hasKickedOff = ((kickedFixtures ?? []) as Array<unknown>).length > 0
 
-    return {
-      number: openGw.number,
-      status: hasKickedOff ? 'in_progress' : 'upcoming',
+      return {
+        number: gw.number,
+        status: hasKickedOff ? 'in_progress' : 'upcoming',
+      }
     }
+
+    return null
   } catch {
     return null
   }
