@@ -1,62 +1,66 @@
 # Resume Here
 
-**Paused:** 2026-04-12 evening
-**Context:** Mid-launch — code complete, deploying to production
+**Paused:** 2026-04-16 ~01:00 (late Weds night / early Thurs morning)
+**Status:** Live — real members signing up and using the site
 
 ---
 
-## Where we are
+## Site is live and in use
 
-**v1.0 is code-complete + pushed + tagged.** 11 phases, 37 plans, 614 tests green.
-
-Currently walking the 11-step launch checklist. You're in the middle of **Step 2: Vercel env vars**. Steps 1 and 2 are critical — nothing works without them.
-
-### ✅ Done today
-
-- All 11 phases shipped (includes pre-launch audit fixes: bonus_awards CHECK + Double Bubble display)
-- Master QA checklist saved to `docs/FINAL_QA_CHECKLIST.md` + copied to your Downloads
-- Milestone v1.0 archived + git tagged + pushed to origin
-- **Step 1 — Supabase migrations applied ✅** — all 12 migrations ran green against the production Supabase project (after a schema nuke + migration-002 fix for a broken `m.role` reference)
-- Production URL confirmed: https://georges-predictor.vercel.app
-- Clean-start SQL file in `C:\Users\David\Downloads\Georges-Predictor-MIGRATIONS.sql`
-- Env template file in `C:\Users\David\Downloads\Georges-Predictor.env`
-
-### ⏳ Currently mid-step: Step 2 — Vercel env vars
-
-You pasted the env template file with `<PLACEHOLDER>` strings into Vercel. Those need to be replaced with real values.
-
-**Tomorrow pick up here:**
-
-1. **Delete** any placeholder env var entries from Vercel (Settings → Environment Variables)
-2. **Get the 5 real values:**
-   - **Supabase** → https://supabase.com/dashboard/project/_/settings/api — grab Project URL, anon public key, service_role key
-   - **Resend** → https://resend.com (sign up free) → API Keys → create `georges-predictor` key → copy the `re_...` string
-   - **football-data.org** → https://www.football-data.org/client/register (sign up free) → token comes in welcome email
-3. **Pick a random string** for `CRON_SECRET` (mash keyboard for 30+ chars, or `openssl rand -hex 32`)
-4. **Edit** `C:\Users\David\Downloads\Georges-Predictor.env` — replace every `<PLACEHOLDER>` with its real value
-5. **Import into Vercel:** Settings → Environment Variables → "⋯" menu → Import .env → select file → Production → Save
-6. **Redeploy:** Deployments tab → latest → "⋯" → Redeploy
+- Production URL: https://georges-predictor.vercel.app
+- Admin: https://georges-predictor.vercel.app/admin
+- 48 members in DB · 5 real signups flowing in · 38 gameweeks synced with football-data.org
+- Fixture/score sync runs every 15 minutes (Vercel cron)
+- Members PDF guide + Admin PDF guide both served from the site and downloadable
 
 ---
 
-## Remaining launch checklist (after Step 2)
+## Admin access (don't lose this)
 
-3. **Verify site loads** — hit https://georges-predictor.vercel.app after redeploy, hard refresh, confirm purple hero shows
-4. **Create George's + Dave's admin accounts** — sign up both via `/signup`, then in Supabase → Authentication → Users → each user → edit `app_metadata` → set `role: "admin"`
-5. **Import mid-season data** via `/admin/import` — your existing spreadsheet of ~48 members + GW31 points tally
-6. **Enter GW32–37 scores manually** via `/admin/fixtures` (the football-data.org sync takes over from GW38 onwards)
-7. **Add Dave ("Bucks") as a member** via `/admin/members` with starting points matching the current league leader
-8. **Walk the master QA sheet** (in Downloads) end-to-end
-9. **Re-shoot the 5 `/how-it-works` screenshots** per the runbook at `docs/how-it-works-screenshot-runbook.md`
-10. **Test-fire a gameweek close** — pick a test GW, click close, verify emails arrive
-11. **Invite real members** — share https://georges-predictor.vercel.app in the WhatsApp group, approve signups via `/admin/approvals`
+- **Dave / Bucks** — dave.john.buckley@gmail.com / `Launch2026!`
+- **George** — king_gegz@aol.com / `GeorgePredictor2026!`
+- Both should change their passwords via `/admin/reset-password` or Settings on first login
 
 ---
 
-## Known post-launch nice-to-haves (not blockers)
+## Real members who've signed up
 
-- Free stock photos from Unsplash/Pexels on the landing hero (legal, unlike PL photos — which I declined to scrape)
-- Custom domain swap (when/if you buy one) → one-line Resend + Vercel config change
+| Display name | Email | Points | Status |
+|---|---|---|---|
+| Liam | ldac323@hotmail.com | 2340 | pending approval |
+| Anna | fitzgerald.anna@gmail.com | 2170 | pending approval |
+| Papa Spam | will.wijngaard@zen.co.uk | 2300 | pending approval |
+| Stu (was "Stuart Lenton") | stuart.lenton@ntlworld.com | 2520 | approved + merged |
+| Dave (was "Kingy") | mrdavidkingrobert@gmail.com | 2460 | approved + merged |
+
+The three "pending approval" members above should be approved by George via `/admin/members?filter=pending` — the magic-link email will land automatically once approved.
+
+---
+
+## Open items for next session
+
+### Data
+
+1. **GW32-inclusive points tally** — Dan said he'd update the starting_points to include GW32 (current tally is through GW30). When Dan hands over the updated list, bulk-update all 48 rows via the REST API (same pattern as the original import).
+2. **Bucks (Dave's) starting_points** — currently set to 13,250 (5× league leader) as an obvious placeholder since Dan isn't actually playing. Keep or drop depending on Dan's preference.
+
+### Launch checklist leftovers
+
+- **Step 8** — Master QA walk-through (`docs/FINAL_QA_CHECKLIST.md`). Big file, lots of items. Block of uninterrupted time, 20–30 min.
+- **Step 9** — Re-shoot `/how-it-works` screenshots. Public-page shots are real; private-page shots (predictions, admin panels, LOS, bonuses) are still placeholder purple boxes in `/public/how-it-works/`. Would need Edge headless with a logged-in session cookie, or just manual screenshots by Dan.
+- **Step 10** — Test-fire a gameweek close. Need to close GW32 to verify the weekly-email report pipeline works end to end. Will send real emails to George + Bucks (and any approved real members). Do it when we have ~5 min to watch for failures.
+- **Step 11** — Real WhatsApp invite blast. Can happen anytime — PDF + link is ready.
+
+### Known future issues
+
+- **Admin-close workflow doesn't update `gameweeks.status`** — the closeGameweek action sets `closed_at` but doesn't change `status`. Not critical since most pages now use fixture-based detection, but the predictions admin page still reads gameweeks.status. Manual backfill was used to set GW1-32 = 'complete'; GW33-38 = 'scheduled'. Will drift again over time.
+- **Public page.tsx still uses `getTopStandings` function name** — now returns the full table (Infinity limit). Name is a minor lie but not worth renaming until someone else reads it.
+
+---
+
+## How today's session went
+
+Massive launch-night session — fixed ~15 bugs discovered live, seeded the full league, wrote + shipped two PDF guides, changed the sync cadence to 15 min, added password login + duplicate-name guard on signup, unblocked both admin accounts, merged Stuart→Stu and Kingy→Dave correctly. Site went from "nothing works" at step 2 of the launch checklist to "48 members, 5 real signups, PDF guides live" by end of session. Commit range: `b3437b5` → `4033bcf`.
 
 ---
 
@@ -68,6 +72,4 @@ Open this session with:
 continue from .planning/RESUME-HERE.md
 ```
 
-Or just open the project and I'll pick up the launch checklist where we left off. Memory is saved — production URL, zero-cost constraint, non-technical user audience, feature ideas list, everything carries forward.
-
-Good luck. Shout if anything breaks overnight.
+Or just open the project and the memory system will carry the zero-cost constraint, the always-commit-push preference, George's PDF double-check note, and all the other context. Production is live and self-maintaining via the 15-min sync — nothing urgent blocks overnight. Wake up, approve the 3 pending members, and move on to Step 8.
