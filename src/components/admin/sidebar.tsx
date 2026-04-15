@@ -57,6 +57,7 @@ export function AdminSidebar({ adminEmail }: SidebarProps) {
       href: '/admin/notifications',
       label: 'Notifications',
       icon: Bell,
+      disabled: true,
     },
     {
       href: '/admin/gameweeks',
