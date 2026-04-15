@@ -86,16 +86,33 @@ async function getStandingsPageData(): Promise<{
     })
     .map((m, i) => ({ ...m, rank: i + 1 }))
 
-  // Latest closed gameweek
-  const { data: latestGwRaw } = await supabase
+  // Latest "fully played" gameweek — all fixtures in terminal status
+  // (FINISHED / CANCELLED / POSTPONED). Independent of admin close workflow
+  // so mid-season launches with historical fixture data still render results.
+  const { data: allGws } = await supabase
     .from('gameweeks')
     .select('id, number, closed_at')
-    .not('closed_at', 'is', null)
     .order('number', { ascending: false })
-    .limit(1)
-    .maybeSingle()
 
-  const latestGw = latestGwRaw as LatestGw | null
+  let latestGw: LatestGw | null = null
+  for (const gw of (allGws ?? []) as LatestGw[]) {
+    const { count: pendingCount } = await supabase
+      .from('fixtures')
+      .select('id', { count: 'exact', head: true })
+      .eq('gameweek_id', gw.id)
+      .not('status', 'in', '(FINISHED,CANCELLED,POSTPONED)')
+    if ((pendingCount ?? 0) === 0) {
+      // every fixture has reached a terminal state
+      const { count: anyCount } = await supabase
+        .from('fixtures')
+        .select('id', { count: 'exact', head: true })
+        .eq('gameweek_id', gw.id)
+      if ((anyCount ?? 0) > 0) {
+        latestGw = gw
+        break
+      }
+    }
+  }
 
   let fixtures: FixtureRow[] = []
   let topWeekly: Array<{ displayName: string; weeklyPoints: number }> = []

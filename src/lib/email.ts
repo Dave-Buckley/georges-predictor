@@ -41,7 +41,7 @@ export async function sendEmail({
 }
 
 /**
- * Notifies George when a new member signs up.
+ * Notifies both admins (George + Dave) when a new member signs up.
  * Called by the signup server action.
  */
 export async function sendAdminSignupNotification({
@@ -51,20 +51,27 @@ export async function sendAdminSignupNotification({
   displayName: string
   email: string
 }): Promise<{ error?: string }> {
-  const adminEmail = process.env.ADMIN_EMAIL_GEORGE
-  if (!adminEmail) {
-    console.warn('[sendAdminSignupNotification] ADMIN_EMAIL_GEORGE not set — skipping')
+  const admins = [
+    process.env.ADMIN_EMAIL_GEORGE,
+    process.env.ADMIN_EMAIL_DAVE,
+  ].filter((x): x is string => Boolean(x))
+
+  if (admins.length === 0) {
+    console.warn('[sendAdminSignupNotification] No admin emails configured — skipping')
     return {}
   }
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
-  return sendEmail({
-    to: adminEmail,
-    subject: `New signup waiting for approval: ${displayName}`,
-    html: `
-      <p>Hi George,</p>
-      <p><strong>${displayName}</strong> (${email}) has just signed up and is waiting for your approval.</p>
+  const subject = `New signup waiting for approval: ${displayName}`
+  const html = `
+      <p>Hi,</p>
+      <p><strong>${displayName}</strong> (${email}) has just signed up and is waiting for approval.</p>
       <p><a href="${appUrl}/admin/members?filter=pending">Review pending approvals</a></p>
-    `,
-  })
+    `
+
+  const results = await Promise.all(
+    admins.map((to) => sendEmail({ to, subject, html })),
+  )
+  const firstError = results.find((r) => r.error)
+  return firstError ?? {}
 }
