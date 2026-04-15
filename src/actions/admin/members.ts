@@ -49,15 +49,24 @@ export async function approveMember(
     return { error: 'Member not found' }
   }
 
-  // Send magic link (invite) via Supabase
-  const { error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
-    member.email,
-    { redirectTo: `${appUrl}/auth/callback?next=/dashboard` }
-  )
+  // Placeholders (user_id IS NULL, blank email) are point-holders waiting to
+  // be claimed when the real member signs up — no auth user exists yet to
+  // send a magic link to. Approve the row but skip the email step.
+  const isPlaceholder = !member.user_id || !member.email
 
-  if (inviteError) {
-    console.error('[approveMember] Invite error:', inviteError.message)
-    return { error: 'Failed to send magic link. Please try again.' }
+  if (!isPlaceholder) {
+    // Existing auth user — use generateLink (inviteUserByEmail only works
+    // for *new* users and errors when the account already exists).
+    const { error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+      type: 'magiclink',
+      email: member.email,
+      options: { redirectTo: `${appUrl}/auth/callback?next=/dashboard` },
+    })
+
+    if (linkError) {
+      console.error('[approveMember] generateLink error:', linkError.message)
+      return { error: 'Failed to send magic link. Please try again.' }
+    }
   }
 
   // Update approval status

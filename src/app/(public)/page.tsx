@@ -15,6 +15,7 @@
 import Link from 'next/link'
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { MemberLink } from '@/components/shared/member-link'
 import { LandingHero } from '@/components/hero/landing-hero'
 import { CurrentGameweekBanner } from '@/components/shared/current-gameweek-banner'
@@ -87,6 +88,13 @@ export default async function HomePage() {
     return <EndOfSeasonPage />
   }
 
+  const supabase = await createServerSupabaseClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  const isLoggedIn = Boolean(user)
+  const isAdmin = user?.app_metadata?.role === 'admin'
+
   const [top, current] = await Promise.all([
     getTopStandings(5),
     getCurrentGameweek(),
@@ -94,7 +102,7 @@ export default async function HomePage() {
 
   return (
     <div className="text-white">
-      <LandingHero showCta />
+      <LandingHero showCta={!isLoggedIn} />
       <CurrentGameweekBanner current={current} />
 
       <main className="max-w-4xl mx-auto px-4 py-10 space-y-10">
@@ -176,12 +184,30 @@ export default async function HomePage() {
             >
               How it works
             </Link>
-            <Link
-              href="/login"
-              className="inline-block rounded-xl border border-pl-green px-6 py-3 font-semibold text-pl-green hover:bg-pl-green/10 transition"
-            >
-              Member login
-            </Link>
+            {!isLoggedIn && (
+              <Link
+                href="/login"
+                className="inline-block rounded-xl border border-pl-green px-6 py-3 font-semibold text-pl-green hover:bg-pl-green/10 transition"
+              >
+                Member login
+              </Link>
+            )}
+            {isLoggedIn && !isAdmin && (
+              <Link
+                href="/dashboard"
+                className="inline-block rounded-xl border border-pl-green px-6 py-3 font-semibold text-pl-green hover:bg-pl-green/10 transition"
+              >
+                Go to dashboard
+              </Link>
+            )}
+            {isAdmin && (
+              <Link
+                href="/admin"
+                className="inline-block rounded-xl border border-pl-green px-6 py-3 font-semibold text-pl-green hover:bg-pl-green/10 transition"
+              >
+                Admin panel
+              </Link>
+            )}
           </div>
         </section>
       </main>
