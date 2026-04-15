@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import * as Select from '@radix-ui/react-select'
-import { X, AlertTriangle, CheckCircle, ChevronDown, Check } from 'lucide-react'
+import { X, AlertTriangle, CheckCircle, ChevronDown, ChevronUp, Check } from 'lucide-react'
 import { setBonusForGameweek } from '@/actions/admin/bonuses'
 import type { BonusTypeRow } from '@/lib/supabase/types'
 
@@ -156,6 +156,9 @@ export function SetBonusDialog({
                       position="popper"
                       sideOffset={4}
                     >
+                      <Select.ScrollUpButton className="flex items-center justify-center h-6 bg-white text-gray-500 cursor-default">
+                        <ChevronUp className="w-4 h-4" />
+                      </Select.ScrollUpButton>
                       <Select.Viewport className="max-h-64 overflow-y-auto p-1">
                         {bonusTypes.map((bt) => (
                           <Select.Item
@@ -177,6 +180,9 @@ export function SetBonusDialog({
                           </Select.Item>
                         ))}
                       </Select.Viewport>
+                      <Select.ScrollDownButton className="flex items-center justify-center h-6 bg-white text-gray-500 cursor-default">
+                        <ChevronDown className="w-4 h-4" />
+                      </Select.ScrollDownButton>
                     </Select.Content>
                   </Select.Portal>
                 </Select.Root>
