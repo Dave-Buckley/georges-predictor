@@ -1,8 +1,8 @@
 /**
- * HomeRankWidget tests — Phase 11 Plan 02 Task 3.
+ * HomeRankWidget tests.
  *
- * Renders viewer's rank plus up to 2 neighbours on each side. Clamps at
- * list bounds. Returns null if viewer is not a member.
+ * Renders 10 members above viewer + viewer + 2 below, clamped at list
+ * bounds. Returns null if viewer is not a member.
  */
 import { describe, it, expect } from 'vitest'
 import { render } from '@testing-library/react'
@@ -19,17 +19,17 @@ function buildMembers(n: number) {
 }
 
 describe('HomeRankWidget', () => {
-  it('viewerRank=5 (middle) renders 5 rows: ranks 3, 4, 5, 6, 7', () => {
-    const members = buildMembers(20)
+  it('viewerRank=15 (middle) renders ranks 5..17 (13 rows)', () => {
+    const members = buildMembers(30)
     const { container } = render(
-      <HomeRankWidget viewerMemberId="m-5" members={members} />,
+      <HomeRankWidget viewerMemberId="m-15" members={members} />,
     )
     const rows = container.querySelectorAll('[data-testid="rank-row"]')
-    expect(rows.length).toBe(5)
+    expect(rows.length).toBe(13)
     const texts = Array.from(rows).map((r) => r.textContent ?? '')
-    expect(texts[0]).toContain('Member 3')
-    expect(texts[2]).toContain('Member 5')
-    expect(texts[4]).toContain('Member 7')
+    expect(texts[0]).toContain('Member 5')
+    expect(texts[10]).toContain('Member 15')
+    expect(texts[12]).toContain('Member 17')
   })
 
   it('viewerRank=1 (top) clamps to ranks 1, 2, 3 (3 rows)', () => {
@@ -43,15 +43,15 @@ describe('HomeRankWidget', () => {
     expect(rows[2].textContent).toContain('Member 3')
   })
 
-  it('viewerRank=20 (bottom) clamps to ranks 18, 19, 20 (3 rows)', () => {
+  it('viewerRank=20 (bottom) clamps to ranks 10..20 (11 rows)', () => {
     const members = buildMembers(20)
     const { container } = render(
       <HomeRankWidget viewerMemberId="m-20" members={members} />,
     )
     const rows = container.querySelectorAll('[data-testid="rank-row"]')
-    expect(rows.length).toBe(3)
-    expect(rows[0].textContent).toContain('Member 18')
-    expect(rows[2].textContent).toContain('Member 20')
+    expect(rows.length).toBe(11)
+    expect(rows[0].textContent).toContain('Member 10')
+    expect(rows[10].textContent).toContain('Member 20')
   })
 
   it('returns null when viewerMemberId is null', () => {

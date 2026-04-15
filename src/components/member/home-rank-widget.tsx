@@ -1,6 +1,6 @@
 /**
- * HomeRankWidget — dashboard strip showing viewer's rank + 2 neighbours on
- * each side. Phase 11 Plan 02 Task 3.
+ * HomeRankWidget — dashboard strip showing viewer's rank with a window of
+ * 10 members above + viewer + 2 below (clamped to list bounds).
  *
  * Returns null when viewer is not a member (e.g. admin-only user) so the
  * dashboard layout doesn't carry an empty card.
@@ -8,6 +8,9 @@
 import Link from 'next/link'
 
 import { MemberLink } from '@/components/shared/member-link'
+
+const ROWS_ABOVE = 10
+const ROWS_BELOW = 2
 
 export interface HomeRankWidgetMember {
   memberId: string
@@ -31,9 +34,8 @@ export function HomeRankWidget({
   const viewerIndex = sorted.findIndex((m) => m.memberId === viewerMemberId)
   if (viewerIndex === -1) return null
 
-  // Slice [viewerIndex - 2, viewerIndex + 2] clamped to array bounds.
-  const start = Math.max(0, viewerIndex - 2)
-  const end = Math.min(sorted.length, viewerIndex + 3)
+  const start = Math.max(0, viewerIndex - ROWS_ABOVE)
+  const end = Math.min(sorted.length, viewerIndex + ROWS_BELOW + 1)
   const slice = sorted.slice(start, end)
 
   return (
@@ -42,12 +44,6 @@ export function HomeRankWidget({
         <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
           Your position
         </h2>
-        <Link
-          href="/standings"
-          className="text-xs text-purple-400 hover:text-purple-300 transition font-medium"
-        >
-          View full league table &rarr;
-        </Link>
       </div>
       <div className="divide-y divide-slate-800">
         {slice.map((m) => {
@@ -86,6 +82,12 @@ export function HomeRankWidget({
           )
         })}
       </div>
+      <Link
+        href="/standings"
+        className="block w-full text-center px-4 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold transition"
+      >
+        View full league table &rarr;
+      </Link>
     </section>
   )
 }
