@@ -32,28 +32,33 @@ async function getDashboardData() {
     const notifications = (notificationsResult.data ?? []) as AdminNotificationRow[]
     const latestSync = syncLogResult.data as SyncLogRow | null
 
-    // ── Active gameweek data ──────────────────────────────────────────────────
-    // Find the most-recently active or complete gameweek (highest number not 'scheduled')
-    const { data: activeGwData } = await supabase
+    // ── Active / upcoming gameweek — derived from fixture state ──────────────
+    // gameweeks.status is never updated by the football-data sync, so every
+    // row sits at 'scheduled' and the original status-based query always
+    // returned GW1. Derive from fixtures instead: activeGw = highest GW
+    // with at least one kicked-off fixture; upcomingGw = lowest GW whose
+    // fixtures haven't kicked off yet.
+    const { data: allGwsRaw } = await supabase
       .from('gameweeks')
       .select('*')
-      .neq('status', 'scheduled')
-      .order('number', { ascending: false })
-      .limit(1)
-      .single()
-
-    const activeGw = activeGwData as GameweekRow | null
-
-    // Upcoming gameweek (lowest number that IS 'scheduled') — for bonus setup card
-    const { data: upcomingGwData } = await supabase
-      .from('gameweeks')
-      .select('*')
-      .eq('status', 'scheduled')
       .order('number', { ascending: true })
-      .limit(1)
-      .single()
+    const allGws = (allGwsRaw ?? []) as GameweekRow[]
 
-    const upcomingGw = upcomingGwData as GameweekRow | null
+    const nowIso = new Date().toISOString()
+    let activeGw: GameweekRow | null = null
+    let upcomingGw: GameweekRow | null = null
+    for (const gw of allGws) {
+      const { count: kickedCount } = await supabase
+        .from('fixtures')
+        .select('id', { count: 'exact', head: true })
+        .eq('gameweek_id', gw.id)
+        .lte('kickoff_time', nowIso)
+      if ((kickedCount ?? 0) > 0) {
+        activeGw = gw
+      } else if (!upcomingGw) {
+        upcomingGw = gw
+      }
+    }
 
     let pendingBonusAwards = 0
     let allFixturesFinished = false
