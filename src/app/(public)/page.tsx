@@ -184,6 +184,14 @@ export default async function HomePage() {
             >
               How it works
             </Link>
+            <a
+              href="/guide/members-guide.pdf"
+              target="_blank"
+              rel="noopener"
+              className="inline-block rounded-xl border border-pl-green px-6 py-3 font-semibold text-pl-green hover:bg-pl-green/10 transition"
+            >
+              Download guide (PDF)
+            </a>
             {!isLoggedIn && (
               <Link
                 href="/login"
