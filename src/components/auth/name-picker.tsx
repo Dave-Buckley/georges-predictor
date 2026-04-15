@@ -104,7 +104,12 @@ export default function NamePicker({
             position="popper"
             sideOffset={8}
           >
-            <Select.Viewport className="py-1">
+            <Select.ScrollUpButton className="flex items-center justify-center h-7 bg-slate-800 text-slate-400 cursor-default">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
+              </svg>
+            </Select.ScrollUpButton>
+            <Select.Viewport className="py-1 max-h-[60vh] overflow-y-auto">
               {importedNames.map((name) => (
                 <Select.Item
                   key={name}
@@ -125,6 +130,11 @@ export default function NamePicker({
                 <Select.ItemText>I&apos;m new — type my name</Select.ItemText>
               </Select.Item>
             </Select.Viewport>
+            <Select.ScrollDownButton className="flex items-center justify-center h-7 bg-slate-800 text-slate-400 cursor-default">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </Select.ScrollDownButton>
           </Select.Content>
         </Select.Portal>
       </Select.Root>

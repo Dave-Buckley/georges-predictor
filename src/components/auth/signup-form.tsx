@@ -87,6 +87,7 @@ export default function SignupForm({ importedNames }: SignupFormProps) {
           <div className="rounded-xl bg-slate-700/50 border border-slate-600 px-4 py-3 space-y-1">
             <p className="text-slate-400 text-sm">
               Once your account has been approved, you will receive an email with a secure login link.
+              <span className="text-amber-300"> If you don&apos;t see it within a few minutes, check your spam/junk folder.</span>
             </p>
             <p className="text-slate-400 text-sm">
               In the meantime, feel free to{' '}
