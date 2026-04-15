@@ -9,7 +9,8 @@
     "lint": "eslint",
     "test": "vitest",
     "test:run": "vitest run",
-    "seed:admins": "npx tsx scripts/seed-admins.ts"
+    "seed:admins": "npx tsx scripts/seed-admins.ts",
+    "update:points": "npx tsx scripts/update-points.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
