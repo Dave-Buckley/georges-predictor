@@ -36,7 +36,7 @@ function formatDate(dateStr: string) {
 
 export function MemberTable({ members }: MemberTableProps) {
   const [activeFilter, setActiveFilter] = useState<FilterTab>('all')
-  const [sortField, setSortField] = useState<'display_name' | 'created_at'>('created_at')
+  const [sortField, setSortField] = useState<'display_name' | 'email' | 'created_at'>('created_at')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
 
   const filtered = members
@@ -55,7 +55,7 @@ export function MemberTable({ members }: MemberTableProps) {
   const pendingCount = members.filter((m) => m.approval_status === 'pending').length
   const approvedCount = members.filter((m) => m.approval_status === 'approved').length
 
-  const toggleSort = (field: 'display_name' | 'created_at') => {
+  const toggleSort = (field: 'display_name' | 'email' | 'created_at') => {
     if (sortField === field) {
       setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
     } else {
@@ -64,7 +64,7 @@ export function MemberTable({ members }: MemberTableProps) {
     }
   }
 
-  const SortIcon = ({ field }: { field: 'display_name' | 'created_at' }) => {
+  const SortIcon = ({ field }: { field: 'display_name' | 'email' | 'created_at' }) => {
     if (sortField !== field) return <span className="text-gray-300 ml-1">↕</span>
     return <span className="text-gray-600 ml-1">{sortDir === 'asc' ? '↑' : '↓'}</span>
   }
@@ -122,9 +122,10 @@ export function MemberTable({ members }: MemberTableProps) {
                 </th>
                 <th
                   scope="col"
-                  className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                  className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer select-none hover:bg-gray-100"
+                  onClick={() => toggleSort('email')}
                 >
-                  Email
+                  Email <SortIcon field="email" />
                 </th>
                 <th
                   scope="col"
