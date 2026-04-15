@@ -356,29 +356,15 @@ export async function gatherFullExportData(): Promise<FullExportData> {
     .select('id, display_name, email, starting_points')
     .eq('approval_status', 'approved')
 
-  // Season totals — sum prediction_scores + confirmed bonuses.
-  const { data: scoreRows } = await admin
-    .from('prediction_scores')
-    .select('member_id, points_awarded')
-  const { data: bonusRows } = await admin
-    .from('bonus_awards')
-    .select('member_id, points_awarded, awarded')
-    .eq('awarded', true)
-
-  const totalByMember = new Map<string, number>()
-  for (const s of (scoreRows ?? []) as Array<any>) {
-    const prev = totalByMember.get(s.member_id) ?? 0
-    totalByMember.set(s.member_id, prev + (s.points_awarded ?? 0))
-  }
-  for (const b of (bonusRows ?? []) as Array<any>) {
-    const prev = totalByMember.get(b.member_id) ?? 0
-    totalByMember.set(b.member_id, prev + (b.points_awarded ?? 0))
-  }
+  // members.starting_points is the live running total — closeGameweek rolls
+  // each week's points in via applyWeeklyToStartingPoints (migration 014).
+  // Summing prediction_scores + bonuses on top would double-count, so we
+  // report starting_points directly.
   const membersMasterList = (memberRows ?? []).map((m: any) => ({
     id: m.id,
     displayName: m.display_name,
     email: m.email ?? '',
-    totalPoints: (m.starting_points ?? 0) + (totalByMember.get(m.id) ?? 0),
+    totalPoints: m.starting_points ?? 0,
   }))
 
   // Fixtures master list — flatten from each gameweek.

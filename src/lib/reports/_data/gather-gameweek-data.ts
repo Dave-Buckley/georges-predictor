@@ -168,21 +168,21 @@ export function shapeData(input: ShapeDataInput): GameweekReportData {
     }
   }
 
-  // ─── Standings (starting_points + all-time weekly accumulation) ───────────
-  // Without a pre-calculated historical total we derive it from
-  // starting_points + THIS gw weekly. Callers that need full-history totals
-  // pass enriched `members` (members.total) — support that by preferring
-  // an explicit `total_points` field if present.
+  // ─── Standings ────────────────────────────────────────────────────────────
+  // Once closeGameweek has rolled weekly into starting_points (migration 014,
+  // tracked via gameweeks.points_applied), total = starting_points. Otherwise
+  // (pre-close preview / backup doc) total = starting_points + weekly.
+  // Explicit `total_points` on a member row still wins for callers that
+  // pre-aggregate history.
+  const pointsApplied = !!gameweek?.points_applied
   const standingsRaw = members.map((m) => {
     const weekly = weeklyByMember.get(m.id) ?? 0
-    // If member row carries total_points (already aggregated historical),
-    // use it directly. Otherwise fall back to starting_points + weekly so
-    // tests and backup-doc contexts (where no history table exists) still
-    // return a sensible ranking.
     const total =
       typeof m.total_points === 'number'
         ? m.total_points
-        : (m.starting_points ?? 0) + weekly
+        : pointsApplied
+          ? (m.starting_points ?? 0)
+          : (m.starting_points ?? 0) + weekly
     return {
       memberId: m.id,
       displayName: m.display_name,

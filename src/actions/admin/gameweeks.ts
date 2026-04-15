@@ -5,6 +5,10 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { closeGameweekSchema, reopenGameweekSchema } from '@/lib/validators/gameweeks'
 import { detectH2HForGameweek, resolveStealsForGameweek } from '@/lib/h2h/sync-hook'
+import {
+  applyWeeklyToStartingPoints,
+  reverseWeeklyFromStartingPoints,
+} from '@/lib/gameweeks/apply-points'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -208,6 +212,21 @@ export async function closeGameweek(
     return { error: 'Failed to close gameweek. Please try again.' }
   }
 
+  // Roll weekly points into members.starting_points so /standings stays
+  // current without manual admin updates. Idempotent — applyWeeklyToStartingPoints
+  // is a no-op if points_applied is already true (e.g. historical closes
+  // back-filled by migration 014).
+  try {
+    await applyWeeklyToStartingPoints(supabase, gameweek_id)
+  } catch (error) {
+    console.error('[closeGameweek] applyWeeklyToStartingPoints failed:', error)
+    await supabase.from('admin_notifications').insert({
+      type: 'system',
+      title: 'Auto-accumulate failed',
+      message: `Weekly points not rolled into totals for GW${gwNumber}: ${String(error)}`,
+    })
+  }
+
   // Create gw_complete admin notification
   await supabase
     .from('admin_notifications')
@@ -351,6 +370,19 @@ export async function reopenGameweek(
     .single()
 
   const gwNumber = gameweek?.number ?? '?'
+
+  // Reverse any previously-applied weekly points from members.starting_points
+  // so a subsequent close re-applies cleanly. No-op if points_applied=false.
+  try {
+    await reverseWeeklyFromStartingPoints(supabase, gameweek_id)
+  } catch (error) {
+    console.error('[reopenGameweek] reverseWeeklyFromStartingPoints failed:', error)
+    await supabase.from('admin_notifications').insert({
+      type: 'system',
+      title: 'Auto-accumulate reverse failed',
+      message: `Weekly points not reversed for GW${gwNumber}: ${String(error)}`,
+    })
+  }
 
   // Clear closed_at and closed_by
   const { error: updateError } = await supabase
