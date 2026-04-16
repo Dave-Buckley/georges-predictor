@@ -227,21 +227,26 @@ export default function PredictionForm({
   const allKickedOff = fixtures.every((f) => new Date(f.kickoff_time) <= now)
 
   // ── Derived layout flags ───────────────────────────────────────────────────
-  // Total bar sits above submit button when visible; when the WhatsApp button
-  // is also stacked below submit, offset further up so nothing overlaps.
+  // Submit button only shows before every fixture kicks off. WhatsApp copy
+  // button shows for the full week whenever the member has saved picks — so
+  // they can still share to the group even after some fixtures have started.
+  // When the week is locked, everything hides.
   const hasExistingSubmitArea = !allKickedOff && !isLocked
-  const whatsAppButtonVisible = hasExistingSubmitArea && hasExistingPredictions
-  const totalBarBottom = !hasExistingSubmitArea
+  const whatsAppButtonVisible =
+    !isLocked && hasExistingPredictions && submittedFixtureIds.size > 0
+  const stickyAreaVisible = hasExistingSubmitArea || whatsAppButtonVisible
+  const totalBarBottom = !stickyAreaVisible
     ? 'bottom-0'
-    : whatsAppButtonVisible
+    : hasExistingSubmitArea && whatsAppButtonVisible
       ? 'bottom-[128px]'
-      : 'bottom-[60px]'
+      : 'bottom-[76px]'
   // Pad scrolling content to clear both fixed bars when both are visible.
-  // Footer is now taller with multiple bonus breakdown lines.
   const contentPadding = scoredFixtureCount > 0
-    ? (hasExistingSubmitArea
-        ? (whatsAppButtonVisible ? 'pb-56' : 'pb-44')
-        : 'pb-36')
+    ? (hasExistingSubmitArea && whatsAppButtonVisible
+        ? 'pb-56'
+        : stickyAreaVisible
+          ? 'pb-44'
+          : 'pb-36')
     : 'pb-24'
 
   // ── Derived bonus display values ───────────────────────────────────────────
@@ -491,30 +496,33 @@ export default function PredictionForm({
         </div>
       )}
 
-      {/* 9. Sticky submit area — submit button OR copy-to-WhatsApp button.
-            Once the member has at least one saved prediction AND the week
-            isn't locked AND there's at least one fixture still to kick off,
-            the WhatsApp button is shown below the submit button so they can
-            finalise and share to the group. When locked, everything is hidden. */}
-      {!allKickedOff && !isLocked && (
+      {/* 9. Sticky submit area — submit button + copy-to-WhatsApp button.
+            The submit button is only visible before any fixture kicks off.
+            The WhatsApp button is visible for the full week whenever the
+            member has saved at least one pick, so they can copy + share even
+            after some fixtures have started. Both hide once the week is
+            locked via WhatsApp. */}
+      {!isLocked && (hasExistingSubmitArea || whatsAppButtonVisible) && (
         <div className="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-700 p-4 z-10 space-y-2">
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={isSubmitting || (losEligible && !losTeamId)}
-            className="w-full h-12 rounded-xl bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-semibold text-base transition disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Saving…
-              </>
-            ) : (
-              hasExistingPredictions ? 'Update Predictions' : 'Submit Predictions'
-            )}
-          </button>
+          {hasExistingSubmitArea && (
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={isSubmitting || (losEligible && !losTeamId)}
+              className="w-full h-12 rounded-xl bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-semibold text-base transition disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Saving…
+                </>
+              ) : (
+                hasExistingPredictions ? 'Update Predictions' : 'Submit Predictions'
+              )}
+            </button>
+          )}
 
-          {hasExistingPredictions && submittedFixtureIds.size > 0 && (
+          {whatsAppButtonVisible && (
             <WhatsAppCopyButton
               gameweekNumber={currentGw}
               memberDisplayName={memberDisplayName}
