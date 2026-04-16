@@ -310,17 +310,12 @@ export default function PredictionForm({
 
   // ── Derived layout flags ───────────────────────────────────────────────────
   // Submit button only shows before every fixture kicks off. WhatsApp copy
-  // button shows whenever the member has any pick filled in — saved to DB or
-  // just typed locally — so they can copy+lock in one action without needing
-  // to hit Submit first. When the week is already locked, everything hides.
-  const hasAnyPick =
-    hasExistingPredictions ||
-    submittedFixtureIds.size > 0 ||
-    Object.values(predictions).some(
-      (p) => p.home_score !== null && p.away_score !== null,
-    )
+  // button shows for the entire week so long as the week isn't locked —
+  // tapping it with no picks returns a clear error via saveCurrentPicks
+  // instead of hiding the whole affordance. Users kept missing the button
+  // when it was gated on having typed scores, so this is intentionally wide.
   const hasExistingSubmitArea = !allKickedOff && !isLocked
-  const whatsAppButtonVisible = !isLocked && hasAnyPick
+  const whatsAppButtonVisible = !isLocked
   const stickyAreaVisible = hasExistingSubmitArea || whatsAppButtonVisible
   const totalBarBottom = !stickyAreaVisible
     ? 'bottom-0'
