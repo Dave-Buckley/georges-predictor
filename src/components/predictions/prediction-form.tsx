@@ -351,6 +351,25 @@ export default function PredictionForm({
   return (
     <div className={`space-y-4 ${contentPadding}`}>
 
+      {/* 0. Top-of-page WhatsApp button — always visible so members can't
+             miss it even if sticky bottom bar is hidden behind browser UI. */}
+      {whatsAppButtonVisible && (
+        <WhatsAppCopyButton
+          gameweekNumber={currentGw}
+          memberDisplayName={memberDisplayName}
+          fixtures={fixtures}
+          predictions={predictions}
+          bonusName={activeBonusType?.name ?? null}
+          bonusFixtureId={bonusRequiresFixture ? bonusFixtureId : null}
+          losTeamName={
+            losTeamId
+              ? losContext?.availableTeams.find((t) => t.id === losTeamId)?.name ?? null
+              : null
+          }
+          onBeforeLock={saveCurrentPicks}
+        />
+      )}
+
       {/* 1. Submission counter bar */}
       <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-700/60 border border-slate-700">
         <Users className="w-4 h-4 text-slate-400 flex-shrink-0" />
