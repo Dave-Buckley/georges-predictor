@@ -473,6 +473,28 @@ export default function PredictionForm({
         allLocked={isLocked}
       />
 
+      {/* 5b. Inline WhatsApp copy button — always rendered (not sticky)
+             so it's visible regardless of bottom nav bar / keyboard overlap
+             on mobile. Duplicate of the sticky variant below. */}
+      {whatsAppButtonVisible && (
+        <div className="pt-2">
+          <WhatsAppCopyButton
+            gameweekNumber={currentGw}
+            memberDisplayName={memberDisplayName}
+            fixtures={fixtures}
+            predictions={predictions}
+            bonusName={activeBonusType?.name ?? null}
+            bonusFixtureId={bonusRequiresFixture ? bonusFixtureId : null}
+            losTeamName={
+              losTeamId
+                ? losContext?.availableTeams.find((t) => t.id === losTeamId)?.name ?? null
+                : null
+            }
+            onBeforeLock={saveCurrentPicks}
+          />
+        </div>
+      )}
+
       {/* 6. Late kickoff warning (conditional) */}
       {someKickedOff && !allKickedOff && (
         <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg bg-amber-900/40 border border-amber-700/50">
