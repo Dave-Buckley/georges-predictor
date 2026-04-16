@@ -5,6 +5,7 @@ import type { MemberRow, GameweekRow, FixtureWithTeams } from '@/lib/supabase/ty
 import PendingNotice from '@/components/member/pending-notice'
 import DashboardOverview from '@/components/member/dashboard-overview'
 import { HomeRankWidget, type HomeRankWidgetMember } from '@/components/member/home-rank-widget'
+import { gatherGameweekData } from '@/lib/reports/_data/gather-gameweek-data'
 
 // Force dynamic rendering — reads member data on every request
 export const dynamic = 'force-dynamic'
@@ -107,12 +108,28 @@ export default async function DashboardPage() {
   // Same shape as /standings: member_id, display_name, starting_points.
   // Dense-rank by starting_points DESC, alpha tiebreak on display_name.
   let rankNeighbours: HomeRankWidgetMember[] = []
+  let weeklyLabel = 'Week'
   try {
     const admin = createAdminClient()
     const { data: membersRaw } = await admin
       .from('members')
       .select('id, display_name, starting_points')
       .eq('approval_status', 'approved')
+
+    // Fetch per-member weekly points for the same gameweek the dashboard
+    // focuses on (upcoming GW if none complete yet, else latest complete).
+    const weeklyByMember = new Map<string, number>()
+    if (currentGameweek) {
+      try {
+        const gw = await gatherGameweekData(currentGameweek.id)
+        weeklyLabel = `GW${gw.gwNumber}`
+        for (const s of gw.standings) {
+          weeklyByMember.set(s.memberId, s.weeklyPoints)
+        }
+      } catch {
+        // Swallow — widget falls back to zeroed weekly column.
+      }
+    }
 
     const sorted = ((membersRaw ?? []) as Array<{
       id: string
@@ -144,6 +161,7 @@ export default async function DashboardPage() {
         displayName: m.display_name,
         rank: lastRank,
         totalPoints: m.starting_points,
+        weeklyPoints: weeklyByMember.get(m.id) ?? 0,
       }
     })
   } catch {
@@ -157,6 +175,7 @@ export default async function DashboardPage() {
       <HomeRankWidget
         viewerMemberId={memberRow.id}
         members={rankNeighbours}
+        weeklyLabel={weeklyLabel}
       />
       <DashboardOverview
         member={memberRow}

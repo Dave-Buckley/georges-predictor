@@ -17,16 +17,20 @@ export interface HomeRankWidgetMember {
   displayName: string
   rank: number
   totalPoints: number
+  weeklyPoints: number
 }
 
 interface HomeRankWidgetProps {
   viewerMemberId: string | null
   members: HomeRankWidgetMember[]
+  /** Label for the weekly column — e.g. "GW33". Falls back to "Week". */
+  weeklyLabel?: string
 }
 
 export function HomeRankWidget({
   viewerMemberId,
   members,
+  weeklyLabel = 'Week',
 }: HomeRankWidgetProps) {
   if (!viewerMemberId) return null
 
@@ -44,6 +48,10 @@ export function HomeRankWidget({
         <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
           Your position
         </h2>
+        <div className="flex items-center gap-4 text-[10px] font-semibold text-slate-500 uppercase tracking-wider pr-1">
+          <span className="w-14 text-right">{weeklyLabel}</span>
+          <span className="w-12 text-right">Total</span>
+        </div>
       </div>
       <div className="divide-y divide-slate-800">
         {slice.map((m) => {
@@ -75,7 +83,10 @@ export function HomeRankWidget({
                   />
                 )}
               </span>
-              <span className="text-sm font-bold text-purple-300 tabular-nums">
+              <span className="text-xs text-slate-400 tabular-nums w-14 text-right">
+                {m.weeklyPoints > 0 ? `+${m.weeklyPoints}` : m.weeklyPoints}
+              </span>
+              <span className="text-sm font-bold text-purple-300 tabular-nums w-12 text-right">
                 {m.totalPoints}
               </span>
             </div>

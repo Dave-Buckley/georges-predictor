@@ -31,6 +31,7 @@ interface StandingRow {
   id: string
   display_name: string
   starting_points: number
+  weekly_points: number
   rank: number
 }
 
@@ -72,19 +73,12 @@ async function getStandingsPageData(): Promise<{
     starting_points: number | null
   }>
 
-  const standings: StandingRow[] = rawMembers
-    .map((m) => ({
-      id: m.id,
-      display_name: m.display_name,
-      starting_points: m.starting_points ?? 0,
-    }))
-    .sort((a, b) => {
-      if (b.starting_points !== a.starting_points) {
-        return b.starting_points - a.starting_points
-      }
-      return a.display_name.localeCompare(b.display_name)
-    })
-    .map((m, i) => ({ ...m, rank: i + 1 }))
+  // Defer building standings until weekly-points map is populated (below).
+  const standingsBase = rawMembers.map((m) => ({
+    id: m.id,
+    display_name: m.display_name,
+    starting_points: m.starting_points ?? 0,
+  }))
 
   // Latest "fully played" gameweek — all fixtures in terminal status
   // (FINISHED / CANCELLED / POSTPONED). Independent of admin close workflow
@@ -116,6 +110,7 @@ async function getStandingsPageData(): Promise<{
 
   let fixtures: FixtureRow[] = []
   let topWeekly: Array<{ displayName: string; weeklyPoints: number }> = []
+  const weeklyPointsById = new Map<string, number>()
 
   if (latestGw) {
     const { data: fixturesRaw } = await supabase
@@ -158,10 +153,26 @@ async function getStandingsPageData(): Promise<{
         displayName: t.displayName,
         weeklyPoints: t.weeklyPoints,
       }))
+      for (const s of gw.standings) {
+        weeklyPointsById.set(s.memberId, s.weeklyPoints)
+      }
     } catch {
       topWeekly = []
     }
   }
+
+  const standings: StandingRow[] = standingsBase
+    .map((m) => ({
+      ...m,
+      weekly_points: weeklyPointsById.get(m.id) ?? 0,
+    }))
+    .sort((a, b) => {
+      if (b.starting_points !== a.starting_points) {
+        return b.starting_points - a.starting_points
+      }
+      return a.display_name.localeCompare(b.display_name)
+    })
+    .map((m, i) => ({ ...m, rank: i + 1 }))
 
   return { standings, latestGw, fixtures, topWeekly }
 }
@@ -211,8 +222,11 @@ export default async function StandingsPage() {
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
                   Member
                 </th>
+                <th className="px-4 py-3 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider whitespace-nowrap">
+                  {latestGw ? `GW${latestGw.number}` : 'This Week'}
+                </th>
                 <th className="px-4 py-3 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                  Points
+                  Total
                 </th>
               </tr>
             </thead>
@@ -225,7 +239,10 @@ export default async function StandingsPage() {
                   <td className="px-4 py-3 text-white font-medium">
                     <MemberLink displayName={m.display_name} className="text-white font-medium" />
                   </td>
-                  <td className="px-4 py-3 text-right text-purple-300 font-bold">
+                  <td className="px-4 py-3 text-right tabular-nums text-slate-300">
+                    {m.weekly_points > 0 ? `+${m.weekly_points}` : m.weekly_points}
+                  </td>
+                  <td className="px-4 py-3 text-right text-purple-300 font-bold tabular-nums">
                     {m.starting_points}
                   </td>
                 </tr>
@@ -233,7 +250,7 @@ export default async function StandingsPage() {
               {standings.length === 0 && (
                 <tr>
                   <td
-                    colSpan={3}
+                    colSpan={4}
                     className="px-4 py-8 text-center text-slate-500"
                   >
                     No members yet.
