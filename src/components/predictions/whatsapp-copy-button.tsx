@@ -14,6 +14,13 @@ interface WhatsAppCopyButtonProps {
   bonusName: string | null
   bonusFixtureId: string | null
   losTeamName: string | null
+  /**
+   * Optional pre-save step. When provided, runs before the lock — used by the
+   * prediction form to save any un-submitted picks so locking doesn't freeze
+   * an empty DB state. Must return { success, error? }. If it errors we abort
+   * the lock and surface the error to the user.
+   */
+  onBeforeLock?: () => Promise<{ success: boolean; error?: string }>
 }
 
 type Step = 'idle' | 'warning' | 'copied'
@@ -39,6 +46,7 @@ export function WhatsAppCopyButton({
   bonusName,
   bonusFixtureId,
   losTeamName,
+  onBeforeLock,
 }: WhatsAppCopyButtonProps) {
   const [open, setOpen] = useState(false)
   const [step, setStep] = useState<Step>('idle')
@@ -119,7 +127,20 @@ export function WhatsAppCopyButton({
     const text = buildWhatsAppText()
 
     startTransition(async () => {
+      // 1. Save any un-submitted local picks first so the lock doesn't freeze
+      //    an empty DB state. Parent decides whether this is a no-op.
+      if (onBeforeLock) {
+        const saveResult = await onBeforeLock()
+        if (!saveResult.success) {
+          setError(saveResult.error ?? 'Could not save your picks before locking.')
+          return
+        }
+      }
+
+      // 2. Copy to clipboard (non-blocking — lock still proceeds if this fails).
       const copied = await copyToClipboard(text)
+
+      // 3. Lock the week.
       const result = await lockPredictionsForWeek(gameweekNumber)
 
       if (!result.success) {

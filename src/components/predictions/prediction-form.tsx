@@ -141,6 +141,61 @@ export default function PredictionForm({
     setBonusFixtureId((prev) => (prev === fixtureId ? null : fixtureId))
   }, [])
 
+  // ── Save-before-lock callback for the WhatsApp button. Collects current
+  // local picks and calls submitPredictions once so the lock never freezes
+  // empty DB state. Mirrors handleSubmit but reports errors via return
+  // value instead of feedback banner.
+  async function saveCurrentPicks(): Promise<{ success: boolean; error?: string }> {
+    const now = new Date()
+    const validEntries: Array<{ fixture_id: string; home_score: number; away_score: number }> = []
+    for (const fixture of fixtures) {
+      const { home_score, away_score } = predictions[fixture.id] ?? {}
+      if (home_score === null || home_score === undefined) continue
+      if (away_score === null || away_score === undefined) continue
+      if (new Date(fixture.kickoff_time) <= now) continue
+      validEntries.push({ fixture_id: fixture.id, home_score, away_score })
+    }
+
+    // No picks in future fixtures + nothing in DB = nothing to save. That's
+    // fine — the lock can still proceed (member may just be locking past
+    // picks they submitted earlier).
+    if (validEntries.length === 0 && !hasExistingPredictions) {
+      return {
+        success: false,
+        error: 'No predictions saved. Fill in at least one score pair first.',
+      }
+    }
+
+    if (bonusRequiresFixture && !bonusFixtureId && !hasExistingPredictions) {
+      return {
+        success: false,
+        error: 'Pick your bonus fixture before locking — tap the star icon on a fixture card.',
+      }
+    }
+
+    if (losEligible && !losTeamId && !hasExistingPredictions) {
+      return {
+        success: false,
+        error: 'Pick your Last One Standing team before locking.',
+      }
+    }
+
+    if (validEntries.length === 0) return { success: true } // nothing new to save
+
+    try {
+      const bonusToSend = bonusRequiresFixture ? bonusFixtureId : null
+      const result = await submitPredictions(currentGw, validEntries, bonusToSend, losTeamId)
+      if (result.error) return { success: false, error: result.error }
+      setHasExistingPredictions(true)
+      const newSubmitted = new Set(submittedFixtureIds)
+      for (const entry of validEntries) newSubmitted.add(entry.fixture_id)
+      setSubmittedFixtureIds(newSubmitted)
+      return { success: true }
+    } catch {
+      return { success: false, error: 'Could not save predictions. Please try again.' }
+    }
+  }
+
   // ── Submit handler ─────────────────────────────────────────────────────────
   async function handleSubmit() {
     if (isLocked) {
@@ -228,12 +283,17 @@ export default function PredictionForm({
 
   // ── Derived layout flags ───────────────────────────────────────────────────
   // Submit button only shows before every fixture kicks off. WhatsApp copy
-  // button shows for the full week whenever the member has saved picks — so
-  // they can still share to the group even after some fixtures have started.
-  // When the week is locked, everything hides.
+  // button shows whenever the member has any pick filled in — saved to DB or
+  // just typed locally — so they can copy+lock in one action without needing
+  // to hit Submit first. When the week is already locked, everything hides.
+  const hasAnyPick =
+    hasExistingPredictions ||
+    submittedFixtureIds.size > 0 ||
+    Object.values(predictions).some(
+      (p) => p.home_score !== null && p.away_score !== null,
+    )
   const hasExistingSubmitArea = !allKickedOff && !isLocked
-  const whatsAppButtonVisible =
-    !isLocked && hasExistingPredictions && submittedFixtureIds.size > 0
+  const whatsAppButtonVisible = !isLocked && hasAnyPick
   const stickyAreaVisible = hasExistingSubmitArea || whatsAppButtonVisible
   const totalBarBottom = !stickyAreaVisible
     ? 'bottom-0'
@@ -535,6 +595,7 @@ export default function PredictionForm({
                   ? losContext?.availableTeams.find((t) => t.id === losTeamId)?.name ?? null
                   : null
               }
+              onBeforeLock={saveCurrentPicks}
             />
           )}
         </div>
