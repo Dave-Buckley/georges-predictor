@@ -81,6 +81,34 @@ export async function submitPredictions(
 
   const { gameweek_number, entries: validatedEntries } = validation.data
 
+  // ── Step 3a: Hard-lock check — members who tapped "Copy to WhatsApp" ────────
+  // Once a member locks their picks for a gameweek, further submits are
+  // rejected. George can clear a lock row via the admin client if needed.
+  const { data: gwForLock } = await supabase
+    .from('gameweeks')
+    .select('id')
+    .eq('number', gameweek_number)
+    .single()
+
+  if (gwForLock) {
+    const { data: existingLock } = await supabase
+      .from('prediction_locks')
+      .select('id')
+      .eq('gameweek_id', gwForLock.id)
+      .eq('member_id', member.id)
+      .maybeSingle()
+
+    if (existingLock) {
+      return {
+        error: 'Your predictions for this gameweek are locked (copied to WhatsApp). Ask George if you need them reopened.',
+        saved: 0,
+        skipped: 0,
+        bonusSaved: false,
+        losSaved: false,
+      }
+    }
+  }
+
   // ── Step 3b: LOS pre-check ───────────────────────────────────────────────────
   // Determine if an active competition exists and whether this member must pick.
   // Runs BEFORE predictions upsert so we can fail fast with saved=0 when the
@@ -405,4 +433,75 @@ export async function getLosContext(gameweekNumber: number): Promise<{
     availableTeams: filtered,
     currentPickTeamId,
   }
+}
+
+// ─── Lock Predictions for Gameweek ────────────────────────────────────────────
+
+/**
+ * Permanently locks the authenticated member's predictions for a gameweek.
+ * Called from the "Copy my picks to WhatsApp" confirmation flow — once the
+ * member confirms, their picks can't be edited for that week.
+ *
+ * Behaviour:
+ *   - Requires an approved member
+ *   - Inserts one row in prediction_locks (gameweek_id, member_id)
+ *   - Idempotent: upsert on conflict (gameweek_id, member_id)
+ *   - Revalidates the gameweek page so the locked UI renders on reload
+ */
+export async function lockPredictionsForWeek(
+  gameweekNumber: number,
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createServerSupabaseClient()
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
+
+  if (authError || !user) {
+    return { success: false, error: 'Not authenticated' }
+  }
+
+  const { data: member } = await supabase
+    .from('members')
+    .select('id, approval_status')
+    .eq('user_id', user.id)
+    .single()
+
+  if (!member || member.approval_status !== 'approved') {
+    return { success: false, error: 'Member not approved' }
+  }
+
+  const { data: gw } = await supabase
+    .from('gameweeks')
+    .select('id')
+    .eq('number', gameweekNumber)
+    .single()
+
+  if (!gw) {
+    return { success: false, error: 'Gameweek not found' }
+  }
+
+  const { error: insertError } = await supabase
+    .from('prediction_locks')
+    .upsert(
+      {
+        gameweek_id: gw.id,
+        member_id: member.id,
+        locked_at: new Date().toISOString(),
+      },
+      { onConflict: 'gameweek_id,member_id' },
+    )
+
+  if (insertError) {
+    console.error('[lockPredictionsForWeek] insert error:', insertError.message)
+    return {
+      success: false,
+      error: 'Could not lock your predictions. Please try again.',
+    }
+  }
+
+  revalidatePath('/gameweeks/' + gameweekNumber)
+
+  return { success: true }
 }

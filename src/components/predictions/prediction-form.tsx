@@ -1,13 +1,14 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Users, AlertTriangle, CheckCircle2, XCircle, Loader2, Star, Zap, Trophy } from 'lucide-react'
+import { Users, AlertTriangle, CheckCircle2, XCircle, Loader2, Lock, Star, Zap, Trophy } from 'lucide-react'
 import type { FixtureWithTeams, GameweekRow, GameweekStatus } from '@/lib/supabase/types'
 import { submitPredictions } from '@/actions/predictions'
 import { computeDisplayTotal } from '@/lib/scoring/calculate-bonus'
 import GameweekNav from '@/components/fixtures/gameweek-nav'
 import GameweekView from '@/components/fixtures/gameweek-view'
 import LosTeamPicker, { type LosTeamOption } from '@/components/los/los-team-picker'
+import { WhatsAppCopyButton } from '@/components/predictions/whatsapp-copy-button'
 
 interface ScoreBreakdown {
   predicted_home: number
@@ -39,6 +40,8 @@ interface PredictionFormProps {
     availableTeams: LosTeamOption[]
     currentPickTeamId: string | null
   } | null
+  memberDisplayName?: string
+  isLocked?: boolean
 }
 
 type FeedbackState = {
@@ -70,6 +73,8 @@ export default function PredictionForm({
   existingBonusPick = null,
   bonusAwardDisplay = null,
   losContext = null,
+  memberDisplayName = '',
+  isLocked = false,
 }: PredictionFormProps) {
   const losActive = !!losContext?.activeCompetition
   const losEligible = losActive && losContext?.memberStatus === 'active'
@@ -138,6 +143,10 @@ export default function PredictionForm({
 
   // ── Submit handler ─────────────────────────────────────────────────────────
   async function handleSubmit() {
+    if (isLocked) {
+      setFeedback({ type: 'error', message: 'Your predictions for this week are locked.' })
+      return
+    }
     // Collect entries where BOTH scores are filled and fixture hasn't kicked off
     const now = new Date()
     const validEntries: Array<{ fixture_id: string; home_score: number; away_score: number }> = []
@@ -218,12 +227,21 @@ export default function PredictionForm({
   const allKickedOff = fixtures.every((f) => new Date(f.kickoff_time) <= now)
 
   // ── Derived layout flags ───────────────────────────────────────────────────
-  // Total bar sits above submit button when both visible; drops to bottom when submit is hidden
-  const totalBarBottom = allKickedOff ? 'bottom-0' : 'bottom-[60px]'
+  // Total bar sits above submit button when visible; when the WhatsApp button
+  // is also stacked below submit, offset further up so nothing overlaps.
+  const hasExistingSubmitArea = !allKickedOff && !isLocked
+  const whatsAppButtonVisible = hasExistingSubmitArea && hasExistingPredictions
+  const totalBarBottom = !hasExistingSubmitArea
+    ? 'bottom-0'
+    : whatsAppButtonVisible
+      ? 'bottom-[128px]'
+      : 'bottom-[60px]'
   // Pad scrolling content to clear both fixed bars when both are visible.
   // Footer is now taller with multiple bonus breakdown lines.
   const contentPadding = scoredFixtureCount > 0
-    ? (allKickedOff ? 'pb-36' : 'pb-44')
+    ? (hasExistingSubmitArea
+        ? (whatsAppButtonVisible ? 'pb-56' : 'pb-44')
+        : 'pb-36')
     : 'pb-24'
 
   // ── Derived bonus display values ───────────────────────────────────────────
@@ -256,6 +274,22 @@ export default function PredictionForm({
           {' '}member{submissionCount.total !== 1 ? 's' : ''} have submitted
         </span>
       </div>
+
+      {/* 1b. Locked banner — member tapped "Copy to WhatsApp". Shown above
+            everything else so the locked state is obvious as soon as the page
+            loads. */}
+      {isLocked && (
+        <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-900/60 to-green-900/60 border border-emerald-500/50">
+          <Lock className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-bold text-emerald-300">Predictions locked for GW{currentGw}</p>
+            <p className="text-xs text-emerald-400/80 mt-0.5">
+              You copied your picks to WhatsApp — they can&apos;t be changed this week
+              unless George reopens them.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* 2. Double Bubble banner (when active) */}
       {gameweek.double_bubble && (
@@ -335,7 +369,9 @@ export default function PredictionForm({
 
       {/* 5. Fixture list with prediction inputs.
             — bonusActive is false when the bonus is Double Bubble, which hides
-              the star toggles on each fixture card (no pick to make). */}
+              the star toggles on each fixture card (no pick to make).
+            — allLocked forces every fixture card into read-only / locked mode
+              once the member has pressed Copy-to-WhatsApp. */}
       <GameweekView
         fixtures={fixtures}
         gameweek={gameweek}
@@ -347,6 +383,7 @@ export default function PredictionForm({
         onBonusToggle={handleBonusToggle}
         bonusActive={bonusRequiresFixture}
         isGoldenGlory={isGoldenGlory}
+        allLocked={isLocked}
       />
 
       {/* 6. Late kickoff warning (conditional) */}
@@ -454,9 +491,13 @@ export default function PredictionForm({
         </div>
       )}
 
-      {/* 9. Sticky submit button */}
-      {!allKickedOff && (
-        <div className="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-700 p-4 z-10">
+      {/* 9. Sticky submit area — submit button OR copy-to-WhatsApp button.
+            Once the member has at least one saved prediction AND the week
+            isn't locked AND there's at least one fixture still to kick off,
+            the WhatsApp button is shown below the submit button so they can
+            finalise and share to the group. When locked, everything is hidden. */}
+      {!allKickedOff && !isLocked && (
+        <div className="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-700 p-4 z-10 space-y-2">
           <button
             type="button"
             onClick={handleSubmit}
@@ -472,6 +513,22 @@ export default function PredictionForm({
               hasExistingPredictions ? 'Update Predictions' : 'Submit Predictions'
             )}
           </button>
+
+          {hasExistingPredictions && submittedFixtureIds.size > 0 && (
+            <WhatsAppCopyButton
+              gameweekNumber={currentGw}
+              memberDisplayName={memberDisplayName}
+              fixtures={fixtures}
+              predictions={predictions}
+              bonusName={activeBonusType?.name ?? null}
+              bonusFixtureId={bonusRequiresFixture ? bonusFixtureId : null}
+              losTeamName={
+                losTeamId
+                  ? losContext?.availableTeams.find((t) => t.id === losTeamId)?.name ?? null
+                  : null
+              }
+            />
+          )}
         </div>
       )}
     </div>

@@ -23,6 +23,8 @@ interface GameweekViewProps {
   onBonusToggle?: (fixtureId: string) => void
   bonusActive?: boolean
   isGoldenGlory?: boolean
+  /** When true, every fixture is shown as locked regardless of kickoff time. */
+  allLocked?: boolean
 }
 
 /**
@@ -42,6 +44,7 @@ export default function GameweekView({
   onBonusToggle,
   bonusActive,
   isGoldenGlory,
+  allLocked = false,
 }: GameweekViewProps) {
   if (fixtures.length === 0) {
     return (
@@ -74,19 +77,20 @@ export default function GameweekView({
       <div className="space-y-2">
         {sorted.map((fixture) => {
           const isPastKickoff = new Date() >= new Date(fixture.kickoff_time)
+          const locked = allLocked || isPastKickoff
           return (
             <FixtureCard
               key={fixture.id}
               fixture={fixture}
               showCountdown={isToday(fixture.kickoff_time)}
               prediction={predictions?.[fixture.id] ?? null}
-              onScoreChange={onScoreChange}
-              isLocked={onScoreChange ? isPastKickoff : undefined}
+              onScoreChange={allLocked ? undefined : onScoreChange}
+              isLocked={onScoreChange ? locked : undefined}
               hasSubmitted={submittedFixtureIds?.has(fixture.id) ?? false}
               scoreBreakdown={scoreBreakdowns?.[fixture.id] ?? null}
               isBonusPick={bonusFixtureId === fixture.id}
-              onBonusToggle={onBonusToggle}
-              bonusActive={bonusActive}
+              onBonusToggle={allLocked ? undefined : onBonusToggle}
+              bonusActive={allLocked ? false : bonusActive}
               isGoldenGlory={isGoldenGlory}
             />
           )

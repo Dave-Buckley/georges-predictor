@@ -61,7 +61,7 @@ export default async function GameweekPage({ params }: PageProps) {
   // ── Member lookup ───────────────────────────────────────────────────────────
   const { data: memberData, error: memberError } = await supabase
     .from('members')
-    .select('id, approval_status')
+    .select('id, approval_status, display_name')
     .eq('user_id', user.id)
     .single()
 
@@ -237,6 +237,21 @@ export default async function GameweekPage({ params }: PageProps) {
   // ── Fetch LOS context for this gameweek ─────────────────────────────────────
   const losContext = await getLosContext(gwNum)
 
+  // ── Check WhatsApp lock status for this member + gameweek ───────────────────
+  let isLocked = false
+  try {
+    const { data: lockRow } = await supabase
+      .from('prediction_locks')
+      .select('id')
+      .eq('gameweek_id', gameweek.id)
+      .eq('member_id', memberData.id)
+      .maybeSingle()
+    isLocked = !!lockRow
+  } catch {
+    // Table may not exist yet if migration 018 hasn't run — fail open.
+    isLocked = false
+  }
+
   // ── Fetch H2H steals relevant to this gameweek ──────────────────────────────
   // Two relationships: steals detected in THIS gw (flagged-for-next-week) or
   // steals that resolve in THIS gw (showdown this week or already resolved).
@@ -365,6 +380,8 @@ export default async function GameweekPage({ params }: PageProps) {
         existingBonusPick={existingBonusPick}
         bonusAwardDisplay={bonusAwardDisplay}
         losContext={losContext}
+        memberDisplayName={memberData.display_name ?? 'Unknown'}
+        isLocked={isLocked}
       />
     </>
   )
