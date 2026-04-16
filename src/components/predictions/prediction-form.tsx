@@ -98,6 +98,11 @@ export default function PredictionForm({
   const [submitResult, setSubmitResult] = useState<{ saved: number; skipped: number } | null>(null)
   const [feedback, setFeedback] = useState<FeedbackState>(null)
 
+  // When an LOS competition is active and a member taps "Update Predictions"
+  // to re-submit, remind them to double-check the LOS pick — the most common
+  // bug is forgetting to refresh a stale pick. Shown once per submit attempt.
+  const [losReminderOpen, setLosReminderOpen] = useState(false)
+
   // Track whether the member has existing saved predictions (Submit vs Update button text)
   const [hasExistingPredictions, setHasExistingPredictions] = useState(
     Object.keys(existingPredictions).length > 0
@@ -194,6 +199,28 @@ export default function PredictionForm({
     } catch {
       return { success: false, error: 'Could not save predictions. Please try again.' }
     }
+  }
+
+  // ── Submit button tap handler ──────────────────────────────────────────────
+  // When the member has already submitted this week AND an LOS competition
+  // is active, pop a "double-check your LOS pick" reminder before actually
+  // submitting. Only shows for updates, not first-time submits. On confirm,
+  // handleSubmit runs the normal flow.
+  function handleSubmitClick() {
+    if (isLocked) {
+      setFeedback({ type: 'error', message: 'Your predictions for this week are locked.' })
+      return
+    }
+    if (hasExistingPredictions && losEligible) {
+      setLosReminderOpen(true)
+      return
+    }
+    void handleSubmit()
+  }
+
+  function handleLosReminderConfirm() {
+    setLosReminderOpen(false)
+    void handleSubmit()
   }
 
   // ── Submit handler ─────────────────────────────────────────────────────────
@@ -567,7 +594,7 @@ export default function PredictionForm({
           {hasExistingSubmitArea && (
             <button
               type="button"
-              onClick={handleSubmit}
+              onClick={handleSubmitClick}
               disabled={isSubmitting || (losEligible && !losTeamId)}
               className="w-full h-12 rounded-xl bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-semibold text-base transition disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
@@ -598,6 +625,49 @@ export default function PredictionForm({
               onBeforeLock={saveCurrentPicks}
             />
           )}
+        </div>
+      )}
+
+      {/* 10. LOS reminder dialog — fires when a returning member taps Update
+             Predictions. Fullscreen overlay, purple theme, clear message. */}
+      {losReminderOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="w-full max-w-sm rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-6 space-y-4">
+            <div className="flex items-start gap-3">
+              <Trophy className="w-6 h-6 text-yellow-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-base font-bold text-white">
+                  Don&apos;t forget your Last One Standing pick
+                </p>
+                <p className="text-sm text-slate-300 mt-1 leading-relaxed">
+                  Before you update, double-check your LOS team for this week.
+                  {losContext?.currentPickTeamId
+                    ? ` Currently picked: ${losContext.availableTeams.find((t) => t.id === losTeamId)?.name ?? 'no team'}.`
+                    : ' You have not picked yet.'}
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3 justify-end">
+              <button
+                type="button"
+                onClick={() => setLosReminderOpen(false)}
+                className="px-4 py-2 rounded-lg border border-slate-600 text-slate-300 text-sm font-medium hover:bg-slate-800"
+              >
+                Go back
+              </button>
+              <button
+                type="button"
+                onClick={handleLosReminderConfirm}
+                className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold"
+              >
+                LOS is good — update
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

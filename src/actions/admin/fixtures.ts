@@ -251,10 +251,16 @@ export async function moveFixture(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const currentGwNumber = (fixture as any).gameweeks?.number ?? '?'
 
-  // Update fixture's gameweek_id
+  // Update fixture's gameweek_id. Set manual_gameweek_override so the next
+  // API sync doesn't revert this move — George's decision wins over the
+  // football-data.org matchday assignment.
   const { error: updateError } = await supabaseAdmin
     .from('fixtures')
-    .update({ gameweek_id: targetGameweek.id })
+    .update({
+      gameweek_id: targetGameweek.id,
+      manual_gameweek_override: true,
+      is_rescheduled: true,
+    })
     .eq('id', fixture_id)
 
   if (updateError) {

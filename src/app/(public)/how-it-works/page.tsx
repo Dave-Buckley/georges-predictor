@@ -321,7 +321,8 @@ export default function HowItWorksPage() {
             </div>
             <div>
               <p className="text-slate-300 leading-relaxed mb-2">
-                One-off prizes — £10 each, first to trigger wins:
+                One-off prizes — £10 each (Christmas Present £20), first to
+                trigger wins:
               </p>
               <ul className="list-disc list-inside text-slate-300 space-y-1.5 leading-relaxed">
                 <li>
@@ -338,7 +339,8 @@ export default function HowItWorksPage() {
                 </li>
                 <li>
                   <strong className="text-white">Christmas Present</strong>{' '}
-                  — league leader on Christmas Day.
+                  <span className="text-pl-green">(£20)</span> — league
+                  leader on Christmas Day.
                 </li>
                 <li>
                   <strong className="text-white">Dry January</strong> —

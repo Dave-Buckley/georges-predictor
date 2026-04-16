@@ -172,21 +172,26 @@ async function detectReschedules(
 
   const { data: existingFixtures } = await adminClient
     .from('fixtures')
-    .select('external_id, kickoff_time, gameweek_id, gameweeks(number)')
+    .select('external_id, kickoff_time, gameweek_id, manual_gameweek_override, gameweeks(number)')
     .in('external_id', externalIds)
 
   if (!existingFixtures || existingFixtures.length === 0) {
     return { reschedules: [], gameweekMoves: [] }
   }
 
-  // Build lookup map: externalId -> { kickoff_time, gameweek_number }
-  const existingMap = new Map<number, { kickoff_time: string; gameweek_number: number | null }>()
+  // Build lookup map: externalId -> { kickoff_time, gameweek_number, override }
+  const existingMap = new Map<
+    number,
+    { kickoff_time: string; gameweek_number: number | null; override: boolean }
+  >()
   for (const row of existingFixtures) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const gw = (row as any).gameweeks
     existingMap.set(row.external_id, {
       kickoff_time: row.kickoff_time,
       gameweek_number: gw?.number ?? null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      override: !!(row as any).manual_gameweek_override,
     })
   }
 
@@ -209,7 +214,14 @@ async function detectReschedules(
       })
     }
 
-    if (existing.gameweek_number !== null && existing.gameweek_number !== match.matchday) {
+    // Skip gameweek-move detection when the fixture is manually overridden —
+    // otherwise we'd spam notifications every sync for George's bundled
+    // rescheduled fixtures.
+    if (
+      !existing.override &&
+      existing.gameweek_number !== null &&
+      existing.gameweek_number !== match.matchday
+    ) {
       gameweekMoves.push({
         externalId: match.id,
         oldMatchday: existing.gameweek_number,
@@ -336,6 +348,28 @@ export async function syncFixtures(): Promise<SyncResult> {
     }
 
     // ── 7. Build fixture rows ─────────────────────────────────────────────────
+    // Look up existing gameweek + override flag per fixture. When a fixture
+    // has manual_gameweek_override=true we preserve its current gameweek_id
+    // so George's manual moves (e.g. bundling rescheduled fixtures into the
+    // predictor week they're played in) aren't reverted by the next sync.
+    const externalIdsToFetch = matches.map((m) => m.id)
+    const { data: overrideRows } = await adminClient
+      .from('fixtures')
+      .select('external_id, gameweek_id, manual_gameweek_override')
+      .in('external_id', externalIdsToFetch)
+
+    const overrideMap = new Map<number, { gameweek_id: string; override: boolean }>()
+    for (const row of (overrideRows ?? []) as Array<{
+      external_id: number
+      gameweek_id: string
+      manual_gameweek_override: boolean | null
+    }>) {
+      overrideMap.set(row.external_id, {
+        gameweek_id: row.gameweek_id,
+        override: !!row.manual_gameweek_override,
+      })
+    }
+
     const fixtureRows: Array<{
       external_id: number
       gameweek_id: string
@@ -353,14 +387,21 @@ export async function syncFixtures(): Promise<SyncResult> {
     for (const match of matches) {
       const homeTeamId = teamUuidMap.get(match.homeTeam.id)
       const awayTeamId = teamUuidMap.get(match.awayTeam.id)
-      const gameweekId = gameweekUuidMap.get(match.matchday)
+      const apiGameweekId = gameweekUuidMap.get(match.matchday)
 
-      if (!homeTeamId || !awayTeamId || !gameweekId) {
+      if (!homeTeamId || !awayTeamId || !apiGameweekId) {
         skipped.push(`match ${match.id}: missing UUID`)
         continue
       }
 
-      const isRescheduled = reschedules.some((r) => r.externalId === match.id)
+      const overrideEntry = overrideMap.get(match.id)
+      const gameweekId = overrideEntry?.override
+        ? overrideEntry.gameweek_id
+        : apiGameweekId
+
+      const isRescheduled =
+        reschedules.some((r) => r.externalId === match.id) ||
+        !!overrideEntry?.override
 
       fixtureRows.push({
         external_id: match.id,
