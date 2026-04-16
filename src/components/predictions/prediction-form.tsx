@@ -106,6 +106,10 @@ export default function PredictionForm({
   // ── Bonus pick state ────────────────────────────────────────────────────────
   const [bonusFixtureId, setBonusFixtureId] = useState<string | null>(existingBonusPick ?? null)
 
+  // Double Bubble is a gameweek-wide doubler — members never pick a fixture for
+  // it, so skip the star-on-each-card UX and the mandatory-pick guard below.
+  const bonusRequiresFixture = !!activeBonusType && activeBonusType.name !== 'Double Bubble'
+
   // ── LOS pick state ──────────────────────────────────────────────────────────
   const [losTeamId, setLosTeamId] = useState<string | null>(losContext?.currentPickTeamId ?? null)
 
@@ -153,8 +157,9 @@ export default function PredictionForm({
     }
 
     // ── Bonus pick validation ───────────────────────────────────────────────
-    // Bonus is mandatory when active — block submission without a selection
-    if (activeBonusType && !bonusFixtureId) {
+    // Bonus is mandatory when active — block submission without a selection.
+    // Double Bubble is the exception handled at component scope below.
+    if (bonusRequiresFixture && !bonusFixtureId) {
       setFeedback({ type: 'error', message: 'Pick your bonus fixture before submitting — tap the star icon on a fixture card.' })
       return
     }
@@ -178,7 +183,9 @@ export default function PredictionForm({
     setFeedback(null)
 
     try {
-      const result = await submitPredictions(currentGw, validEntries, bonusFixtureId, losTeamId)
+      // Double Bubble has no per-fixture pick — never send a bonusFixtureId
+      const bonusToSend = bonusRequiresFixture ? bonusFixtureId : null
+      const result = await submitPredictions(currentGw, validEntries, bonusToSend, losTeamId)
 
       if (result.error) {
         setFeedback({ type: 'error', message: result.error })
@@ -261,8 +268,10 @@ export default function PredictionForm({
         </div>
       )}
 
-      {/* 3. Bonus banner (when a confirmed bonus is active) */}
-      {activeBonusType && (
+      {/* 3. Bonus banner (when a confirmed bonus is active)
+            — hidden when the bonus IS Double Bubble; the gw-level banner above
+              already communicates it, and there's no fixture pick to prompt. */}
+      {activeBonusType && activeBonusType.name !== 'Double Bubble' && (
         <div className={`flex items-start gap-3 px-4 py-3 rounded-xl border ${
           isGoldenGlory
             ? 'bg-gradient-to-r from-yellow-900/60 to-amber-900/60 border-yellow-500/50'
@@ -324,7 +333,9 @@ export default function PredictionForm({
         gameweeks={navGameweeks}
       />
 
-      {/* 5. Fixture list with prediction inputs */}
+      {/* 5. Fixture list with prediction inputs.
+            — bonusActive is false when the bonus is Double Bubble, which hides
+              the star toggles on each fixture card (no pick to make). */}
       <GameweekView
         fixtures={fixtures}
         gameweek={gameweek}
@@ -334,7 +345,7 @@ export default function PredictionForm({
         scoreBreakdowns={scoreBreakdowns}
         bonusFixtureId={bonusFixtureId}
         onBonusToggle={handleBonusToggle}
-        bonusActive={!!activeBonusType}
+        bonusActive={bonusRequiresFixture}
         isGoldenGlory={isGoldenGlory}
       />
 

@@ -69,6 +69,27 @@ export async function setBonusForGameweek(
 
   const pickCount = existingPickCount ?? 0
 
+  // Resolve old + new bonus type names to detect Double Bubble transitions.
+  // If George switches this gw INTO Double Bubble we flip gw.double_bubble=true;
+  // if he switches OUT OF Double Bubble we flip it back to false. Any other
+  // transition leaves the flag alone so George's manual toggles are preserved.
+  const { data: newBonus } = await adminClient
+    .from('bonus_types')
+    .select('name')
+    .eq('id', bonus_type_id)
+    .single()
+
+  const { data: currentSchedule } = await adminClient
+    .from('bonus_schedule')
+    .select('bonus_type:bonus_types!bonus_type_id(name)')
+    .eq('gameweek_id', gameweek_id)
+    .maybeSingle()
+
+  const newIsDoubleBubble = (newBonus as { name?: string } | null)?.name === 'Double Bubble'
+  const wasDoubleBubble =
+    (currentSchedule as { bonus_type?: { name?: string } | null } | null)?.bonus_type?.name ===
+    'Double Bubble'
+
   // Upsert bonus_schedule — on conflict (gameweek_id), update the bonus type
   const { error: upsertError } = await adminClient.from('bonus_schedule').upsert(
     {
@@ -84,6 +105,16 @@ export async function setBonusForGameweek(
   if (upsertError) {
     console.error('[setBonusForGameweek] Upsert error:', upsertError.message)
     return { error: 'Failed to set bonus. Please try again.' }
+  }
+
+  if (newIsDoubleBubble !== wasDoubleBubble) {
+    const { error: flagError } = await adminClient
+      .from('gameweeks')
+      .update({ double_bubble: newIsDoubleBubble })
+      .eq('id', gameweek_id)
+    if (flagError) {
+      console.error('[setBonusForGameweek] Double Bubble flag sync error:', flagError.message)
+    }
   }
 
   // Create notification if changing a bonus that already has picks
