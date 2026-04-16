@@ -139,27 +139,38 @@ export default function HowItWorksPage() {
           </p>
           <div className="space-y-3 text-slate-300 leading-relaxed">
             <p>
-              <strong className="text-white">Jose Park The Bus</strong> — pick
-              a fixture you think will be low-scoring. Pays out if the total
-              goals in your chosen game is 1 or fewer (0-0, 1-0, or 0-1).
+              <strong className="text-white">Brace Yourself</strong> —
+              predict a player to score exactly 2 goals in your chosen match.
             </p>
             <p>
-              <strong className="text-white">Goal Fest</strong> — pick a
-              fixture you think will be high-scoring. Pays out on 4+ total
-              goals.
+              <strong className="text-white">Captain Fantastic</strong> —
+              predict a captain to score, assist or be booked in your chosen
+              match.
             </p>
             <p>
-              <strong className="text-white">Clean Sheet</strong> — pick a
-              fixture where one team will keep a clean sheet (either side
-              held to zero).
+              <strong className="text-white">Jose Park The Bus</strong> —
+              predict under 2.5 goals in your chosen match.
             </p>
             <p>
-              <strong className="text-white">Draw</strong> — pick a fixture
-              you think will end level.
+              <strong className="text-white">Klopp Trumps</strong> — predict
+              the home team to score, concede and receive 3+ yellows in your
+              chosen match.
             </p>
             <p>
-              <strong className="text-white">Underdog</strong> — pick a
-              fixture you think the underdog will win outright.
+              <strong className="text-white">London Derby</strong> — predict
+              both teams to score in your chosen match.
+            </p>
+            <p>
+              <strong className="text-white">Pep Talk</strong> — predict the
+              team to win by over 2.5 goals in your chosen match.
+            </p>
+            <p>
+              <strong className="text-white">Roy Keane</strong> — predict the
+              highest number of cards in your chosen match.
+            </p>
+            <p>
+              <strong className="text-white">Shane Long</strong> — predict
+              the fastest goal to be scored in your chosen match.
             </p>
           </div>
           <div className="rounded-xl bg-pl-purple/40 border border-pl-purple-light p-5 space-y-3">
@@ -167,9 +178,10 @@ export default function HowItWorksPage() {
               Double Bubble
             </p>
             <p className="text-slate-200 leading-relaxed">
-              On <strong>Gameweek 10, 20 and 30</strong> all your points for
-              the week — regular scoring plus bonus — get doubled. These are
-              the swing weeks where the leaderboard can really move.
+              When the weekly bonus is <strong>Double Bubble</strong>, your
+              whole gameweek total gets doubled — no fixture pick needed.
+              These are the swing weeks where the leaderboard can really
+              move.
             </p>
           </div>
           <div className="rounded-xl bg-pl-purple/40 border border-pl-purple-light p-5 space-y-3">
@@ -285,31 +297,80 @@ export default function HowItWorksPage() {
             Prizes
           </h2>
           <p className="text-slate-300 leading-relaxed">
-            A few prizes up for grabs each season:
+            Plenty up for grabs through the season:
           </p>
-          <ul className="list-disc list-inside text-slate-300 space-y-2 leading-relaxed">
-            <li>
-              <strong className="text-white">Season winner</strong> — most
-              points overall at the end of the season.
-            </li>
-            <li>
-              <strong className="text-white">Weekly winner</strong> — top
-              scorer that gameweek (subject to H2H steals).
-            </li>
-            <li>
-              <strong className="text-white">Last One Standing</strong> —
-              the survivor when everyone else has gone out.
-            </li>
-            <li>
-              <strong className="text-white">Pre-season clean sweeps</strong>{' '}
-              — perfect top-4, relegated or promoted picks trigger bonus
-              payouts.
-            </li>
-          </ul>
-          <p className="text-slate-300 leading-relaxed">
-            George sets the pot each season and announces additional prizes
-            as they come up.
-          </p>
+          <div className="space-y-4">
+            <div className="rounded-xl bg-pl-purple/30 border border-pl-purple-light p-4 space-y-2">
+              <p className="text-pl-green font-semibold text-sm uppercase tracking-wide">
+                Ongoing prizes
+              </p>
+              <ul className="list-disc list-inside text-slate-300 space-y-1.5 leading-relaxed">
+                <li>
+                  <strong className="text-white">Jackpot 1st</strong> —
+                  £30/week to the highest scorer each gameweek.
+                </li>
+                <li>
+                  <strong className="text-white">Jackpot 2nd</strong> —
+                  £10/week to the second-highest scorer.
+                </li>
+                <li>
+                  <strong className="text-white">Last One Standing</strong>{' '}
+                  — £50 to the final player standing in each LOS game.
+                </li>
+              </ul>
+            </div>
+            <div>
+              <p className="text-slate-300 leading-relaxed mb-2">
+                One-off prizes — £10 each, first to trigger wins:
+              </p>
+              <ul className="list-disc list-inside text-slate-300 space-y-1.5 leading-relaxed">
+                <li>
+                  <strong className="text-white">180</strong> — first member
+                  to score 180+ in a single week.
+                </li>
+                <li>
+                  <strong className="text-white">Bonus King</strong> — first
+                  to earn 3 consecutive bonuses.
+                </li>
+                <li>
+                  <strong className="text-white">Centurion</strong> — first
+                  to reach 1000 total points.
+                </li>
+                <li>
+                  <strong className="text-white">Christmas Present</strong>{' '}
+                  — league leader on Christmas Day.
+                </li>
+                <li>
+                  <strong className="text-white">Dry January</strong> —
+                  lowest scorer at the end of January.
+                </li>
+                <li>
+                  <strong className="text-white">Easter Egg</strong> —
+                  overall losing player on Easter Sunday.
+                </li>
+                <li>
+                  <strong className="text-white">Fresh Start</strong> —
+                  highest scoring player in the first gameweek.
+                </li>
+                <li>
+                  <strong className="text-white">Halloween Horror Show</strong>{' '}
+                  — member in 31st place on Halloween.
+                </li>
+                <li>
+                  <strong className="text-white">Knockout</strong> — first
+                  to lose 2 H2H steals.
+                </li>
+                <li>
+                  <strong className="text-white">Smart One Standing</strong>{' '}
+                  — first to reach the final 10 in 3 separate LOS games.
+                </li>
+                <li>
+                  <strong className="text-white">Valentines Surprise</strong>{' '}
+                  — members in 6th & 9th on Valentine&apos;s Day.
+                </li>
+              </ul>
+            </div>
+          </div>
         </section>
 
         {/* ── 9. FAQ ─────────────────────────────────────────────────── */}
