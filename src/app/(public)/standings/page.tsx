@@ -22,6 +22,7 @@ import { MemberLink } from '@/components/shared/member-link'
 import { StandingsHero } from '@/components/hero/standings-hero'
 import { CurrentGameweekBanner } from '@/components/shared/current-gameweek-banner'
 import { getCurrentGameweek } from '@/lib/gameweeks/current'
+import { StandingsTable } from './_components/standings-table'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,7 +33,6 @@ interface StandingRow {
   display_name: string
   starting_points: number
   weekly_points: number
-  rank: number
 }
 
 interface FixtureRow {
@@ -161,18 +161,11 @@ async function getStandingsPageData(): Promise<{
     }
   }
 
-  const standings: StandingRow[] = standingsBase
-    .map((m) => ({
-      ...m,
-      weekly_points: weeklyPointsById.get(m.id) ?? 0,
-    }))
-    .sort((a, b) => {
-      if (b.starting_points !== a.starting_points) {
-        return b.starting_points - a.starting_points
-      }
-      return a.display_name.localeCompare(b.display_name)
-    })
-    .map((m, i) => ({ ...m, rank: i + 1 }))
+  // The client table handles sort + rank — we just hand it the rows.
+  const standings: StandingRow[] = standingsBase.map((m) => ({
+    ...m,
+    weekly_points: weeklyPointsById.get(m.id) ?? 0,
+  }))
 
   return { standings, latestGw, fixtures, topWeekly }
 }
@@ -209,57 +202,59 @@ export default async function StandingsPage() {
         </p>
       </header>
 
+      {/* ── Weekly winner callout ────────────────────────────────────────── */}
+      {latestGw && topWeekly.length > 0 && (
+        <section className="rounded-2xl border border-pl-green/30 bg-gradient-to-br from-pl-green/10 to-purple-500/10 p-5 space-y-3">
+          <p className="text-xs font-semibold text-pl-green uppercase tracking-wider">
+            Gameweek {latestGw.number} weekly winner
+          </p>
+          <div className="flex items-baseline gap-3 flex-wrap">
+            <MemberLink
+              displayName={topWeekly[0].displayName}
+              className="text-2xl font-bold text-white"
+            />
+            <span className="text-pl-green font-bold tabular-nums text-lg">
+              {topWeekly[0].weeklyPoints} pts
+            </span>
+          </div>
+          {topWeekly.length > 1 && (
+            <p className="text-sm text-slate-300">
+              Runner-up:{' '}
+              <MemberLink
+                displayName={topWeekly[1].displayName}
+                className="text-slate-200 font-medium"
+              />
+              <span className="text-slate-400"> — {topWeekly[1].weeklyPoints} pts</span>
+              {topWeekly.length > 2 && (
+                <>
+                  {' '}&middot; Third:{' '}
+                  <MemberLink
+                    displayName={topWeekly[2].displayName}
+                    className="text-slate-200 font-medium"
+                  />
+                  <span className="text-slate-400"> — {topWeekly[2].weeklyPoints} pts</span>
+                </>
+              )}
+            </p>
+          )}
+        </section>
+      )}
+
       {/* ── Standings table ──────────────────────────────────────────────── */}
       <section className="space-y-3">
         <h2 className="text-lg font-semibold text-slate-200">Standings</h2>
-        <div className="rounded-2xl border border-slate-700 bg-slate-900 overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-700 bg-slate-800/60">
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider w-12">
-                  Rank
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                  Member
-                </th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider whitespace-nowrap">
-                  {latestGw ? `GW${latestGw.number}` : 'This Week'}
-                </th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                  Total
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800">
-              {standings.map((m) => (
-                <tr key={m.id} className={m.rank === 1 ? 'bg-purple-500/10' : ''}>
-                  <td className="px-4 py-3 font-medium text-slate-300">
-                    {m.rank}
-                  </td>
-                  <td className="px-4 py-3 text-white font-medium">
-                    <MemberLink displayName={m.display_name} className="text-white font-medium" />
-                  </td>
-                  <td className="px-4 py-3 text-right tabular-nums text-slate-300">
-                    {m.weekly_points > 0 ? `+${m.weekly_points}` : m.weekly_points}
-                  </td>
-                  <td className="px-4 py-3 text-right text-purple-300 font-bold tabular-nums">
-                    {m.starting_points}
-                  </td>
-                </tr>
-              ))}
-              {standings.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={4}
-                    className="px-4 py-8 text-center text-slate-500"
-                  >
-                    No members yet.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        <p className="text-xs text-slate-500">
+          Tap a column header to sort.
+        </p>
+        <StandingsTable
+          rows={standings.map(({ id, display_name, starting_points, weekly_points }) => ({
+            id,
+            display_name,
+            starting_points,
+            weekly_points,
+          }))}
+          weeklyLabel={latestGw ? `GW${latestGw.number}` : 'This Week'}
+        />
       </section>
 
       {/* ── Latest GW results ────────────────────────────────────────────── */}
@@ -296,32 +291,6 @@ export default async function StandingsPage() {
             </div>
           </section>
 
-          <section className="space-y-3">
-            <h2 className="text-lg font-semibold text-slate-200">
-              Top 3 this week
-            </h2>
-            <div className="rounded-2xl border border-slate-700 bg-slate-900 overflow-hidden divide-y divide-slate-800">
-              {topWeekly.map((t, i) => (
-                <div
-                  key={t.displayName}
-                  className="flex items-center justify-between px-4 py-3"
-                >
-                  <span className="text-slate-300 font-medium">
-                    {i + 1}.{' '}
-                    <MemberLink displayName={t.displayName} className="text-slate-300 font-medium" />
-                  </span>
-                  <span className="text-purple-300 font-bold tabular-nums">
-                    {t.weeklyPoints} pts
-                  </span>
-                </div>
-              ))}
-              {topWeekly.length === 0 && (
-                <div className="px-4 py-6 text-center text-slate-500 text-sm">
-                  No weekly scores yet.
-                </div>
-              )}
-            </div>
-          </section>
         </>
       ) : (
         <section className="rounded-2xl border border-slate-700 bg-slate-900 p-8 text-center">
