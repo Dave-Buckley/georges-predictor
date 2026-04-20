@@ -1,0 +1,29 @@
+name: Sync fixtures
+
+# Runs every 15 minutes. Vercel Hobby plan caps crons at once-per-day, so we
+# schedule the frequent sync here instead of in vercel.json. The workflow
+# hits /api/sync-fixtures on the production deployment with the CRON_SECRET
+# bearer token — the route handler is unchanged.
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch: # allow manual run from the Actions tab
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping /api/sync-fixtures
+        run: |
+          set -e
+          http_status=$(curl -sS -o /tmp/sync-response.json -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "https://georges-predictor.vercel.app/api/sync-fixtures")
+          echo "HTTP $http_status"
+          cat /tmp/sync-response.json || true
+          echo
+          if [ "$http_status" -ge 400 ]; then
+            echo "::error::sync-fixtures returned $http_status"
+            exit 1
+          fi
