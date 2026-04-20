@@ -321,18 +321,33 @@ export async function resetCompetitionIfNeeded(
     await adminClient.from('los_competition_members').insert(memberRows)
   }
 
-  // 5. Notifications
+  // 5. Notifications — resolve the winner's display name so George sees a
+  // friendly message rather than a raw member UUID. Falls back gracefully
+  // when the lookup fails (or a test stub doesn't support it).
+  let winnerName = 'A member'
+  try {
+    const { data: winnerRow } = await adminClient
+      .from('members')
+      .select('display_name')
+      .eq('id', winnerId)
+      .maybeSingle()
+    const name = (winnerRow as { display_name?: string | null } | null)?.display_name
+    if (name && name.trim().length > 0) winnerName = name.trim()
+  } catch {
+    /* fall through — use the generic label */
+  }
+
   await adminClient.from('admin_notifications').insert([
     {
       type: 'los_winner_found',
-      title: 'Last One Standing winner found',
-      message: `Competition winner: member ${winnerId}`,
+      title: `${winnerName} has won Last One Standing!`,
+      message: `${winnerName} is the last one standing — they've won this round of the competition. A new Last One Standing round starts in Gameweek ${endedAtGw + 1}.`,
       member_id: winnerId,
     },
     {
       type: 'los_competition_started',
-      title: 'New Last One Standing competition started',
-      message: `Competition ${nextNum} starts at gameweek ${endedAtGw + 1}`,
+      title: `New Last One Standing round starts in Gameweek ${endedAtGw + 1}`,
+      message: `A new Last One Standing competition has begun. Everyone is back in — it starts at Gameweek ${endedAtGw + 1}.`,
     },
   ])
 

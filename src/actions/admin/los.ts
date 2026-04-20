@@ -20,6 +20,25 @@ import {
 } from '@/lib/validators/los'
 import { resetCompetitionIfNeeded } from '@/lib/los/round'
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+async function lookupMemberName(
+  adminClient: ReturnType<typeof createAdminClient>,
+  memberId: string,
+): Promise<string> {
+  try {
+    const { data } = await adminClient
+      .from('members')
+      .select('display_name')
+      .eq('id', memberId)
+      .maybeSingle()
+    const name = (data as { display_name?: string | null } | null)?.display_name
+    return name && name.trim().length > 0 ? name : 'A member'
+  } catch {
+    return 'A member'
+  }
+}
+
 // ─── Admin Auth Guard ─────────────────────────────────────────────────────────
 
 async function requireAdmin(): Promise<{ userId: string } | { error: string }> {
@@ -84,10 +103,12 @@ export async function overrideEliminate(
     return { error: 'Failed to eliminate member. Please try again.' }
   }
 
+  const memberName = await lookupMemberName(adminClient, member_id)
+
   await adminClient.from('admin_notifications').insert({
     type: 'system',
-    title: 'LOS member override-eliminated',
-    message: `Admin eliminated member ${member_id} (reason: ${reason})`,
+    title: `${memberName} has been knocked out of Last One Standing`,
+    message: `${memberName} was knocked out of Last One Standing by an admin. Reason: ${reason}.`,
     member_id,
   })
 
@@ -147,10 +168,12 @@ export async function reinstateMember(
     return { error: 'Failed to reinstate member. Please try again.' }
   }
 
+  const memberName = await lookupMemberName(adminClient, member_id)
+
   await adminClient.from('admin_notifications').insert({
     type: 'system',
-    title: 'LOS member reinstated',
-    message: `Admin reinstated member ${member_id}`,
+    title: `${memberName} is back in Last One Standing`,
+    message: `${memberName} was reinstated into Last One Standing by an admin and is back in the running.`,
     member_id,
   })
 

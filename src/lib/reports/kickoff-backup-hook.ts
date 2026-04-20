@@ -110,10 +110,11 @@ export async function maybeSendKickoffBackup(
         .update({ kickoff_backup_sent_at: new Date().toISOString() })
         .eq('id', gw.id)
     } catch (err) {
+      console.error('[kickoff-backup-hook]', gw.number, err)
       await supabase.from('admin_notifications').insert({
         type: 'kickoff_backup_failed',
-        title: `Kickoff backup failed for GW${gw.number}`,
-        message: String(err),
+        title: `Backup email for Gameweek ${gw.number} didn't send`,
+        message: `The backup email with everyone's Gameweek ${gw.number} predictions couldn't be sent out. The app will try again at the next update, and Dave can also resend it manually.`,
       })
       // Flag stays NULL — next sync will retry this GW.
     }

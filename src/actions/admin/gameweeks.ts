@@ -222,8 +222,8 @@ export async function closeGameweek(
     console.error('[closeGameweek] applyWeeklyToStartingPoints failed:', error)
     await supabase.from('admin_notifications').insert({
       type: 'system',
-      title: 'Auto-accumulate failed',
-      message: `Weekly points not rolled into totals for GW${gwNumber}: ${String(error)}`,
+      title: `Gameweek ${gwNumber} points didn't save — Dave needs to check`,
+      message: `The weekly points for Gameweek ${gwNumber} could not be added to the season totals. Standings may be out of date until Dave takes a look.`,
     })
   }
 
@@ -233,7 +233,7 @@ export async function closeGameweek(
     .insert({
       type: 'gw_complete',
       title: `Gameweek ${gwNumber} closed`,
-      message: `Closed by admin`,
+      message: `Gameweek ${gwNumber} has been closed. Weekly points have been added to the season totals.`,
     })
 
   // ── Non-blocking H2H integration (Phase 8 Plan 03) ──────────────────────────
@@ -245,8 +245,8 @@ export async function closeGameweek(
     console.error('[closeGameweek] H2H detection failed:', error)
     await supabase.from('admin_notifications').insert({
       type: 'system',
-      title: 'H2H detection failed',
-      message: `detectH2HForGameweek threw on GW${gwNumber}: ${String(error)}`,
+      title: `Head-to-head check didn't finish for Gameweek ${gwNumber}`,
+      message: `The app couldn't work out head-to-head ties for Gameweek ${gwNumber}. Dave needs to take a look before prizes are confirmed.`,
     })
   }
   try {
@@ -255,8 +255,8 @@ export async function closeGameweek(
     console.error('[closeGameweek] H2H steal resolution failed:', error)
     await supabase.from('admin_notifications').insert({
       type: 'system',
-      title: 'H2H steal resolution failed',
-      message: `resolveStealsForGameweek threw on GW${gwNumber}: ${String(error)}`,
+      title: `Head-to-head tie-break didn't finish for Gameweek ${gwNumber}`,
+      message: `A head-to-head tie from a previous gameweek needed to be settled in Gameweek ${gwNumber} and the app ran into a problem. Dave needs to take a look.`,
     })
   }
 
@@ -379,8 +379,8 @@ export async function reopenGameweek(
     console.error('[reopenGameweek] reverseWeeklyFromStartingPoints failed:', error)
     await supabase.from('admin_notifications').insert({
       type: 'system',
-      title: 'Auto-accumulate reverse failed',
-      message: `Weekly points not reversed for GW${gwNumber}: ${String(error)}`,
+      title: `Gameweek ${gwNumber} re-open didn't tidy up — Dave needs to check`,
+      message: `Gameweek ${gwNumber} was re-opened but the weekly points could not be taken back out of the season totals. Standings may be off until Dave takes a look.`,
     })
   }
 

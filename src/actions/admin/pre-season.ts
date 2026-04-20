@@ -260,6 +260,24 @@ export async function calculatePreSeasonAwards(
 
   const picks = (picksData as PickDbRow[] | null) ?? []
 
+  // Resolve member display names upfront so notifications can use friendly
+  // names instead of raw UUIDs. Wrapped in try/catch so a lookup failure
+  // (or stubbed test client) never breaks the calc.
+  const memberIds = picks.map((p) => p.member_id)
+  const memberNameById = new Map<string, string>()
+  try {
+    const { data: memberRows } = await admin
+      .from('members')
+      .select('id, display_name')
+      .in('id', memberIds)
+    for (const row of ((memberRows ?? []) as Array<{ id: string; display_name: string | null }>)) {
+      const name = (row.display_name ?? '').trim()
+      memberNameById.set(row.id, name || 'A member')
+    }
+  } catch {
+    /* fall through — notifications will use the generic "A member" fallback */
+  }
+
   let flagsAllCorrect = 0
   let flagsCategory = 0
 
@@ -304,25 +322,32 @@ export async function calculatePreSeasonAwards(
       .upsert(upsertPayload, { onConflict: 'member_id,season' })
 
     // Emit notifications (Pattern 5 — failures swallowed)
+    const memberName = memberNameById.get(row.member_id) ?? 'A member'
     try {
       if (score.flags.all_correct_overall) {
         await admin.from('admin_notifications').insert({
           type: 'pre_season_all_correct',
-          title: `Pre-season: all 12 correct`,
-          message: `Member ${row.member_id} got every pre-season pick right for ${season}.`,
+          title: `${memberName} got every pre-season pick right!`,
+          message: `${memberName} got all 12 pre-season predictions correct for the ${season} season. That's a clean sweep.`,
           member_id: row.member_id,
         })
         flagsAllCorrect++
       } else {
         const cats: string[] = []
-        if (score.flags.all_top4_correct) cats.push('top4')
-        if (score.flags.all_relegated_correct) cats.push('relegated')
-        if (score.flags.all_promoted_correct) cats.push('promoted')
+        if (score.flags.all_top4_correct) cats.push('top 4')
+        if (score.flags.all_relegated_correct) cats.push('relegated teams')
+        if (score.flags.all_promoted_correct) cats.push('promoted teams')
         if (cats.length) {
+          const catsList =
+            cats.length === 1
+              ? cats[0]
+              : cats.length === 2
+                ? `${cats[0]} and ${cats[1]}`
+                : `${cats.slice(0, -1).join(', ')} and ${cats[cats.length - 1]}`
           await admin.from('admin_notifications').insert({
             type: 'pre_season_category_correct',
-            title: `Pre-season: category-correct (${cats.join(', ')})`,
-            message: `Member ${row.member_id} got an entire category correct for ${season}.`,
+            title: `${memberName} got a pre-season category 100% correct`,
+            message: `${memberName} got every pick right in the ${catsList} category for the ${season} season.`,
             member_id: row.member_id,
           })
           flagsCategory++
@@ -337,8 +362,8 @@ export async function calculatePreSeasonAwards(
   try {
     await admin.from('admin_notifications').insert({
       type: 'pre_season_awards_ready',
-      title: `Pre-season awards calculated`,
-      message: `Season ${season}: ${picks.length} award${picks.length !== 1 ? 's' : ''} ready for George to confirm.`,
+      title: `Pre-season scores are ready for George to review`,
+      message: `The pre-season points for the ${season} season have been worked out — ${picks.length} member${picks.length !== 1 ? 's' : ''} ready for George to confirm.`,
     })
   } catch {
     /* noop */

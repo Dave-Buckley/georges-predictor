@@ -298,8 +298,8 @@ export async function endOfSeasonRollover(formData: FormData): Promise<Result> {
   try {
     await admin.from('admin_notifications').insert({
       type: 'system',
-      title: `Season ${fromSeason} rollover complete`,
-      message: `Relegated to Championship ${fromSeason + 1}: ${relegated.join(', ')}. Promoted to Premier League: ${promoted.join(', ')}.`,
+      title: `End-of-season promotion and relegation done`,
+      message: `The ${fromSeason} season has been wrapped up. Going down to the Championship: ${relegated.join(', ')}. Coming up to the Premier League: ${promoted.join(', ')}.`,
     })
   } catch {
     /* noop */

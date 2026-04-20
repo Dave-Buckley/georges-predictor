@@ -159,10 +159,11 @@ export async function detectH2HForGameweek(
 
   // 6. Admin notification (once per run with ties)
   if (created > 0) {
+    const groupCount = created === 1 ? 'a tie' : `${created} ties`
     await adminClient.from('admin_notifications').insert({
       type: 'h2h_steal_detected',
-      title: `H2H steal detected in GW${gw.number}`,
-      message: `${created} tie group${created !== 1 ? 's' : ''} at position 1/2 — resolves in GW${gw.number + 1}`,
+      title: `H2H Steal coming up after Gameweek ${gw.number}`,
+      message: `Gameweek ${gw.number} ended with ${groupCount} at the top for the weekly prize. It'll be settled by an H2H Steal — whoever scores highest in Gameweek ${gw.number + 1} takes the prize.`,
     })
   }
 
@@ -228,8 +229,11 @@ export async function resolveStealsForGameweek(
   if (resolved > 0) {
     await adminClient.from('admin_notifications').insert({
       type: 'h2h_steal_resolved',
-      title: 'H2H steal resolved',
-      message: `${resolved} steal${resolved !== 1 ? 's' : ''} resolved in this gameweek`,
+      title: `H2H Steal settled — weekly prize has a winner`,
+      message:
+        resolved === 1
+          ? `A head-to-head tie from last week has been settled. The weekly prize winner has been chosen based on this week's scores.`
+          : `${resolved} head-to-head ties from last week have been settled. The weekly prize winners have been chosen based on this week's scores.`,
     })
   }
 

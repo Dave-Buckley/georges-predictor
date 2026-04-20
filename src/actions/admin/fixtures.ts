@@ -251,6 +251,24 @@ export async function moveFixture(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const currentGwNumber = (fixture as any).gameweeks?.number ?? '?'
 
+  // Look up team names for a friendly "Brighton vs Chelsea" label — if the
+  // lookup fails (or a test mock doesn't support it) we fall back to a
+  // generic label rather than surfacing the fixture UUID to George.
+  let matchLabel = 'A fixture'
+  try {
+    const { data: teamRows } = await supabaseAdmin
+      .from('teams')
+      .select('id, short_name, name')
+      .in('id', [fixture.home_team_id, fixture.away_team_id])
+    const homeTeam = teamRows?.find((t) => t.id === fixture.home_team_id)
+    const awayTeam = teamRows?.find((t) => t.id === fixture.away_team_id)
+    if (homeTeam && awayTeam) {
+      matchLabel = `${homeTeam.short_name ?? homeTeam.name} vs ${awayTeam.short_name ?? awayTeam.name}`
+    }
+  } catch {
+    /* fall through — notification will use the generic label */
+  }
+
   // Update fixture's gameweek_id. Set manual_gameweek_override so the next
   // API sync doesn't revert this move — George's decision wins over the
   // football-data.org matchday assignment.
@@ -273,8 +291,8 @@ export async function moveFixture(
     .from('admin_notifications')
     .insert({
       type: 'fixture_moved',
-      title: `Fixture moved manually: GW${currentGwNumber} → GW${target_gameweek_number}`,
-      message: `Fixture ${fixture_id} moved from GW${currentGwNumber} to GW${target_gameweek_number} by admin.`,
+      title: `${matchLabel} moved to Gameweek ${target_gameweek_number}`,
+      message: `${matchLabel} was in Gameweek ${currentGwNumber} and has been moved to Gameweek ${target_gameweek_number}.`,
     })
     .then(({ error }) => {
       if (error) console.error('[moveFixture] Notification error:', error.message)

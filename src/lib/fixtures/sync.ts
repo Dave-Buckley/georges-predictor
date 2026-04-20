@@ -22,6 +22,25 @@ export interface SyncResult {
   errors: string[]
 }
 
+// ─── Helper: format a kickoff ISO timestamp for George ──────────────────────
+// Short, plain-English format suitable for admin notifications. BST/GMT is
+// handled by toLocaleString — "Europe/London" picks the right offset.
+function formatFriendlyKickoff(iso: string): string {
+  try {
+    return new Date(iso).toLocaleString('en-GB', {
+      timeZone: 'Europe/London',
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    })
+  } catch {
+    return iso
+  }
+}
+
 // ─── Helper: Detect newly-FINISHED fixtures (exported for testing) ────────────
 
 export interface FixtureStatusSnapshot {
@@ -368,13 +387,16 @@ export async function syncFixtures(): Promise<SyncResult> {
     // transient DB error), aborting is far safer than silently reverting
     // manually-moved fixtures to whatever the API matchday says.
     if (overrideError) {
-      const msg = `Override read failed — sync aborted to preserve manual fixture moves: ${overrideError.message}`
-      errors.push(msg)
-      await writeSyncLog(adminClient, false, 0, msg)
+      // Log the technical detail for developers, but surface a plain-English
+      // message to George via admin_notifications.
+      const techMsg = `Override read failed: ${overrideError.message}`
+      errors.push(techMsg)
+      await writeSyncLog(adminClient, false, 0, techMsg)
       await adminClient.from('admin_notifications').insert({
         type: 'sync_failure',
-        title: 'Fixture sync aborted',
-        message: msg,
+        title: 'Fixture update paused — Dave needs to check',
+        message:
+          'The nightly fixture update did not run properly tonight. To keep any fixtures you have moved manually safe, the update has been paused. No fixtures have been changed. Please let Dave know — everything will carry on as normal once he has had a look.',
       })
       return { success: false, fixtures_updated: 0, scored_fixtures: 0, rescheduled, errors }
     }
@@ -497,8 +519,8 @@ export async function syncFixtures(): Promise<SyncResult> {
 
         await adminClient.from('admin_notifications').insert({
           type: 'scoring_complete',
-          title: `Scores calculated for ${scored_fixtures} fixture${scored_fixtures !== 1 ? 's' : ''}`,
-          message: fixtureLabelsList,
+          title: `Points awarded for ${scored_fixtures} new result${scored_fixtures !== 1 ? 's' : ''}`,
+          message: `Everyone's predictions have been scored for: ${fixtureLabelsList}.`,
         })
       }
     }
@@ -567,16 +589,16 @@ export async function syncFixtures(): Promise<SyncResult> {
     for (const r of reschedules) {
       notifications.push({
         type: 'fixture_rescheduled',
-        title: `Fixture rescheduled: ${r.matchLabel}`,
-        message: `Kickoff moved from ${r.oldKickoff} to ${r.newKickoff}`,
+        title: `Kickoff time changed: ${r.matchLabel}`,
+        message: `${r.matchLabel} has a new kickoff time. It used to be ${formatFriendlyKickoff(r.oldKickoff)} and is now ${formatFriendlyKickoff(r.newKickoff)}.`,
       })
     }
 
     for (const move of gameweekMoves) {
       notifications.push({
         type: 'fixture_moved',
-        title: `Fixture moved gameweek: ${move.matchLabel}`,
-        message: `Moved from GW${move.oldMatchday} to GW${move.newMatchday}`,
+        title: `${move.matchLabel} has moved to a new gameweek`,
+        message: `${move.matchLabel} was in Gameweek ${move.oldMatchday} and has been moved to Gameweek ${move.newMatchday}.`,
       })
     }
 
@@ -609,8 +631,9 @@ export async function syncFixtures(): Promise<SyncResult> {
       })
       await adminClient.from('admin_notifications').insert({
         type: 'sync_failure',
-        title: 'Fixture sync failed',
-        message: msg,
+        title: 'Fixture update had a problem — Dave needs to check',
+        message:
+          'The nightly fixture update ran into an error and did not finish. Scores and fixtures may not be fully up to date until Dave takes a look. The app is still working normally for everyone else in the meantime.',
       })
     } catch {
       // Best-effort — if logging itself fails, swallow the error

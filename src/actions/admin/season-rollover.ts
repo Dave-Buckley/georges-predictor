@@ -149,8 +149,8 @@ export async function archiveSeason(formData: FormData): Promise<Result> {
   try {
     await admin.from('admin_notifications').insert({
       type: 'season_archived',
-      title: `Season ${parsed.data.season} archived`,
-      message: `The ${parsed.data.season} season was archived at ${nowIso}.`,
+      title: `The ${parsed.data.season} season has been wrapped up`,
+      message: `The ${parsed.data.season} season is now in the history books. Final standings, weekly prizes, and all predictions have been saved.`,
     })
   } catch {
     /* noop */
@@ -268,8 +268,8 @@ export async function launchNewSeason(formData: FormData): Promise<Result> {
   try {
     await admin.from('admin_notifications').insert({
       type: 'season_launched',
-      title: `Season ${parsed.data.season} launched`,
-      message: `The ${parsed.data.season} season is now the active season.`,
+      title: `The ${parsed.data.season} season is live!`,
+      message: `Predictions are now open for the ${parsed.data.season} season. Good luck everyone!`,
     })
   } catch {
     /* noop */
