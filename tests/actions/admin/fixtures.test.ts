@@ -471,7 +471,11 @@ describe('moveFixture admin action', () => {
     const result = await moveFixture(formData)
 
     expect(result).toEqual({ success: true })
-    expect(updateMock).toHaveBeenCalledWith({ gameweek_id: TARGET_GW_ID })
+    expect(updateMock).toHaveBeenCalledWith({
+      gameweek_id: TARGET_GW_ID,
+      manual_gameweek_override: true,
+      is_rescheduled: true,
+    })
   })
 
   it('returns error if caller is not admin', async () => {

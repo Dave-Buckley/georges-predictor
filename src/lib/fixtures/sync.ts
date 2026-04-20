@@ -170,10 +170,16 @@ async function detectReschedules(
 ): Promise<{ reschedules: RescheduleInfo[]; gameweekMoves: GameweekMoveInfo[] }> {
   const externalIds = matches.map((m) => m.id)
 
-  const { data: existingFixtures } = await adminClient
+  const { data: existingFixtures, error: existingError } = await adminClient
     .from('fixtures')
     .select('external_id, kickoff_time, gameweek_id, manual_gameweek_override, gameweeks(number)')
     .in('external_id', externalIds)
+
+  if (existingError) {
+    // Bubble up so the caller can fail-closed — silently returning [] would
+    // cause the next upsert to revert any manually-moved fixtures.
+    throw new Error(`detectReschedules read failed: ${existingError.message}`)
+  }
 
   if (!existingFixtures || existingFixtures.length === 0) {
     return { reschedules: [], gameweekMoves: [] }
@@ -353,10 +359,25 @@ export async function syncFixtures(): Promise<SyncResult> {
     // so George's manual moves (e.g. bundling rescheduled fixtures into the
     // predictor week they're played in) aren't reverted by the next sync.
     const externalIdsToFetch = matches.map((m) => m.id)
-    const { data: overrideRows } = await adminClient
+    const { data: overrideRows, error: overrideError } = await adminClient
       .from('fixtures')
       .select('external_id, gameweek_id, manual_gameweek_override')
       .in('external_id', externalIdsToFetch)
+
+    // Fail-closed: if we can't read the override flag (e.g. column missing,
+    // transient DB error), aborting is far safer than silently reverting
+    // manually-moved fixtures to whatever the API matchday says.
+    if (overrideError) {
+      const msg = `Override read failed — sync aborted to preserve manual fixture moves: ${overrideError.message}`
+      errors.push(msg)
+      await writeSyncLog(adminClient, false, 0, msg)
+      await adminClient.from('admin_notifications').insert({
+        type: 'sync_failure',
+        title: 'Fixture sync aborted',
+        message: msg,
+      })
+      return { success: false, fixtures_updated: 0, scored_fixtures: 0, rescheduled, errors }
+    }
 
     const overrideMap = new Map<number, { gameweek_id: string; override: boolean }>()
     for (const row of (overrideRows ?? []) as Array<{
