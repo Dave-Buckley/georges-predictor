@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Users, AlertTriangle, CheckCircle2, XCircle, Loader2, Lock, Star, Zap, Trophy } from 'lucide-react'
 import type { FixtureWithTeams, GameweekRow, GameweekStatus } from '@/lib/supabase/types'
 import { submitPredictions } from '@/actions/predictions'
@@ -97,6 +97,18 @@ export default function PredictionForm({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitResult, setSubmitResult] = useState<{ saved: number; skipped: number } | null>(null)
   const [feedback, setFeedback] = useState<FeedbackState>(null)
+
+  // The inline feedback block lives near the top of the page. When the user is
+  // scrolled down at the sticky Update Predictions button and a validation
+  // error fires, the error banner ends up off-screen and it looks like
+  // nothing happened. Scroll the banner into view on every feedback change
+  // so the error is always visible right after the click.
+  const feedbackRef = useRef<HTMLDivElement | null>(null)
+  useEffect(() => {
+    if (feedback && feedbackRef.current) {
+      feedbackRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+  }, [feedback])
 
   // When an LOS competition is active and a member taps "Update Predictions"
   // to re-submit, remind them to double-check the LOS pick — the most common
@@ -536,6 +548,7 @@ export default function PredictionForm({
       {/* 7. Feedback banner (auto-dismisses after 5s) */}
       {feedback && (
         <div
+          ref={feedbackRef}
           className={`flex items-start gap-2 px-3 py-2.5 rounded-lg border ${
             feedback.type === 'success'
               ? 'bg-green-900/40 border-green-700/50'
@@ -627,11 +640,33 @@ export default function PredictionForm({
             locked via WhatsApp. */}
       {!isLocked && (hasExistingSubmitArea || whatsAppButtonVisible) && (
         <div className="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-700 p-4 z-10 space-y-2">
+          {/* Mirror the inline feedback right next to the action button.
+              Without this, validation errors render high up the page and the
+              user — who just tapped Update at the bottom — can't see them
+              and assumes the button is broken. */}
+          {feedback && (
+            <div
+              className={`flex items-start gap-2 px-3 py-2 rounded-lg border ${
+                feedback.type === 'success'
+                  ? 'bg-green-900/40 border-green-700/50'
+                  : 'bg-red-900/40 border-red-700/50'
+              }`}
+            >
+              {feedback.type === 'success' ? (
+                <CheckCircle2 className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" />
+              ) : (
+                <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+              )}
+              <p className={`text-xs ${feedback.type === 'success' ? 'text-green-300' : 'text-red-300'}`}>
+                {feedback.message}
+              </p>
+            </div>
+          )}
           {hasExistingSubmitArea && (
             <button
               type="button"
               onClick={handleSubmitClick}
-              disabled={isSubmitting || (losEligible && !losTeamId)}
+              disabled={isSubmitting}
               className="w-full h-12 rounded-xl bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-semibold text-base transition disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isSubmitting ? (
