@@ -382,14 +382,14 @@ describe('verifyLoginCode', () => {
 
     const { verifyLoginCode } = await import('@/actions/auth')
 
-    const formData = makeFormData({ email: 'user@example.com', token: '123456' })
+    const formData = makeFormData({ email: 'user@example.com', token: '12345678' })
 
     const result = await verifyLoginCode(formData)
 
     expect(result).toEqual({ success: true })
     expect(mockSupabase.auth.verifyOtp).toHaveBeenCalledWith({
       email: 'user@example.com',
-      token: '123456',
+      token: '12345678',
       type: 'email',
     })
   })
@@ -415,7 +415,7 @@ describe('verifyLoginCode', () => {
 
     const { verifyLoginCode } = await import('@/actions/auth')
 
-    const formData = makeFormData({ email: 'user@example.com', token: '123456' })
+    const formData = makeFormData({ email: 'user@example.com', token: '12345678' })
 
     const result = await verifyLoginCode(formData)
 
