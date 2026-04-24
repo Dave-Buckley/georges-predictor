@@ -173,7 +173,7 @@ export default function LoginForm() {
           <div className="rounded-xl bg-slate-800 border border-slate-700 p-5 text-center space-y-2">
             <p className="text-white font-semibold">Check your email</p>
             <p className="text-slate-300 text-sm">
-              We sent a 6-digit code to{' '}
+              We sent a login code to{' '}
               <span className="text-white font-medium break-all">{email}</span>
             </p>
             <p className="text-slate-500 text-xs">
@@ -186,21 +186,21 @@ export default function LoginForm() {
               htmlFor="code"
               className="block text-sm font-medium text-slate-300"
             >
-              Enter the 6-digit code
+              Enter the code from your email
             </label>
             <input
               id="code"
               type="text"
               inputMode="numeric"
               autoComplete="one-time-code"
-              pattern="\d{6}"
-              maxLength={6}
-              placeholder="123456"
+              pattern="\d{6,10}"
+              maxLength={10}
+              placeholder="12345678"
               disabled={isSubmitting}
               value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 10))}
               required
-              className="w-full rounded-xl bg-slate-800 border border-slate-600 px-4 py-4 text-white text-2xl tracking-[0.5em] text-center font-mono placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50 transition"
+              className="w-full rounded-xl bg-slate-800 border border-slate-600 px-4 py-4 text-white text-2xl tracking-[0.4em] text-center font-mono placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50 transition"
             />
           </div>
 
@@ -212,7 +212,7 @@ export default function LoginForm() {
 
           <button
             type="submit"
-            disabled={isSubmitting || code.length !== 6}
+            disabled={isSubmitting || code.length < 6}
             className="w-full rounded-xl bg-purple-600 hover:bg-purple-500 disabled:bg-purple-600/50 disabled:cursor-not-allowed px-6 py-4 text-white font-semibold text-lg transition focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 focus:ring-offset-slate-900"
           >
             {isSubmitting ? 'Verifying...' : 'Log in'}

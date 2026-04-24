@@ -1,0 +1,21 @@
+<h2>Your George's Predictor login code</h2>
+
+<p>Hi — your login code is:</p>
+
+<p style="font-size: 32px; font-weight: bold; letter-spacing: 8px; font-family: monospace; margin: 24px 0; padding: 16px 24px; background: #f4f4f4; border-radius: 8px; display: inline-block;">
+  {{ .Token }}
+</p>
+
+<p>Type this into the login screen on George's Predictor. The code expires in 1 hour.</p>
+
+<hr style="margin: 32px 0; border: none; border-top: 1px solid #e5e5e5;" />
+
+<p style="color: #666; font-size: 14px;">
+  Or if you prefer, you can click this link to log in:
+  <br />
+  <a href="{{ .ConfirmationURL }}">Log me in</a>
+</p>
+
+<p style="color: #999; font-size: 12px; margin-top: 24px;">
+  Didn't request this? Ignore this email — your account is safe.
+</p>

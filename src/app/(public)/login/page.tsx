@@ -23,7 +23,7 @@ export default async function LoginPage({
             Welcome back
           </h1>
           <p className="text-slate-400 text-lg">
-            Enter your email — we&apos;ll send you a 6-digit code.
+            Enter your email — we&apos;ll send you a login code.
           </p>
           <p className="text-slate-500 text-sm">
             No password required. Just type the code from your email.
