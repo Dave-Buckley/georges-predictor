@@ -114,3 +114,30 @@ export const moveFixtureSchema = z.object({
 })
 
 export type MoveFixtureInput = z.infer<typeof moveFixtureSchema>
+
+// ─── Manual point adjustments (migration 020) ───────────────────────────────
+
+export const adjustPointsSchema = z
+  .object({
+    member_id: z.string().uuid('Invalid member ID'),
+    scope: z.enum(['gameweek', 'overall']),
+    gameweek_id: z
+      .string()
+      .uuid('Invalid gameweek ID')
+      .optional()
+      .or(z.literal('')),
+    new_total: z.coerce
+      .number()
+      .int('Points must be a whole number')
+      .min(0, 'Points cannot be negative'),
+    note: z
+      .string()
+      .max(500, 'Note must be 500 characters or fewer')
+      .optional(),
+  })
+  .refine(
+    (d) => d.scope !== 'gameweek' || (d.gameweek_id && d.gameweek_id.length > 0),
+    { message: 'Gameweek is required when scope is "gameweek"', path: ['gameweek_id'] },
+  )
+
+export type AdjustPointsInput = z.infer<typeof adjustPointsSchema>

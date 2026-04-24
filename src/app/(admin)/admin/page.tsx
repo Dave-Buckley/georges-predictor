@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { SyncStatus } from '@/components/admin/sync-status'
 import { CloseGameweekDialog } from '@/components/admin/close-gameweek-dialog'
+import { AdjustPointsDialog } from '@/components/admin/adjust-points-dialog'
 import { getCurrentSeason, getUpcomingSeason } from '@/lib/pre-season/seasons'
 import type { MemberRow, AdminNotificationRow, SyncLogRow, GameweekRow } from '@/lib/supabase/types'
 import { DownloadFullExport } from './_components/DownloadFullExport'
@@ -13,7 +14,13 @@ async function getDashboardData() {
   try {
     const supabase = createAdminClient()
 
-    const [membersResult, notificationsResult, syncLogResult] = await Promise.all([
+    const [
+      membersResult,
+      notificationsResult,
+      syncLogResult,
+      adjustMembersResult,
+      adjustGameweeksResult,
+    ] = await Promise.all([
       supabase.from('members').select('id, approval_status'),
       supabase
         .from('admin_notifications')
@@ -26,9 +33,23 @@ async function getDashboardData() {
         .order('synced_at', { ascending: false })
         .limit(1)
         .single(),
+      supabase
+        .from('members')
+        .select('id, display_name')
+        .eq('approval_status', 'approved')
+        .order('display_name'),
+      supabase.from('gameweeks').select('id, number').order('number'),
     ])
 
     const members = (membersResult.data ?? []) as Pick<MemberRow, 'id' | 'approval_status'>[]
+    const adjustMembers = (adjustMembersResult.data ?? []) as Array<{
+      id: string
+      display_name: string
+    }>
+    const adjustGameweeks = (adjustGameweeksResult.data ?? []) as Array<{
+      id: string
+      number: number
+    }>
     const notifications = (notificationsResult.data ?? []) as AdminNotificationRow[]
     const latestSync = syncLogResult.data as SyncLogRow | null
 
@@ -223,6 +244,8 @@ async function getDashboardData() {
       preSeasonCard,
       rolloverUrgent,
       rolloverArchived,
+      adjustMembers,
+      adjustGameweeks,
     }
   } catch {
     return {
@@ -242,6 +265,8 @@ async function getDashboardData() {
       preSeasonCard: null,
       rolloverUrgent: false,
       rolloverArchived: false,
+      adjustMembers: [] as Array<{ id: string; display_name: string }>,
+      adjustGameweeks: [] as Array<{ id: string; number: number }>,
     }
   }
 }
@@ -263,13 +288,24 @@ export default async function AdminDashboardPage() {
     preSeasonCard,
     rolloverUrgent,
     rolloverArchived,
+    adjustMembers,
+    adjustGameweeks,
   } = await getDashboardData()
 
   return (
     <div className="p-6 lg:p-8 max-w-5xl">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-500 mt-1">Here&apos;s what needs your attention.</p>
+      <div className="mb-8 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-gray-500 mt-1">Here&apos;s what needs your attention.</p>
+        </div>
+        {adjustMembers.length > 0 && adjustGameweeks.length > 0 && (
+          <AdjustPointsDialog
+            members={adjustMembers}
+            gameweeks={adjustGameweeks}
+            defaultGameweekId={activeGw?.id ?? null}
+          />
+        )}
       </div>
 
       {/* Fixture Sync */}

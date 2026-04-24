@@ -378,6 +378,7 @@ describe('shapeData (pure transform helper)', () => {
       losMembers: LOS_COMPETITION_MEMBERS,
       h2hSteals: H2H_STEALS,
       members: MEMBERS,
+      pointAdjustments: [],
       gwId: GW_ID,
     })
     expect(result.gwId).toBe(GW_ID)

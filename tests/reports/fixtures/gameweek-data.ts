@@ -179,6 +179,7 @@ export interface TableDataMap {
   members?: unknown[]
   bonus_schedule?: unknown[]
   los_competition_members?: unknown[]
+  point_adjustments?: unknown[]
 }
 
 /**

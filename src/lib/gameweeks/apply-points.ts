@@ -32,6 +32,11 @@ interface BonusRow {
   awarded: boolean | null
 }
 
+interface AdjustmentRow {
+  member_id: string
+  delta: number | null
+}
+
 /**
  * Computes weekly points per member for a gameweek. Pure once the DB calls
  * have returned. Returned map is member_id → weekly points (already including
@@ -41,29 +46,39 @@ async function computeWeeklyByMember(
   supabase: SupabaseClient,
   gwId: string,
 ): Promise<Map<string, number>> {
-  const [{ data: gw }, { data: fixtures }, { data: scores }, { data: bonuses }] =
-    await Promise.all([
-      supabase
-        .from('gameweeks')
-        .select('id, double_bubble')
-        .eq('id', gwId)
-        .single<GameweekRow>(),
-      supabase
-        .from('fixtures')
-        .select('id')
-        .eq('gameweek_id', gwId)
-        .returns<FixtureIdRow[]>(),
-      supabase
-        .from('prediction_scores')
-        .select('member_id, fixture_id, points_awarded')
-        .returns<ScoreRow[]>(),
-      supabase
-        .from('bonus_awards')
-        .select('member_id, points_awarded, awarded')
-        .eq('gameweek_id', gwId)
-        .eq('awarded', true)
-        .returns<BonusRow[]>(),
-    ])
+  const [
+    { data: gw },
+    { data: fixtures },
+    { data: scores },
+    { data: bonuses },
+    { data: adjustments },
+  ] = await Promise.all([
+    supabase
+      .from('gameweeks')
+      .select('id, double_bubble')
+      .eq('id', gwId)
+      .single<GameweekRow>(),
+    supabase
+      .from('fixtures')
+      .select('id')
+      .eq('gameweek_id', gwId)
+      .returns<FixtureIdRow[]>(),
+    supabase
+      .from('prediction_scores')
+      .select('member_id, fixture_id, points_awarded')
+      .returns<ScoreRow[]>(),
+    supabase
+      .from('bonus_awards')
+      .select('member_id, points_awarded, awarded')
+      .eq('gameweek_id', gwId)
+      .eq('awarded', true)
+      .returns<BonusRow[]>(),
+    supabase
+      .from('point_adjustments')
+      .select('member_id, delta')
+      .eq('gameweek_id', gwId)
+      .returns<AdjustmentRow[]>(),
+  ])
 
   const fixtureIds = new Set((fixtures ?? []).map((f) => f.id))
   const weekly = new Map<string, number>()
@@ -78,6 +93,12 @@ async function computeWeeklyByMember(
 
   if (gw?.double_bubble) {
     for (const [id, pts] of weekly) weekly.set(id, pts * 2)
+  }
+
+  // Manual admin adjustments are stored as final (post-Double-Bubble) deltas,
+  // so they layer on AFTER the ×2 above.
+  for (const a of adjustments ?? []) {
+    weekly.set(a.member_id, (weekly.get(a.member_id) ?? 0) + (a.delta ?? 0))
   }
 
   return weekly

@@ -277,6 +277,19 @@ export interface PrizeAwardRow {
   notes: string | null
 }
 
+/** Row shape for the public.point_adjustments table (migration 020) */
+export interface PointAdjustmentRow {
+  id: string
+  member_id: string
+  /** null = overall adjustment (applies to starting_points directly) */
+  gameweek_id: string | null
+  /** Signed delta in final display points (post-Double-Bubble for GW-scoped rows). */
+  delta: number
+  note: string | null
+  created_by: string | null
+  created_at: string
+}
+
 /** Row shape for the public.admin_settings table */
 export interface AdminSettingsRow {
   id: string

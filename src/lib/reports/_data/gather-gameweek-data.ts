@@ -95,6 +95,7 @@ export interface ShapeDataInput {
   losMembers: any[]
   h2hSteals: any[]
   members: any[]
+  pointAdjustments: any[]
   gwId: string
 }
 
@@ -115,6 +116,7 @@ export function shapeData(input: ShapeDataInput): GameweekReportData {
     losMembers,
     h2hSteals,
     members,
+    pointAdjustments,
     gwId,
   } = input
 
@@ -166,6 +168,13 @@ export function shapeData(input: ShapeDataInput): GameweekReportData {
     for (const [memberId, pts] of weeklyByMember) {
       weeklyByMember.set(memberId, pts * 2)
     }
+  }
+
+  // Manual admin adjustments (migration 020) are final post-Double-Bubble
+  // deltas, so they layer on AFTER the ×2 above.
+  for (const adj of pointAdjustments) {
+    const prev = weeklyByMember.get(adj.member_id) ?? 0
+    weeklyByMember.set(adj.member_id, prev + (adj.delta ?? 0))
   }
 
   // ─── Standings ────────────────────────────────────────────────────────────
@@ -332,6 +341,7 @@ export async function gatherGameweekData(
     { data: losMembers },
     { data: h2hSteals },
     { data: members },
+    { data: pointAdjustments },
   ] = await Promise.all([
     admin
       .from('gameweeks')
@@ -367,6 +377,10 @@ export async function gatherGameweekData(
       .from('members')
       .select('id, display_name, starting_points, email_weekly_personal, email_weekly_group')
       .eq('approval_status', 'approved'),
+    admin
+      .from('point_adjustments')
+      .select('member_id, delta')
+      .eq('gameweek_id', gwId),
   ])
 
   // Filter predictions + scores to only those in this gw (we can't cheaply
@@ -389,6 +403,7 @@ export async function gatherGameweekData(
     losMembers: losMembers ?? [],
     h2hSteals: h2hSteals ?? [],
     members: members ?? [],
+    pointAdjustments: pointAdjustments ?? [],
     gwId,
   })
 }
