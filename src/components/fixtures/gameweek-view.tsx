@@ -84,7 +84,12 @@ export default function GameweekView({
               fixture={fixture}
               showCountdown={isToday(fixture.kickoff_time)}
               prediction={predictions?.[fixture.id] ?? null}
-              onScoreChange={allLocked ? undefined : onScoreChange}
+              // Keep onScoreChange defined when the parent is the member's
+              // own form — even if the week is locked — so the prediction
+              // area still renders in read-only mode and the member can see
+              // the scores they picked. Locked steppers are disabled via the
+              // isLocked flag, not by yanking the callback.
+              onScoreChange={onScoreChange}
               isLocked={onScoreChange ? locked : undefined}
               hasSubmitted={submittedFixtureIds?.has(fixture.id) ?? false}
               scoreBreakdown={scoreBreakdowns?.[fixture.id] ?? null}
