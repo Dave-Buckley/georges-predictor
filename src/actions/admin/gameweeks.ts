@@ -107,11 +107,17 @@ export async function getCloseGameweekSummary(
 
   const bonusConfirmed = bonusSchedule?.confirmed ?? false
 
-  // Sum total points distributed
-  const { data: scores } = await supabase
-    .from('prediction_scores')
-    .select('points_awarded')
-    .eq('gameweek_id', gameweekId)
+  // Sum total points distributed.
+  // prediction_scores has no gameweek_id column — it links via fixture_id.
+  // Filter against this gameweek's fixture IDs instead.
+  const gameweekFixtureIds = allFixtures.map((f) => f.id)
+  const { data: scores } =
+    gameweekFixtureIds.length > 0
+      ? await supabase
+          .from('prediction_scores')
+          .select('points_awarded')
+          .in('fixture_id', gameweekFixtureIds)
+      : { data: [] as Array<{ points_awarded: number }> }
 
   const totalPointsDistributed = (scores ?? []).reduce(
     (sum: number, row: { points_awarded: number }) => sum + (row.points_awarded ?? 0),

@@ -124,7 +124,7 @@ describe('getCloseGameweekSummary', () => {
         if (table === 'prediction_scores') {
           return {
             select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockResolvedValue({ data: [], error: null }),
+              in: vi.fn().mockResolvedValue({ data: [], error: null }),
             }),
           }
         }
@@ -187,7 +187,7 @@ describe('getCloseGameweekSummary', () => {
         if (table === 'prediction_scores') {
           return {
             select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockResolvedValue({ data: [{ points_awarded: 10 }], error: null }),
+              in: vi.fn().mockResolvedValue({ data: [{ points_awarded: 10 }], error: null }),
             }),
           }
         }
@@ -247,7 +247,7 @@ describe('getCloseGameweekSummary', () => {
         if (table === 'prediction_scores') {
           return {
             select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockResolvedValue({ data: [{ points_awarded: 30 }, { points_awarded: 10 }], error: null }),
+              in: vi.fn().mockResolvedValue({ data: [{ points_awarded: 30 }, { points_awarded: 10 }], error: null }),
             }),
           }
         }
