@@ -21,6 +21,12 @@ interface WhatsAppCopyButtonProps {
    * the lock and surface the error to the user.
    */
   onBeforeLock?: () => Promise<{ success: boolean; error?: string }>
+  /**
+   * When true, the member's week is already locked. Tapping the button
+   * re-opens WhatsApp with the same picks so they can share again — no
+   * save, no lock, no warning dialog.
+   */
+  alreadyLocked?: boolean
 }
 
 type Step = 'idle' | 'warning' | 'copied'
@@ -47,6 +53,7 @@ export function WhatsAppCopyButton({
   bonusFixtureId,
   losTeamName,
   onBeforeLock,
+  alreadyLocked = false,
 }: WhatsAppCopyButtonProps) {
   const [open, setOpen] = useState(false)
   const [step, setStep] = useState<Step>('idle')
@@ -118,7 +125,14 @@ export function WhatsAppCopyButton({
       setStep('idle')
       setError(null)
     } else {
-      setStep('warning')
+      // For a member who's already locked the week, tapping the button is
+      // just a re-share — skip the warning and fire the share flow directly.
+      // handleConfirm handles stepping into 'copied'.
+      if (alreadyLocked) {
+        handleConfirm()
+      } else {
+        setStep('warning')
+      }
     }
   }
 
@@ -134,27 +148,38 @@ export function WhatsAppCopyButton({
     const waTab =
       typeof window !== 'undefined' ? window.open(waHref, '_blank') : null
 
+    // Re-shares (already locked) skip the warning step and land directly on
+    // the copied-state dialog. Set the text synchronously so the dialog isn't
+    // empty while the clipboard copy finishes.
+    if (alreadyLocked) {
+      setCopiedText(text)
+      setStep('copied')
+    }
+
     startTransition(async () => {
-      // 1. Save any un-submitted local picks first so the lock doesn't freeze
-      //    an empty DB state. Parent decides whether this is a no-op.
-      if (onBeforeLock) {
-        const saveResult = await onBeforeLock()
-        if (!saveResult.success) {
-          setError(saveResult.error ?? 'Could not save your picks before locking.')
-          return
+      // Save + lock only runs for the first share. A re-share doesn't need
+      // to save (edits are blocked once locked) or re-lock (idempotent,
+      // but unnecessary round trip).
+      if (!alreadyLocked) {
+        if (onBeforeLock) {
+          const saveResult = await onBeforeLock()
+          if (!saveResult.success) {
+            setError(saveResult.error ?? 'Could not save your picks before locking.')
+            return
+          }
         }
       }
 
-      // 2. Copy to clipboard as a belt-and-braces fallback — if the WhatsApp
-      //    tab was blocked, the member can still paste manually.
+      // Clipboard copy as a belt-and-braces fallback — if the WhatsApp tab
+      // was blocked, the member can still paste manually.
       const copied = await copyToClipboard(text)
 
-      // 3. Lock the week.
-      const result = await lockPredictionsForWeek(gameweekNumber)
-
-      if (!result.success) {
-        setError(result.error ?? 'Something went wrong. Please try again.')
-        return
+      if (!alreadyLocked) {
+        const result = await lockPredictionsForWeek(gameweekNumber)
+        if (!result.success) {
+          setError(result.error ?? 'Something went wrong. Please try again.')
+          return
+        }
       }
 
       setCopiedText(text)
@@ -175,9 +200,13 @@ export function WhatsAppCopyButton({
 
   function handleDone() {
     setOpen(false)
-    // Page refresh so the server re-reads isLocked and renders the locked
-    // state (disabled inputs, no submit button, "Locked" banner).
-    window.location.reload()
+    // On the first share we reload so the server re-reads isLocked and
+    // renders the locked state (disabled inputs, 'Locked' banner).
+    // Re-shares don't change the lock state — a reload would throw away
+    // any unsaved scroll position for no gain.
+    if (!alreadyLocked) {
+      window.location.reload()
+    }
   }
 
   return (

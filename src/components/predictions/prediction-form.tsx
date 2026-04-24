@@ -310,13 +310,13 @@ export default function PredictionForm({
   const allKickedOff = fixtures.every((f) => new Date(f.kickoff_time) <= now)
 
   // ── Derived layout flags ───────────────────────────────────────────────────
-  // Submit button only shows before every fixture kicks off. WhatsApp copy
-  // button shows for the entire week so long as the week isn't locked —
-  // tapping it with no picks returns a clear error via saveCurrentPicks
-  // instead of hiding the whole affordance. Users kept missing the button
-  // when it was gated on having typed scores, so this is intentionally wide.
+  // Submit button only shows before every fixture kicks off AND while the week
+  // is unlocked. The WhatsApp button stays visible at all times so members
+  // can share (or re-share) their picks whenever they want — locked or not,
+  // before or after kickoff. Tapping it with no picks surfaces a clear error
+  // via saveCurrentPicks rather than hiding the whole affordance.
   const hasExistingSubmitArea = !allKickedOff && !isLocked
-  const whatsAppButtonVisible = !isLocked
+  const whatsAppButtonVisible = true
   const stickyAreaVisible = hasExistingSubmitArea || whatsAppButtonVisible
   const totalBarBottom = !stickyAreaVisible
     ? 'bottom-0'
@@ -368,6 +368,7 @@ export default function PredictionForm({
               : null
           }
           onBeforeLock={saveCurrentPicks}
+          alreadyLocked={isLocked}
         />
       )}
 
@@ -511,6 +512,7 @@ export default function PredictionForm({
                 : null
             }
             onBeforeLock={saveCurrentPicks}
+            alreadyLocked={isLocked}
           />
         </div>
       )}
@@ -622,12 +624,10 @@ export default function PredictionForm({
       )}
 
       {/* 9. Sticky submit area — submit button + copy-to-WhatsApp button.
-            The submit button is only visible before any fixture kicks off.
-            The WhatsApp button is visible for the full week whenever the
-            member has saved at least one pick, so they can copy + share even
-            after some fixtures have started. Both hide once the week is
-            locked via WhatsApp. */}
-      {!isLocked && (hasExistingSubmitArea || whatsAppButtonVisible) && (
+            Submit button only renders before kickoff and while unlocked.
+            WhatsApp button stays visible always (including after locking)
+            so members can share their picks again any time. */}
+      {(hasExistingSubmitArea || whatsAppButtonVisible) && (
         <div className="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-700 p-4 z-10 space-y-2">
           {/* Mirror the inline feedback right next to the action button.
               Without this, validation errors render high up the page and the
@@ -683,6 +683,7 @@ export default function PredictionForm({
                   : null
               }
               onBeforeLock={saveCurrentPicks}
+              alreadyLocked={isLocked}
             />
           )}
         </div>
