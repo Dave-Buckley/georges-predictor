@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
-import { AlertTriangle, CheckCircle, Copy, Lock, MessageCircle, X } from 'lucide-react'
+import { AlertTriangle, CheckCircle, Copy, MessageCircle, X } from 'lucide-react'
 import type { FixtureWithTeams } from '@/lib/supabase/types'
 import { lockPredictionsForWeek } from '@/actions/predictions'
 
@@ -126,6 +126,14 @@ export function WhatsAppCopyButton({
     setError(null)
     const text = buildWhatsAppText()
 
+    // Open WhatsApp in a new tab synchronously while we still hold the user's
+    // click gesture — otherwise mobile popup blockers swallow it. wa.me opens
+    // the app (mobile) or WhatsApp Web (desktop) with the text pre-filled and
+    // lets the member pick the group chat.
+    const waHref = `https://wa.me/?text=${encodeURIComponent(text)}`
+    const waTab =
+      typeof window !== 'undefined' ? window.open(waHref, '_blank') : null
+
     startTransition(async () => {
       // 1. Save any un-submitted local picks first so the lock doesn't freeze
       //    an empty DB state. Parent decides whether this is a no-op.
@@ -137,7 +145,8 @@ export function WhatsAppCopyButton({
         }
       }
 
-      // 2. Copy to clipboard (non-blocking — lock still proceeds if this fails).
+      // 2. Copy to clipboard as a belt-and-braces fallback — if the WhatsApp
+      //    tab was blocked, the member can still paste manually.
       const copied = await copyToClipboard(text)
 
       // 3. Lock the week.
@@ -150,9 +159,9 @@ export function WhatsAppCopyButton({
 
       setCopiedText(text)
       setStep('copied')
-      if (!copied) {
+      if (!copied && !waTab) {
         setError(
-          'Predictions locked, but auto-copy failed. Long-press the text below and copy manually.',
+          'Couldn’t open WhatsApp or copy the picks. Long-press the text below and copy manually.',
         )
       }
     })
@@ -189,7 +198,7 @@ export function WhatsAppCopyButton({
           <Dialog.Content className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-6 w-[90vw] max-w-md">
             <div className="flex items-center justify-between mb-4">
               <Dialog.Title className="text-lg font-bold text-white">
-                {step === 'copied' ? 'Picks copied' : 'Lock your predictions?'}
+                {step === 'copied' ? 'Picks locked' : 'Lock your predictions?'}
               </Dialog.Title>
               <Dialog.Close asChild>
                 <button
@@ -204,8 +213,8 @@ export function WhatsAppCopyButton({
 
             <Dialog.Description className="sr-only">
               {step === 'copied'
-                ? 'Your predictions have been copied and locked for this gameweek.'
-                : 'Warning — confirming will lock your predictions for this gameweek.'}
+                ? 'Your predictions are locked. WhatsApp should have opened in a new tab with your picks pre-filled.'
+                : 'Warning — confirming will lock your predictions and open WhatsApp with your picks.'}
             </Dialog.Description>
 
             {step === 'warning' && (
@@ -215,10 +224,10 @@ export function WhatsAppCopyButton({
                   <div className="text-sm text-amber-200 leading-relaxed">
                     <p className="font-semibold mb-1">This will lock your picks for GW{gameweekNumber}.</p>
                     <p>
-                      We&apos;ll copy them as a WhatsApp-friendly message so you can paste
-                      them into the group chat. Once you confirm, you won&apos;t be able to
-                      change your predictions, bonus or LOS pick for this week unless
-                      George reopens them.
+                      WhatsApp will open with your picks ready to send — just
+                      pick the group chat. Once you confirm, you won&apos;t be
+                      able to change your predictions, bonus or LOS pick for
+                      this week unless George reopens them.
                     </p>
                   </div>
                 </div>
@@ -248,8 +257,8 @@ export function WhatsAppCopyButton({
                       'Locking…'
                     ) : (
                       <>
-                        <Lock className="w-4 h-4" />
-                        Copy + lock
+                        <MessageCircle className="w-4 h-4" />
+                        Open WhatsApp &amp; lock
                       </>
                     )}
                   </button>
@@ -262,8 +271,13 @@ export function WhatsAppCopyButton({
                 <div className="flex items-start gap-3 p-4 rounded-xl bg-green-900/30 border border-green-700/50">
                   <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
                   <div className="text-sm text-green-200 leading-relaxed">
-                    <p className="font-semibold mb-1">Copied to clipboard.</p>
-                    <p>Paste it into the George&apos;s Predictor WhatsApp chat.</p>
+                    <p className="font-semibold mb-1">WhatsApp should have opened in a new tab.</p>
+                    <p>
+                      Pick the group chat and hit send. If it didn&apos;t open,
+                      tap <span className="font-semibold">Open WhatsApp</span> below.
+                      Your picks are also in your clipboard — paste with a
+                      long-press if you need to.
+                    </p>
                   </div>
                 </div>
 
@@ -277,7 +291,7 @@ export function WhatsAppCopyButton({
                   </p>
                 )}
 
-                <div className="flex gap-3 justify-end">
+                <div className="flex flex-wrap gap-3 justify-end">
                   <button
                     type="button"
                     onClick={handleRecopy}
@@ -286,6 +300,15 @@ export function WhatsAppCopyButton({
                     <Copy className="w-4 h-4" />
                     Copy again
                   </button>
+                  <a
+                    href={`https://wa.me/?text=${encodeURIComponent(copiedText)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-semibold flex items-center gap-2"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    Open WhatsApp
+                  </a>
                   <button
                     type="button"
                     onClick={handleDone}
