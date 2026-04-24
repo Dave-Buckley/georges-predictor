@@ -1,95 +1,83 @@
-# Pickup — 16 April 2026 session
+# Pickup — 24 April 2026
 
-Everything in git is pushed. Two outstanding things to verify when you're back.
+## ⚠️ ACTION REQUIRED — update Supabase email template
 
-## 1. Run migration 019 SQL in Supabase
+The login flow just shipped now uses a **6-digit code** instead of a magic
+link (fixes Barny's login loop — eliminates the whole class of
+prefetch/webview bugs). For this to work, the Supabase "Magic Link" email
+template must include `{{ .Token }}`. The default template only includes
+the link.
 
-This MUST run before the fixture moves + Christmas Present fix take effect.
+**Do this now:**
 
-Open: https://supabase.com/dashboard/project/unpdsomipodadnlnbioq/sql/new
+1. Open https://supabase.com/dashboard/project/unpdsomipodadnlnbioq/auth/templates
+2. Click the **Magic Link** template
+3. Replace the body with the HTML below
+4. Save
 
-Paste and run:
+```html
+<h2>Your George's Predictor login code</h2>
 
-```sql
-BEGIN;
+<p>Hi — your 6-digit login code is:</p>
 
-ALTER TABLE public.fixtures
-  ADD COLUMN IF NOT EXISTS manual_gameweek_override boolean NOT NULL DEFAULT false;
+<p style="font-size: 32px; font-weight: bold; letter-spacing: 8px; font-family: monospace; margin: 24px 0; padding: 16px 24px; background: #f4f4f4; border-radius: 8px; display: inline-block;">
+  {{ .Token }}
+</p>
 
-COMMENT ON COLUMN public.fixtures.manual_gameweek_override IS
-  'When true, sync preserves gameweek_id instead of reverting to API matchday.';
+<p>Type this into the login screen on George's Predictor. The code expires in 1 hour.</p>
 
-UPDATE public.fixtures
-SET gameweek_id = (SELECT id FROM public.gameweeks WHERE number = 33),
-    manual_gameweek_override = true,
-    is_rescheduled = true
-WHERE id IN (
-  '9ca38a78-dfee-40fc-8af8-3e3aba0b4225',  -- Brighton vs Chelsea
-  '7b953a65-caeb-4874-9a14-b9b1d3dd34b2',  -- Bournemouth vs Leeds
-  'd2be9f53-4bed-480e-b8ea-6bba4d4e4dbf'   -- Burnley vs Man City
-);
+<hr style="margin: 32px 0; border: none; border-top: 1px solid #e5e5e5;" />
 
-UPDATE public.additional_prizes
-SET cash_value = 2000
-WHERE name = 'Christmas Present';
+<p style="color: #666; font-size: 14px;">
+  Or if you prefer, you can click this link to log in:
+  <br />
+  <a href="{{ .ConfirmationURL }}">Log me in</a>
+</p>
 
-COMMIT;
+<p style="color: #999; font-size: 12px; margin-top: 24px;">
+  Didn't request this? Ignore this email — your account is safe.
+</p>
 ```
 
-Expected: "Success. No rows returned."
+After saving, test by logging in fresh. Any existing users requesting a
+code from the old template will just see the link (no code) — they'll
+need to request a new code after the template is updated. No harm done.
 
-After it runs:
-- GW33 shows all 13 fixtures (Brighton vs Chelsea, Bournemouth vs Leeds, Burnley vs Man City move in from GW34)
-- Christmas Present prize = £20
-- Future manual fixture moves via /admin persist across API syncs
+## ⚠️ Also — forward to Barny
 
-## 2. Verify WhatsApp button is visible
+Once the template is updated, tell Barny:
 
-Latest commit `bc27efa` renders the green "Copy my picks to WhatsApp" button in THREE places on every `/gameweeks/[n]` page:
-- Top of the page (above submission counter)
-- Inline after the fixture list
-- Sticky at the bottom alongside Update Predictions
+> "Login works differently now — enter your email, check your inbox for
+> a 6-digit code, type it into the app. No more link clicking needed.
+> If you don't see a code in the email, George needs to save the new
+> template (ping Dave if this happens)."
 
-If you still don't see any of them:
-1. Open an **incognito window** (rules out browser cache + service worker)
-2. Log in fresh and go to `/gameweeks/33`
-3. If incognito ALSO shows nothing, something else is broken — share a screenshot and we'll dig in
+## What shipped this session
 
-If incognito shows the button, it's a stale client bundle in your normal browser. Clear site data for `georges-predictor.vercel.app`.
+Three fixes pushed to master:
 
-## 3. Forward the email to George
+1. **`9437645`** — fix(admin): close-gameweek dialog shows correct points
+   total. Was displaying 0 because `prediction_scores` query filtered on
+   a non-existent `gameweek_id` column; now filters by fixture IDs.
+   GW33 shows the real ~1,190 point total.
 
-An update summary + fixture-move how-to was sent to `dave.john.buckley@gmail.com`. Resend is in test mode so I couldn't send directly to George. Forward it to `king_gegz@aol.com` when you're ready.
+2. **`dbd859e`** — fix(predictions): WhatsApp share button now opens
+   WhatsApp with picks pre-filled instead of only copying to clipboard.
+   George's "nothing happens" report.
 
-## Everything shipped this session
+3. **`f935521`** — feat(login): surface `?error=auth` with diagnostic
+   banner on the login page, explaining prefetch/webview issues.
 
-- Bonus descriptions aligned with George's final wording (already done pre-session)
-- Double Bubble: selectable bonus, no member fixture pick required
-- Prizes: 11 descriptions fixed, 3 ongoing prizes added, Bore Draw + Fantastic 4 removed, Christmas Present bumped to £20 (SQL pending)
-- GW33 rollup: Brighton/Chelsea, Bournemouth/Leeds, Burnley/Man City moved from GW34 (SQL pending)
-- Fixture ordering: strict kickoff-time on predictions page
-- "This Week" points column on standings + dashboard
-- How It Works + printable guide rewritten for new bonus/prize list
-- Copy-to-WhatsApp button with confirm dialog + week lock
-- LOS reminder on Update Predictions click
-- `prediction_locks` table created
-- `manual_gameweek_override` column (via SQL)
-- Sync pipeline respects manual fixture moves
-- Update email drafted + sent to Dave for forwarding to George
+4. **`<this commit>`** — feat(login): switch from magic link flow to
+   6-digit OTP code flow. Members now enter a code instead of clicking
+   a link. Magic link still works as fallback for users whose email
+   clients handle it cleanly.
 
-## Pushed commits this session (most recent first)
+## Tell George (when ready)
 
-```
-bc27efa fix(predictions): render WhatsApp button at top of page too
-2fdcaa2 fix(predictions): render inline WhatsApp button alongside sticky one
-3d841e8 fix(predictions): always show WhatsApp button when week isn't locked
-9de6f03 feat(fixtures): manual gameweek override + LOS reminder + prize fixes
-4c676f5 fix(predictions): show WhatsApp button on typed picks; save-before-lock
-85ece57 fix(predictions): keep WhatsApp button visible after kickoff
-b4571f6 feat(predictions): copy-to-WhatsApp button with confirm + week lock
-5d03d38 docs(how-it-works): align bonuses + prizes with George's final list
-3261f01 feat(tables): show this-week points alongside season total
-efde01e feat(prizes): sync to George's final list
-c3bd5dc feat(bonuses): add Double Bubble as a pickable bonus
-e73ce95 fix(predictions): order fixtures strictly by kickoff date
-```
+> "Two fixes live: (1) Close Gameweek 33 now shows the real points
+> total (was a display bug — click it when you're ready, everyone's
+> season totals will update automatically). (2) WhatsApp share button
+> now opens WhatsApp with your picks pre-filled — tell the group.
+> Also: Barny and anyone else hitting login issues should retry —
+> they'll now get a 6-digit code to type in instead of a link to click."

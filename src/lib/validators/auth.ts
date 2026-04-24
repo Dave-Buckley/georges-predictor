@@ -45,3 +45,18 @@ export const passwordLoginSchema = z.object({
 })
 
 export type PasswordLoginInput = z.infer<typeof passwordLoginSchema>
+
+// ─── Verify Login Code Schema ─────────────────────────────────────────────────
+
+export const verifyLoginCodeSchema = z.object({
+  email: z
+    .string()
+    .email('Please enter a valid email address')
+    .transform((val) => val.toLowerCase()),
+  token: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/, 'Enter the 6-digit code from your email'),
+})
+
+export type VerifyLoginCodeInput = z.infer<typeof verifyLoginCodeSchema>

@@ -34,6 +34,7 @@ export function createMockSupabaseClient() {
       getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
       signInWithPassword: vi.fn().mockResolvedValue({ data: null, error: null }),
       signInWithOtp: vi.fn().mockResolvedValue({ data: null, error: null }),
+      verifyOtp: vi.fn().mockResolvedValue({ data: null, error: null }),
       signOut: vi.fn().mockResolvedValue({ error: null }),
       exchangeCodeForSession: vi.fn().mockResolvedValue({ data: null, error: null }),
       admin: {

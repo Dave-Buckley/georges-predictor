@@ -6,6 +6,7 @@ import {
   signupSchema,
   loginSchema,
   passwordLoginSchema,
+  verifyLoginCodeSchema,
 } from '@/lib/validators/auth'
 import { sendAdminSignupNotification } from '@/lib/email'
 
@@ -155,6 +156,48 @@ export async function requestMagicLink(
     // Supabase returns a generic error if the email is not registered.
     // Surface a helpful message to the member.
     return { error: 'No account found with this email. Have you signed up?' }
+  }
+
+  return { success: true }
+}
+
+// ─── Verify Login Code ────────────────────────────────────────────────────────
+
+/**
+ * Verifies a 6-digit email OTP code and establishes a session.
+ * The companion to requestMagicLink: members type the code from their email
+ * instead of clicking the link, which sidesteps email prefetchers (Outlook,
+ * AOL, Yahoo) that consume magic links before the user taps them.
+ *
+ * Requires the Supabase email template to include `{{ .Token }}` — see
+ * the PICKUP note written when this action shipped.
+ */
+export async function verifyLoginCode(
+  formData: FormData,
+): Promise<{ success?: boolean; error?: string }> {
+  const raw = {
+    email: formData.get('email'),
+    token: formData.get('token'),
+  }
+
+  const result = verifyLoginCodeSchema.safeParse(raw)
+  if (!result.success) {
+    const firstError = result.error.issues[0]?.message ?? 'Invalid code'
+    return { error: firstError }
+  }
+
+  const { email, token } = result.data
+  const supabase = await createServerSupabaseClient()
+
+  const { error } = await supabase.auth.verifyOtp({
+    email,
+    token,
+    type: 'email',
+  })
+
+  if (error) {
+    console.error('[verifyLoginCode] verify error:', error.message)
+    return { error: 'That code is wrong or has expired. Request a new one.' }
   }
 
   return { success: true }

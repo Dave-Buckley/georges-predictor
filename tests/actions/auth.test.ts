@@ -367,6 +367,63 @@ describe('requestMagicLink', () => {
   })
 })
 
+describe('verifyLoginCode', () => {
+  beforeEach(async () => {
+    vi.resetModules()
+    mockSupabase = createMockSupabaseClient()
+    const { createServerSupabaseClient } = await import('@/lib/supabase/server')
+    vi.mocked(createServerSupabaseClient).mockResolvedValue(mockSupabase as any)
+  })
+
+  it('calls verifyOtp with type=email and returns success', async () => {
+    mockSupabase.auth.verifyOtp = vi
+      .fn()
+      .mockResolvedValue({ data: { session: {} }, error: null })
+
+    const { verifyLoginCode } = await import('@/actions/auth')
+
+    const formData = makeFormData({ email: 'user@example.com', token: '123456' })
+
+    const result = await verifyLoginCode(formData)
+
+    expect(result).toEqual({ success: true })
+    expect(mockSupabase.auth.verifyOtp).toHaveBeenCalledWith({
+      email: 'user@example.com',
+      token: '123456',
+      type: 'email',
+    })
+  })
+
+  it('rejects a non-6-digit code without calling Supabase', async () => {
+    mockSupabase.auth.verifyOtp = vi.fn()
+
+    const { verifyLoginCode } = await import('@/actions/auth')
+
+    const formData = makeFormData({ email: 'user@example.com', token: '12' })
+
+    const result = await verifyLoginCode(formData)
+
+    expect(result).toHaveProperty('error')
+    expect(mockSupabase.auth.verifyOtp).not.toHaveBeenCalled()
+  })
+
+  it('returns a friendly error when Supabase rejects the code', async () => {
+    mockSupabase.auth.verifyOtp = vi.fn().mockResolvedValue({
+      data: null,
+      error: { message: 'Token has expired or is invalid' },
+    })
+
+    const { verifyLoginCode } = await import('@/actions/auth')
+
+    const formData = makeFormData({ email: 'user@example.com', token: '123456' })
+
+    const result = await verifyLoginCode(formData)
+
+    expect(result).toHaveProperty('error')
+    expect((result as { error: string }).error).toMatch(/expired/i)
+  })
+})
+
 describe('sendAdminSignupNotification', () => {
   it('sends email to ADMIN_EMAIL_GEORGE with correct subject and details', async () => {
     process.env.ADMIN_EMAIL_GEORGE = 'george@example.com'
