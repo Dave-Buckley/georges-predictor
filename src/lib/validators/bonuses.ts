@@ -26,6 +26,12 @@ export type SetBonusInput = z.infer<typeof setBonusSchema>
 export const confirmBonusAwardSchema = z.object({
   award_id: z.string().uuid({ message: 'Invalid award ID' }),
   awarded: z.boolean(),
+  points_awarded: z
+    .number()
+    .int()
+    .min(0, { message: 'Points cannot be negative' })
+    .max(1000, { message: 'Points too high' })
+    .optional(),
 })
 
 export type ConfirmBonusAwardInput = z.infer<typeof confirmBonusAwardSchema>

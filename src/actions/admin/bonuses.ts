@@ -221,10 +221,15 @@ export async function confirmBonusAward(
 
   const { userId } = auth
 
+  const pointsRaw = formData.get('points_awarded')
   const raw = {
     award_id: formData.get('award_id'),
     // Parse boolean from string
     awarded: formData.get('awarded') === 'true',
+    // Optional override — only included if the form sent it
+    ...(pointsRaw != null && pointsRaw !== ''
+      ? { points_awarded: Number(pointsRaw) }
+      : {}),
   }
 
   const parsed = confirmBonusAwardSchema.safeParse(raw)
@@ -233,16 +238,26 @@ export async function confirmBonusAward(
     return { error: firstError }
   }
 
-  const { award_id, awarded } = parsed.data
+  const { award_id, awarded, points_awarded } = parsed.data
   const adminClient = createAdminClient()
+
+  const updatePayload: {
+    awarded: boolean
+    confirmed_by: string
+    confirmed_at: string
+    points_awarded?: number
+  } = {
+    awarded,
+    confirmed_by: userId,
+    confirmed_at: new Date().toISOString(),
+  }
+  if (points_awarded !== undefined) {
+    updatePayload.points_awarded = points_awarded
+  }
 
   const { error: updateError } = await adminClient
     .from('bonus_awards')
-    .update({
-      awarded,
-      confirmed_by: userId,
-      confirmed_at: new Date().toISOString(),
-    })
+    .update(updatePayload)
     .eq('id', award_id)
 
   if (updateError) {
