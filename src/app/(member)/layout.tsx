@@ -121,6 +121,12 @@ export default async function MemberLayout({ children }: MemberLayoutProps) {
               My Predictions
             </Link>
             <Link
+              href="/tables"
+              className="px-4 py-3 text-sm font-medium text-slate-300 hover:text-white whitespace-nowrap border-b-2 border-transparent hover:border-purple-500 transition"
+            >
+              Tables
+            </Link>
+            <Link
               href="/bonuses"
               className="px-4 py-3 text-sm font-medium text-slate-300 hover:text-white whitespace-nowrap border-b-2 border-transparent hover:border-purple-500 transition"
             >
