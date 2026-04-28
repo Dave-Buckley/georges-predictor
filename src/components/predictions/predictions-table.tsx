@@ -114,22 +114,39 @@ export function PredictionsTable({ members, fixtures, predictions }: Predictions
                     const pred = predictionMap.get(`${member.id}:${fixture.id}`)
                     const hasResult =
                       fixture.home_score !== null && fixture.away_score !== null
-                    const isCorrect =
+                    const isExact =
                       hasResult &&
                       pred !== undefined &&
                       pred.home_score === fixture.home_score &&
                       pred.away_score === fixture.away_score
+                    const sign = (h: number, a: number) =>
+                      h > a ? 'H' : h < a ? 'A' : 'D'
+                    const isResultCorrect =
+                      hasResult &&
+                      pred !== undefined &&
+                      !isExact &&
+                      sign(pred.home_score, pred.away_score) ===
+                        sign(fixture.home_score!, fixture.away_score!)
 
                     return (
                       <td
                         key={fixture.id}
                         className={`px-3 py-2.5 text-center text-sm border-r border-gray-100 last:border-r-0 ${
-                          isCorrect
+                          isExact
                             ? 'bg-green-50 text-green-800 font-semibold'
-                            : pred
-                              ? 'text-gray-700'
-                              : 'text-gray-300'
+                            : isResultCorrect
+                              ? 'bg-blue-50 text-blue-800 font-semibold'
+                              : pred
+                                ? 'text-gray-700'
+                                : 'text-gray-300'
                         }`}
+                        title={
+                          isExact
+                            ? 'Correct score (30 pts)'
+                            : isResultCorrect
+                              ? 'Correct result (10 pts)'
+                              : undefined
+                        }
                       >
                         {pred ? `${pred.home_score}-${pred.away_score}` : '—'}
                       </td>

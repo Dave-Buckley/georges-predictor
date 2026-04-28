@@ -43,11 +43,39 @@ async function getBonusPageData() {
       .is('awarded', null),
   ])
 
+  const pendingAwards = (pendingAwardsResult.data ?? []) as unknown as AwardWithDetails[]
+
+  // Fetch the member's prediction for each pending award's fixture so admin
+  // can see the predicted score next to the bonus pick (saves a trip to WhatsApp).
+  const memberIds = Array.from(
+    new Set(pendingAwards.map((a) => a.member_id).filter(Boolean))
+  )
+  const fixtureIds = Array.from(
+    new Set(pendingAwards.map((a) => a.fixture_id).filter((id): id is string => Boolean(id)))
+  )
+
+  const predictionsByKey = new Map<string, { home_score: number; away_score: number }>()
+  if (memberIds.length > 0 && fixtureIds.length > 0) {
+    const predictionsResult = await supabase
+      .from('predictions')
+      .select('member_id, fixture_id, home_score, away_score')
+      .in('member_id', memberIds)
+      .in('fixture_id', fixtureIds)
+
+    for (const p of predictionsResult.data ?? []) {
+      predictionsByKey.set(`${p.member_id}::${p.fixture_id}`, {
+        home_score: p.home_score,
+        away_score: p.away_score,
+      })
+    }
+  }
+
   return {
     bonusTypes: (bonusTypesResult.data ?? []) as BonusTypeRow[],
     schedule: (scheduleResult.data ?? []) as BonusScheduleWithType[],
     gameweeks: (gameweeksResult.data ?? []) as GameweekRow[],
-    pendingAwards: (pendingAwardsResult.data ?? []) as unknown as AwardWithDetails[],
+    pendingAwards,
+    predictionsByKey,
   }
 }
 
@@ -59,7 +87,7 @@ function getRowClass(status: string): string {
 }
 
 export default async function BonusesPage() {
-  const { bonusTypes, schedule, gameweeks, pendingAwards } = await getBonusPageData()
+  const { bonusTypes, schedule, gameweeks, pendingAwards, predictionsByKey } = await getBonusPageData()
 
   // Build a map of gameweek_id -> schedule row for quick lookup
   const scheduleByGwId = new Map<string, BonusScheduleWithType>()
@@ -287,20 +315,26 @@ export default async function BonusesPage() {
             {gameweeksWithPending.map((gw) => {
               const gwAwards = pendingByGwId.get(gw.id) ?? []
               // Map to ConfirmBonusAwards shape
-              const awardItems = gwAwards.map((a) => ({
-                id: a.id,
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                member_display_name: (a as any).members?.display_name ?? 'Unknown',
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                bonus_type_name: (a as any).bonus_types?.name ?? 'Unknown',
-                fixture_label: (() => {
+              const awardItems = gwAwards.map((a) => {
+                const prediction = a.fixture_id
+                  ? predictionsByKey.get(`${a.member_id}::${a.fixture_id}`) ?? null
+                  : null
+                return {
+                  id: a.id,
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  const f = (a as any).fixtures
-                  if (!f) return null
-                  return `${f.home_team?.name ?? '?'} vs ${f.away_team?.name ?? '?'}`
-                })(),
-                awarded: a.awarded ?? null,
-              }))
+                  member_display_name: (a as any).members?.display_name ?? 'Unknown',
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  bonus_type_name: (a as any).bonus_types?.name ?? 'Unknown',
+                  fixture_label: (() => {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const f = (a as any).fixtures
+                    if (!f) return null
+                    return `${f.home_team?.name ?? '?'} vs ${f.away_team?.name ?? '?'}`
+                  })(),
+                  prediction,
+                  awarded: a.awarded ?? null,
+                }
+              })
 
               return (
                 <ConfirmBonusAwards

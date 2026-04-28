@@ -10,6 +10,7 @@ interface BonusAwardItem {
   member_display_name: string
   bonus_type_name: string
   fixture_label: string | null
+  prediction: { home_score: number; away_score: number } | null
   awarded: boolean | null
 }
 
@@ -128,6 +129,11 @@ export function ConfirmBonusAwards({
                       <span className="font-medium text-gray-800">{award.bonus_type_name}</span>
                       {award.fixture_label && (
                         <p className="text-xs text-gray-400 mt-0.5">{award.fixture_label}</p>
+                      )}
+                      {award.prediction && (
+                        <p className="text-xs text-purple-700 font-semibold mt-0.5">
+                          Predicted: {award.prediction.home_score}-{award.prediction.away_score}
+                        </p>
                       )}
                     </div>
                   </td>
