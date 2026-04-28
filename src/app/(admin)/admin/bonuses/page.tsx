@@ -30,6 +30,7 @@ async function getBonusPageData() {
     scheduleResult,
     gameweeksResult,
     pendingAwardsResult,
+    goldenGloryAwardsResult,
   ] = await Promise.all([
     supabase.from('bonus_types').select('*').order('name'),
     supabase
@@ -41,9 +42,23 @@ async function getBonusPageData() {
       .from('bonus_awards')
       .select('*, members(display_name), bonus_types(name), fixtures(home_team:teams!home_team_id(name), away_team:teams!away_team_id(name))')
       .is('awarded', null),
+    // Also load already-reviewed Golden Glory awards so George can edit a wrong call.
+    supabase
+      .from('bonus_awards')
+      .select('*, members(display_name), bonus_types!inner(name), fixtures(home_team:teams!home_team_id(name), away_team:teams!away_team_id(name))')
+      .eq('bonus_types.name', 'Golden Glory')
+      .not('awarded', 'is', null),
   ])
 
-  const pendingAwards = (pendingAwardsResult.data ?? []) as unknown as AwardWithDetails[]
+  // Merge pending + reviewed-Golden-Glory awards (deduped by id).
+  const awardsById = new Map<string, AwardWithDetails>()
+  for (const a of (pendingAwardsResult.data ?? []) as unknown as AwardWithDetails[]) {
+    awardsById.set(a.id, a)
+  }
+  for (const a of (goldenGloryAwardsResult.data ?? []) as unknown as AwardWithDetails[]) {
+    awardsById.set(a.id, a)
+  }
+  const pendingAwards = Array.from(awardsById.values())
 
   // Fetch the member's prediction for each pending award's fixture so admin
   // can see the predicted score next to the bonus pick (saves a trip to WhatsApp).
@@ -333,6 +348,7 @@ export default async function BonusesPage() {
                   })(),
                   prediction,
                   awarded: a.awarded ?? null,
+                  points_awarded: a.points_awarded ?? 0,
                 }
               })
 

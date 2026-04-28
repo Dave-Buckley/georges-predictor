@@ -12,6 +12,7 @@ interface BonusAwardItem {
   fixture_label: string | null
   prediction: { home_score: number; away_score: number } | null
   awarded: boolean | null
+  points_awarded: number
 }
 
 interface ConfirmBonusAwardsProps {
@@ -156,48 +157,70 @@ export function ConfirmBonusAwards({
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    {award.awarded === null ? (
+                    {award.bonus_type_name === 'Golden Glory' ? (
                       <div className="flex items-center justify-end gap-2 flex-wrap">
-                        {award.bonus_type_name === 'Golden Glory' ? (
-                          <>
-                            <form action={confirmBonusAward as unknown as (formData: FormData) => void}>
-                              <input type="hidden" name="award_id" value={award.id} />
-                              <input type="hidden" name="awarded" value="true" />
-                              <input type="hidden" name="points_awarded" value="10" />
-                              <button
-                                type="submit"
-                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-green-50 hover:bg-green-100 border border-green-200 text-green-700 text-xs font-medium transition-colors"
-                              >
-                                <CheckCircle className="w-3 h-3" />
-                                Approve 10pt
-                              </button>
-                            </form>
-                            <form action={confirmBonusAward as unknown as (formData: FormData) => void}>
-                              <input type="hidden" name="award_id" value={award.id} />
-                              <input type="hidden" name="awarded" value="true" />
-                              <input type="hidden" name="points_awarded" value="30" />
-                              <button
-                                type="submit"
-                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 text-emerald-800 text-xs font-semibold transition-colors"
-                              >
-                                <CheckCircle className="w-3 h-3" />
-                                Approve 30pt
-                              </button>
-                            </form>
-                          </>
-                        ) : (
-                          <form action={confirmBonusAward as unknown as (formData: FormData) => void}>
-                            <input type="hidden" name="award_id" value={award.id} />
-                            <input type="hidden" name="awarded" value="true" />
-                            <button
-                              type="submit"
-                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-green-50 hover:bg-green-100 border border-green-200 text-green-700 text-xs font-medium transition-colors"
-                            >
-                              <CheckCircle className="w-3 h-3" />
-                              Approve
-                            </button>
-                          </form>
-                        )}
+                        <form action={confirmBonusAward as unknown as (formData: FormData) => void}>
+                          <input type="hidden" name="award_id" value={award.id} />
+                          <input type="hidden" name="awarded" value="true" />
+                          <input type="hidden" name="points_awarded" value="10" />
+                          <button
+                            type="submit"
+                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-xs font-medium transition-colors ${
+                              award.awarded === true && award.points_awarded === 10
+                                ? 'bg-green-100 border-green-400 text-green-800 ring-2 ring-green-300'
+                                : 'bg-green-50 hover:bg-green-100 border-green-200 text-green-700'
+                            }`}
+                          >
+                            <CheckCircle className="w-3 h-3" />
+                            {award.awarded === true && award.points_awarded === 10 ? '10pt ✓' : 'Approve 10pt'}
+                          </button>
+                        </form>
+                        <form action={confirmBonusAward as unknown as (formData: FormData) => void}>
+                          <input type="hidden" name="award_id" value={award.id} />
+                          <input type="hidden" name="awarded" value="true" />
+                          <input type="hidden" name="points_awarded" value="30" />
+                          <button
+                            type="submit"
+                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-xs font-semibold transition-colors ${
+                              award.awarded === true && award.points_awarded === 30
+                                ? 'bg-emerald-200 border-emerald-500 text-emerald-900 ring-2 ring-emerald-400'
+                                : 'bg-emerald-100 hover:bg-emerald-200 border-emerald-300 text-emerald-800'
+                            }`}
+                          >
+                            <CheckCircle className="w-3 h-3" />
+                            {award.awarded === true && award.points_awarded === 30 ? '30pt ✓' : 'Approve 30pt'}
+                          </button>
+                        </form>
+                        <form action={confirmBonusAward as unknown as (formData: FormData) => void}>
+                          <input type="hidden" name="award_id" value={award.id} />
+                          <input type="hidden" name="awarded" value="false" />
+                          <input type="hidden" name="points_awarded" value="0" />
+                          <button
+                            type="submit"
+                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-xs font-medium transition-colors ${
+                              award.awarded === false
+                                ? 'bg-red-100 border-red-400 text-red-800 ring-2 ring-red-300'
+                                : 'bg-red-50 hover:bg-red-100 border-red-200 text-red-700'
+                            }`}
+                          >
+                            <XCircle className="w-3 h-3" />
+                            {award.awarded === false ? 'Rejected ✓' : 'Reject'}
+                          </button>
+                        </form>
+                      </div>
+                    ) : award.awarded === null ? (
+                      <div className="flex items-center justify-end gap-2 flex-wrap">
+                        <form action={confirmBonusAward as unknown as (formData: FormData) => void}>
+                          <input type="hidden" name="award_id" value={award.id} />
+                          <input type="hidden" name="awarded" value="true" />
+                          <button
+                            type="submit"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-green-50 hover:bg-green-100 border border-green-200 text-green-700 text-xs font-medium transition-colors"
+                          >
+                            <CheckCircle className="w-3 h-3" />
+                            Approve
+                          </button>
+                        </form>
                         <form action={confirmBonusAward as unknown as (formData: FormData) => void}>
                           <input type="hidden" name="award_id" value={award.id} />
                           <input type="hidden" name="awarded" value="false" />
