@@ -174,6 +174,7 @@ export async function adjustPoints(
 
     revalidatePath('/standings')
     revalidatePath('/admin')
+    revalidatePath('/admin/tables')
     revalidatePath('/dashboard')
     return { success: true, delta }
   }
@@ -214,6 +215,7 @@ export async function adjustPoints(
   revalidatePath('/standings')
   revalidatePath('/admin')
   revalidatePath(`/admin/gameweeks`)
+  revalidatePath('/admin/tables')
   revalidatePath(`/gameweeks`)
   revalidatePath('/dashboard')
   return { success: true, delta }

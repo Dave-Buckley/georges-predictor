@@ -266,6 +266,7 @@ export async function confirmBonusAward(
   }
 
   revalidatePath('/admin/bonuses')
+  revalidatePath('/admin/tables')
 
   return { success: true }
 }

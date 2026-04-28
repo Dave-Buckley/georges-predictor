@@ -19,6 +19,7 @@ import {
   X,
   Crown,
   Sparkles,
+  Table2,
 } from 'lucide-react'
 
 interface SidebarProps {
@@ -52,6 +53,11 @@ export function AdminSidebar({ adminEmail }: SidebarProps) {
       href: '/admin/predictions',
       label: 'All Predictions',
       icon: Trophy,
+    },
+    {
+      href: '/admin/tables',
+      label: 'Tables',
+      icon: Table2,
     },
     {
       href: '/admin/notifications',
