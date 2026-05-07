@@ -7,9 +7,10 @@ import {
   requestMagicLink,
   verifyLoginCode,
   loginWithPassword,
+  requestPasswordReset,
 } from '@/actions/auth'
 
-type Mode = 'magic' | 'password'
+type Mode = 'magic' | 'password' | 'forgot'
 type MagicStep = 'enter-email' | 'enter-code'
 
 export default function LoginForm() {
@@ -20,6 +21,7 @@ export default function LoginForm() {
   const [password, setPassword] = useState('')
   const [code, setCode] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [forgotSent, setForgotSent] = useState(false)
   const [result, setResult] = useState<{
     success?: boolean
     error?: string
@@ -81,34 +83,57 @@ export default function LoginForm() {
     setResult(null)
   }
 
+  async function handleForgot(e: React.FormEvent) {
+    e.preventDefault()
+    setResult(null)
+    setIsSubmitting(true)
+    const fd = new FormData()
+    fd.set('email', email)
+    const response = await requestPasswordReset(fd)
+    setIsSubmitting(false)
+    if (response.success) {
+      setForgotSent(true)
+      return
+    }
+    setResult(response)
+  }
+
+  function goToForgot() {
+    setMode('forgot')
+    setForgotSent(false)
+    setResult(null)
+  }
+
   return (
     <div className="w-full max-w-md mx-auto">
-      <div className="mb-6 flex rounded-xl bg-slate-800 border border-slate-700 p-1">
-        <button
-          type="button"
-          onClick={() => {
-            setMode('magic')
-            setResult(null)
-          }}
-          className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition ${
-            mode === 'magic' ? 'bg-purple-600 text-white' : 'text-slate-300 hover:text-white'
-          }`}
-        >
-          Email code
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setMode('password')
-            setResult(null)
-          }}
-          className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition ${
-            mode === 'password' ? 'bg-purple-600 text-white' : 'text-slate-300 hover:text-white'
-          }`}
-        >
-          Password
-        </button>
-      </div>
+      {mode !== 'forgot' && (
+        <div className="mb-6 flex rounded-xl bg-slate-800 border border-slate-700 p-1">
+          <button
+            type="button"
+            onClick={() => {
+              setMode('magic')
+              setResult(null)
+            }}
+            className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition ${
+              mode === 'magic' ? 'bg-purple-600 text-white' : 'text-slate-300 hover:text-white'
+            }`}
+          >
+            Email code
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setMode('password')
+              setResult(null)
+            }}
+            className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition ${
+              mode === 'password' ? 'bg-purple-600 text-white' : 'text-slate-300 hover:text-white'
+            }`}
+          >
+            Password
+          </button>
+        </div>
+      )}
 
       {mode === 'magic' && magicStep === 'enter-email' && (
         <form onSubmit={handleRequestCode} className="space-y-6">
@@ -165,6 +190,14 @@ export default function LoginForm() {
               Learn how it works
             </Link>
           </p>
+
+          <button
+            type="button"
+            onClick={goToForgot}
+            className="w-full text-center text-slate-500 hover:text-white text-xs transition"
+          >
+            Prefer a password? Set one up
+          </button>
         </form>
       )}
 
@@ -283,6 +316,14 @@ export default function LoginForm() {
             {isSubmitting ? 'Signing in...' : 'Sign in'}
           </button>
 
+          <button
+            type="button"
+            onClick={goToForgot}
+            className="w-full text-center text-purple-400 hover:text-purple-300 text-sm font-medium transition"
+          >
+            Forgot password? / Set one up
+          </button>
+
           <p className="text-center text-slate-400 text-sm">
             Don&apos;t have an account?{' '}
             <Link
@@ -293,6 +334,99 @@ export default function LoginForm() {
             </Link>
           </p>
         </form>
+      )}
+
+      {mode === 'forgot' && (
+        <>
+          {forgotSent ? (
+            <div className="space-y-6">
+              <div className="rounded-xl bg-green-900/30 border border-green-700/50 p-5 text-center space-y-2">
+                <p className="text-white font-semibold">Check your email</p>
+                <p className="text-slate-300 text-sm">
+                  If an account exists for{' '}
+                  <span className="text-white font-medium break-all">
+                    {email}
+                  </span>
+                  , we&apos;ve sent a link you can use to set a new password.
+                </p>
+                <p className="text-slate-500 text-xs pt-2">
+                  Tip: if the link doesn&apos;t open, long-press it in your email
+                  → Copy link → paste into Safari or Chrome.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('password')
+                  setForgotSent(false)
+                  setResult(null)
+                }}
+                className="w-full text-center text-slate-400 hover:text-white text-sm transition"
+              >
+                ← Back to sign in
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleForgot} className="space-y-6">
+              <div className="rounded-xl bg-slate-800 border border-slate-700 p-5 space-y-2">
+                <p className="text-white font-semibold">
+                  Set up a password for your account
+                </p>
+                <p className="text-slate-400 text-sm">
+                  Enter your email below and we&apos;ll send you a link to
+                  register a password. Works whether you&apos;ve been logging
+                  in with the email code or you&apos;ve forgotten an old
+                  password.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <label
+                  htmlFor="email-forgot"
+                  className="block text-sm font-medium text-slate-300"
+                >
+                  Your email address
+                </label>
+                <input
+                  id="email-forgot"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="you@example.com"
+                  disabled={isSubmitting}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full rounded-xl bg-slate-800 border border-slate-600 px-4 py-4 text-white text-lg placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50 transition"
+                />
+              </div>
+
+              {result?.error && (
+                <div className="rounded-xl bg-red-500/10 border border-red-500/30 px-4 py-3">
+                  <p className="text-red-400 text-sm">{result.error}</p>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full rounded-xl bg-purple-600 hover:bg-purple-500 disabled:bg-purple-600/50 disabled:cursor-not-allowed px-6 py-4 text-white font-semibold text-lg transition focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+              >
+                {isSubmitting ? 'Sending link...' : 'Email me a password link'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('password')
+                  setResult(null)
+                }}
+                className="w-full text-center text-slate-400 hover:text-white text-sm transition"
+              >
+                ← Back to sign in
+              </button>
+            </form>
+          )}
+        </>
       )}
     </div>
   )

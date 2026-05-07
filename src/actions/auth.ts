@@ -203,6 +203,46 @@ export async function verifyLoginCode(
   return { success: true }
 }
 
+// ─── Request Password Reset ───────────────────────────────────────────────────
+
+/**
+ * Sends a password-recovery email to a member's address. The link in the email
+ * lands on /auth/reset-password where the member sets a new password.
+ *
+ * Used by:
+ *  - Members who originally signed in with the email code (OTP) and now want
+ *    to register a password they can use directly.
+ *  - Members who set a password but forgot it.
+ *
+ * Returns success even if the email is not registered — Supabase doesn't
+ * reveal whether an account exists, and we don't want to leak it either.
+ */
+export async function requestPasswordReset(
+  formData: FormData,
+): Promise<{ success?: boolean; error?: string }> {
+  const raw = { email: formData.get('email') }
+  const result = loginSchema.safeParse(raw)
+  if (!result.success) {
+    const firstError = result.error.issues[0]?.message ?? 'Invalid email'
+    return { error: firstError }
+  }
+
+  const { email } = result.data
+  const supabase = await createServerSupabaseClient()
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${appUrl}/auth/reset-password`,
+  })
+
+  if (error) {
+    console.error('[requestPasswordReset] Error:', error.message)
+    // Don't surface — return generic success so we don't reveal account state.
+  }
+
+  return { success: true }
+}
+
 // ─── Login With Password ──────────────────────────────────────────────────────
 
 /**

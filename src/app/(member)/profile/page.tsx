@@ -11,6 +11,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import type { MemberRow } from '@/lib/supabase/types'
 
 import { EmailPreferenceToggles } from './_components/email-preference-toggles'
+import { SetPasswordForm } from './_components/set-password-form'
 
 export const dynamic = 'force-dynamic'
 
@@ -80,6 +81,14 @@ export default async function ProfilePage() {
         <p className="text-xs text-slate-500">
           To change your display name or email, please contact George.
         </p>
+      </section>
+
+      {/* ── Password ────────────────────────────────────────────────────── */}
+      <section className="space-y-3">
+        <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
+          Password
+        </h2>
+        <SetPasswordForm />
       </section>
 
       {/* ── Email preferences ───────────────────────────────────────────── */}
