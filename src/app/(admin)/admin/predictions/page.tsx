@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { gatherGameweekData } from '@/lib/reports/_data/gather-gameweek-data'
 import { PredictionsTable } from '@/components/predictions/predictions-table'
 import { GameweekSelector } from './gameweek-selector'
 import type { FixtureWithTeams, GameweekRow } from '@/lib/supabase/types'
@@ -14,6 +15,21 @@ interface PageProps {
   searchParams: Promise<{ gw?: string }>
 }
 
+interface BonusAwardRaw {
+  id: string
+  member_id: string
+  fixture_id: string | null
+  awarded: boolean | null
+  points_awarded: number | null
+  bonus_types: { name: string } | null
+  fixtures:
+    | {
+        home_team: { name: string } | null
+        away_team: { name: string } | null
+      }
+    | null
+}
+
 /**
  * Determines the default gameweek to show:
  * - Earliest gameweek with SCHEDULED or TIMED fixtures (current active window)
@@ -21,13 +37,10 @@ interface PageProps {
  */
 function pickDefaultGameweek(gameweeks: GameweekRow[]): number {
   if (gameweeks.length === 0) return 1
-  // Prefer 'active' status first
   const active = gameweeks.find((gw) => gw.status === 'active')
   if (active) return active.number
-  // Otherwise the first 'scheduled' one
   const scheduled = gameweeks.find((gw) => gw.status === 'scheduled')
   if (scheduled) return scheduled.number
-  // Fall back to latest
   return gameweeks[gameweeks.length - 1].number
 }
 
@@ -117,11 +130,53 @@ export default async function AdminPredictionsPage({ searchParams }: PageProps) 
     }
   }
 
-  // 7. Calculate summary stats
+  // 7. Bonus awards + weekly totals so the table can show Bonus Y/N + Total
+  //    columns and let George approve/reject + edit the weekly score inline.
+  const bonusByMember = new Map<
+    string,
+    { awardId: string; typeName: string; fixtureLabel: string | null; awarded: boolean | null; pointsAwarded: number }
+  >()
+  const weeklyByMember = new Map<string, number>()
+
+  if (gameweek) {
+    const [{ data: bonusAwardsRaw }, gwData] = await Promise.all([
+      supabaseAdmin
+        .from('bonus_awards')
+        .select(
+          'id, member_id, fixture_id, awarded, points_awarded, bonus_types(name), fixtures(home_team:teams!home_team_id(name), away_team:teams!away_team_id(name))',
+        )
+        .eq('gameweek_id', gameweek.id),
+      gatherGameweekData(gameweek.id),
+    ])
+
+    for (const row of (bonusAwardsRaw ?? []) as unknown as BonusAwardRaw[]) {
+      bonusByMember.set(row.member_id, {
+        awardId: row.id,
+        typeName: row.bonus_types?.name ?? 'Bonus',
+        fixtureLabel: row.fixtures
+          ? `${row.fixtures.home_team?.name ?? '?'} vs ${row.fixtures.away_team?.name ?? '?'}`
+          : null,
+        awarded: row.awarded ?? null,
+        pointsAwarded: row.points_awarded ?? 0,
+      })
+    }
+    for (const s of gwData.standings) {
+      weeklyByMember.set(s.memberId, s.weeklyPoints)
+    }
+  }
+
+  // 8. Calculate summary stats
   const submittedMemberIds = new Set(predictions.map((p) => p.member_id))
   const submittedCount = submittedMemberIds.size
   const totalMembers = members.length
   const totalPredictions = predictions.length
+
+  const memberRows = members.map((m) => ({
+    id: m.id,
+    display_name: m.display_name,
+    bonus: bonusByMember.get(m.id) ?? null,
+    weeklyPoints: weeklyByMember.get(m.id) ?? 0,
+  }))
 
   return (
     <div className="p-6 lg:p-8 max-w-full">
@@ -193,7 +248,9 @@ export default async function AdminPredictionsPage({ searchParams }: PageProps) 
       {/* Predictions table */}
       {gameweek && fixtures.length > 0 && members.length > 0 && (
         <PredictionsTable
-          members={members}
+          gameweekId={gameweek.id}
+          gameweekNumber={gameweek.number}
+          members={memberRows}
           fixtures={fixtures}
           predictions={predictions}
         />

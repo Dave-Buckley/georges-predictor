@@ -3,6 +3,7 @@ import { Star, Zap, CheckCircle, Clock, PlusCircle } from 'lucide-react'
 import { SetBonusDialog } from '@/components/admin/set-bonus-dialog'
 import { ConfirmBonusAwards } from '@/components/admin/confirm-bonus-awards'
 import { createBonusType, toggleDoubleBubble } from '@/actions/admin/bonuses'
+import { GameweekSelector } from './gameweek-selector'
 import type {
   BonusTypeRow,
   BonusScheduleRow,
@@ -22,15 +23,48 @@ interface AwardWithDetails extends BonusAwardRow {
   fixture_label: string | null
 }
 
-async function getBonusPageData() {
+interface PageProps {
+  searchParams: Promise<{ gw?: string }>
+}
+
+/**
+ * Picks which gameweek's awards to show by default:
+ *   1. earliest gameweek with pending (NULL) awards — that's the one George
+ *      most likely needs to action right now
+ *   2. otherwise the active gameweek so he can see live picks before close
+ *   3. otherwise the latest gameweek with at least one pick
+ */
+function pickDefaultGameweek(
+  gameweeks: GameweekRow[],
+  pendingByGwId: Map<string, number>,
+  anyByGwId: Map<string, number>,
+): number {
+  if (gameweeks.length === 0) return 1
+  const firstWithPending = gameweeks.find((gw) => (pendingByGwId.get(gw.id) ?? 0) > 0)
+  if (firstWithPending) return firstWithPending.number
+  const active = gameweeks.find((gw) => gw.status === 'active')
+  if (active) return active.number
+  const lastWithAny = [...gameweeks].reverse().find((gw) => (anyByGwId.get(gw.id) ?? 0) > 0)
+  if (lastWithAny) return lastWithAny.number
+  return gameweeks[gameweeks.length - 1].number
+}
+
+function getRowClass(status: string): string {
+  if (status === 'complete') return 'bg-gray-50 opacity-60'
+  if (status === 'active') return 'bg-purple-50'
+  return 'bg-white'
+}
+
+export default async function BonusesPage({ searchParams }: PageProps) {
+  const { gw: gwParam } = await searchParams
   const supabase = createAdminClient()
 
+  // ── Phase 1: load lookups + per-gw award counts in parallel ────────────────
   const [
     bonusTypesResult,
     scheduleResult,
     gameweeksResult,
-    pendingAwardsResult,
-    goldenGloryAwardsResult,
+    awardCountsResult,
   ] = await Promise.all([
     supabase.from('bonus_types').select('*').order('name'),
     supabase
@@ -38,88 +72,101 @@ async function getBonusPageData() {
       .select('*, bonus_type:bonus_types(*)')
       .order('created_at'),
     supabase.from('gameweeks').select('*').order('number'),
-    supabase
-      .from('bonus_awards')
-      .select('*, members(display_name), bonus_types(name), fixtures(home_team:teams!home_team_id(name), away_team:teams!away_team_id(name))')
-      .is('awarded', null),
-    // Also load already-reviewed Golden Glory awards so George can edit a wrong call.
-    supabase
-      .from('bonus_awards')
-      .select('*, members(display_name), bonus_types!inner(name), fixtures(home_team:teams!home_team_id(name), away_team:teams!away_team_id(name))')
-      .eq('bonus_types.name', 'Golden Glory')
-      .not('awarded', 'is', null),
+    supabase.from('bonus_awards').select('gameweek_id, awarded'),
   ])
 
-  // Merge pending + reviewed-Golden-Glory awards (deduped by id).
-  const awardsById = new Map<string, AwardWithDetails>()
-  for (const a of (pendingAwardsResult.data ?? []) as unknown as AwardWithDetails[]) {
-    awardsById.set(a.id, a)
-  }
-  for (const a of (goldenGloryAwardsResult.data ?? []) as unknown as AwardWithDetails[]) {
-    awardsById.set(a.id, a)
-  }
-  const pendingAwards = Array.from(awardsById.values())
+  const bonusTypes = (bonusTypesResult.data ?? []) as BonusTypeRow[]
+  const schedule = (scheduleResult.data ?? []) as BonusScheduleWithType[]
+  const gameweeks = (gameweeksResult.data ?? []) as GameweekRow[]
 
-  // Fetch the member's prediction for each pending award's fixture so admin
-  // can see the predicted score next to the bonus pick (saves a trip to WhatsApp).
-  const memberIds = Array.from(
-    new Set(pendingAwards.map((a) => a.member_id).filter(Boolean))
-  )
-  const fixtureIds = Array.from(
-    new Set(pendingAwards.map((a) => a.fixture_id).filter((id): id is string => Boolean(id)))
-  )
-
-  const predictionsByKey = new Map<string, { home_score: number; away_score: number }>()
-  if (memberIds.length > 0 && fixtureIds.length > 0) {
-    const predictionsResult = await supabase
-      .from('predictions')
-      .select('member_id, fixture_id, home_score, away_score')
-      .in('member_id', memberIds)
-      .in('fixture_id', fixtureIds)
-
-    for (const p of predictionsResult.data ?? []) {
-      predictionsByKey.set(`${p.member_id}::${p.fixture_id}`, {
-        home_score: p.home_score,
-        away_score: p.away_score,
-      })
+  const pendingByGwId = new Map<string, number>()
+  const anyByGwId = new Map<string, number>()
+  for (const row of (awardCountsResult.data ?? []) as Array<{
+    gameweek_id: string
+    awarded: boolean | null
+  }>) {
+    anyByGwId.set(row.gameweek_id, (anyByGwId.get(row.gameweek_id) ?? 0) + 1)
+    if (row.awarded === null) {
+      pendingByGwId.set(
+        row.gameweek_id,
+        (pendingByGwId.get(row.gameweek_id) ?? 0) + 1,
+      )
     }
   }
 
-  return {
-    bonusTypes: (bonusTypesResult.data ?? []) as BonusTypeRow[],
-    schedule: (scheduleResult.data ?? []) as BonusScheduleWithType[],
-    gameweeks: (gameweeksResult.data ?? []) as GameweekRow[],
-    pendingAwards,
-    predictionsByKey,
+  // ── Phase 2: resolve which gw to show + load that gw's awards ──────────────
+  const defaultGwNumber = pickDefaultGameweek(gameweeks, pendingByGwId, anyByGwId)
+  const requested = gwParam ? parseInt(gwParam, 10) : defaultGwNumber
+  const selectedGwNumber = isNaN(requested) ? defaultGwNumber : requested
+  const selectedGw = gameweeks.find((gw) => gw.number === selectedGwNumber) ?? null
+
+  let awardsForSelectedGw: AwardWithDetails[] = []
+  const predictionsByKey = new Map<string, { home_score: number; away_score: number }>()
+
+  if (selectedGw) {
+    const { data: awardRows } = await supabase
+      .from('bonus_awards')
+      .select(
+        '*, members(display_name), bonus_types(name), fixtures(home_team:teams!home_team_id(name), away_team:teams!away_team_id(name))',
+      )
+      .eq('gameweek_id', selectedGw.id)
+    awardsForSelectedGw = (awardRows ?? []) as unknown as AwardWithDetails[]
+
+    const memberIds = Array.from(
+      new Set(awardsForSelectedGw.map((a) => a.member_id).filter(Boolean)),
+    )
+    const fixtureIds = Array.from(
+      new Set(
+        awardsForSelectedGw
+          .map((a) => a.fixture_id)
+          .filter((id): id is string => Boolean(id)),
+      ),
+    )
+    if (memberIds.length > 0 && fixtureIds.length > 0) {
+      const { data: predictionsData } = await supabase
+        .from('predictions')
+        .select('member_id, fixture_id, home_score, away_score')
+        .in('member_id', memberIds)
+        .in('fixture_id', fixtureIds)
+      for (const p of predictionsData ?? []) {
+        predictionsByKey.set(`${p.member_id}::${p.fixture_id}`, {
+          home_score: p.home_score,
+          away_score: p.away_score,
+        })
+      }
+    }
   }
-}
 
-// Determine row color class based on gameweek status
-function getRowClass(status: string): string {
-  if (status === 'complete') return 'bg-gray-50 opacity-60'
-  if (status === 'active') return 'bg-purple-50'
-  return 'bg-white'
-}
-
-export default async function BonusesPage() {
-  const { bonusTypes, schedule, gameweeks, pendingAwards, predictionsByKey } = await getBonusPageData()
-
-  // Build a map of gameweek_id -> schedule row for quick lookup
+  // ── Schedule lookup for the rotation table ─────────────────────────────────
   const scheduleByGwId = new Map<string, BonusScheduleWithType>()
   for (const row of schedule) {
     scheduleByGwId.set(row.gameweek_id, row)
   }
 
-  // Group pending awards by gameweek_id for the awards section
-  const pendingByGwId = new Map<string, typeof pendingAwards>()
-  for (const award of pendingAwards) {
-    const gwId = award.gameweek_id
-    if (!pendingByGwId.has(gwId)) pendingByGwId.set(gwId, [])
-    pendingByGwId.get(gwId)!.push(award)
-  }
+  // ── Shape awards for ConfirmBonusAwards ────────────────────────────────────
+  const awardItems = awardsForSelectedGw.map((a) => {
+    const prediction = a.fixture_id
+      ? predictionsByKey.get(`${a.member_id}::${a.fixture_id}`) ?? null
+      : null
+    return {
+      id: a.id,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      member_display_name: (a as any).members?.display_name ?? 'Unknown',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      bonus_type_name: (a as any).bonus_types?.name ?? 'Unknown',
+      fixture_label: (() => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const f = (a as any).fixtures
+        if (!f) return null
+        return `${f.home_team?.name ?? '?'} vs ${f.away_team?.name ?? '?'}`
+      })(),
+      prediction,
+      awarded: a.awarded ?? null,
+      points_awarded: a.points_awarded ?? 0,
+    }
+  })
 
-  // Gameweeks with pending awards (for the review section)
-  const gameweeksWithPending = gameweeks.filter((gw) => pendingByGwId.has(gw.id))
+  const pendingForSelected = awardItems.filter((a) => a.awarded === null).length
 
   return (
     <div className="p-6 lg:p-8 max-w-5xl space-y-8">
@@ -311,57 +358,45 @@ export default async function BonusesPage() {
 
       {/* Bonus Awards review section */}
       <div className="bg-white border border-gray-200 rounded-2xl p-5">
-        <h2 className="text-base font-semibold text-gray-900 mb-1" id="awards">
-          Bonus Awards
-        </h2>
-        <p className="text-sm text-gray-500 mb-5">
-          Review and confirm member bonus award claims
-        </p>
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-5">
+          <div>
+            <h2 className="text-base font-semibold text-gray-900" id="awards">
+              Bonus Awards
+            </h2>
+            <p className="text-sm text-gray-500 mt-0.5">
+              Pick a gameweek to review or audit member bonus picks.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-700">Gameweek:</label>
+            <GameweekSelector gameweeks={gameweeks} selectedGw={selectedGwNumber} />
+            {pendingForSelected > 0 && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+                {pendingForSelected} pending
+              </span>
+            )}
+          </div>
+        </div>
 
-        {gameweeksWithPending.length === 0 ? (
+        {!selectedGw ? (
           <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 text-center">
-            <p className="text-gray-500 font-medium">No pending bonus awards</p>
+            <p className="text-gray-500 text-sm">Gameweek {selectedGwNumber} not found.</p>
+          </div>
+        ) : awardItems.length === 0 ? (
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 text-center">
+            <p className="text-gray-500 font-medium">
+              No bonus picks for Gameweek {selectedGw.number} yet
+            </p>
             <p className="text-gray-400 text-sm mt-1">
-              Awards will appear here once members submit picks and gameweeks close.
+              Picks appear here as soon as members submit them.
             </p>
           </div>
         ) : (
-          <div className="space-y-6">
-            {gameweeksWithPending.map((gw) => {
-              const gwAwards = pendingByGwId.get(gw.id) ?? []
-              // Map to ConfirmBonusAwards shape
-              const awardItems = gwAwards.map((a) => {
-                const prediction = a.fixture_id
-                  ? predictionsByKey.get(`${a.member_id}::${a.fixture_id}`) ?? null
-                  : null
-                return {
-                  id: a.id,
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  member_display_name: (a as any).members?.display_name ?? 'Unknown',
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  bonus_type_name: (a as any).bonus_types?.name ?? 'Unknown',
-                  fixture_label: (() => {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const f = (a as any).fixtures
-                    if (!f) return null
-                    return `${f.home_team?.name ?? '?'} vs ${f.away_team?.name ?? '?'}`
-                  })(),
-                  prediction,
-                  awarded: a.awarded ?? null,
-                  points_awarded: a.points_awarded ?? 0,
-                }
-              })
-
-              return (
-                <ConfirmBonusAwards
-                  key={gw.id}
-                  gameweekId={gw.id}
-                  gameweekNumber={gw.number}
-                  awards={awardItems}
-                />
-              )
-            })}
-          </div>
+          <ConfirmBonusAwards
+            gameweekId={selectedGw.id}
+            gameweekNumber={selectedGw.number}
+            awards={awardItems}
+          />
         )}
       </div>
     </div>

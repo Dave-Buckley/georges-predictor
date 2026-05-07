@@ -212,6 +212,9 @@ export async function toggleDoubleBubble(
  * Confirms or rejects a single bonus award for a member.
  *
  * Updates awarded (true/false from NULL), confirmed_by, and confirmed_at.
+ * If the gameweek has already had weekly→starting points applied (close
+ * happened), pushes the bonus-points delta into members.starting_points so
+ * /standings, the dashboard, and tables reflect the change immediately.
  */
 export async function confirmBonusAward(
   formData: FormData
@@ -241,6 +244,28 @@ export async function confirmBonusAward(
   const { award_id, awarded, points_awarded } = parsed.data
   const adminClient = createAdminClient()
 
+  // Capture the BEFORE state so we can compute the delta for already-closed
+  // gameweeks. We need member_id, gameweek_id, double_bubble flag and
+  // points_applied flag in addition to the prior award contribution.
+  const { data: before, error: beforeErr } = await adminClient
+    .from('bonus_awards')
+    .select('member_id, gameweek_id, awarded, points_awarded, gameweeks(double_bubble, points_applied)')
+    .eq('id', award_id)
+    .single()
+
+  if (beforeErr || !before) {
+    return { error: 'Bonus award not found' }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const gw = (before as any).gameweeks as
+    | { double_bubble: boolean | null; points_applied: boolean | null }
+    | null
+  const prevAwarded = (before as { awarded: boolean | null }).awarded
+  const prevPoints = (before as { points_awarded: number | null }).points_awarded ?? 0
+  const memberId = (before as { member_id: string }).member_id
+  const gwId = (before as { gameweek_id: string }).gameweek_id
+
   const updatePayload: {
     awarded: boolean
     confirmed_by: string
@@ -265,8 +290,46 @@ export async function confirmBonusAward(
     return { error: 'Failed to confirm bonus award. Please try again.' }
   }
 
+  // Sync starting_points if the gameweek has already been closed (else the
+  // public standings would silently keep the pre-edit value forever).
+  if (gw?.points_applied) {
+    const prevContribution = prevAwarded === true ? prevPoints : 0
+    const nextContribution =
+      awarded === true
+        ? (points_awarded !== undefined ? points_awarded : prevPoints)
+        : 0
+    const multiplier = gw.double_bubble ? 2 : 1
+    const delta = (nextContribution - prevContribution) * multiplier
+
+    if (delta !== 0) {
+      const { data: mRow } = await adminClient
+        .from('members')
+        .select('starting_points')
+        .eq('id', memberId)
+        .single()
+      const curr = (mRow as { starting_points: number | null } | null)?.starting_points ?? 0
+      const next = Math.max(0, curr + delta)
+      const { error: spErr } = await adminClient
+        .from('members')
+        .update({ starting_points: next })
+        .eq('id', memberId)
+      if (spErr) {
+        console.error('[confirmBonusAward] starting_points sync error:', spErr.message)
+        // Non-fatal: surface as admin notification so Dave can investigate.
+        await adminClient.from('admin_notifications').insert({
+          type: 'system',
+          title: `Bonus update saved but standings didn't sync`,
+          message:
+            `A bonus change for gameweek ${gwId} couldn't be reflected in the season totals — Dave needs to take a look.`,
+        })
+      }
+    }
+  }
+
   revalidatePath('/admin/bonuses')
   revalidatePath('/admin/tables')
+  revalidatePath('/standings')
+  revalidatePath('/')
 
   return { success: true }
 }
@@ -275,7 +338,9 @@ export async function confirmBonusAward(
 
 /**
  * Bulk-approves or bulk-rejects all pending (awarded IS NULL) bonus awards
- * for a specific gameweek.
+ * for a specific gameweek. If the gameweek has already had its weekly→starting
+ * roll applied, also bumps each affected member's starting_points so standings
+ * stay in sync.
  */
 export async function bulkConfirmBonusAwards(
   formData: FormData
@@ -301,6 +366,14 @@ export async function bulkConfirmBonusAwards(
 
   const awarded = action === 'approve_all'
 
+  // Capture the before state of all pending awards in this gw so we can sync
+  // starting_points after a close.
+  const { data: pendingBefore } = await adminClient
+    .from('bonus_awards')
+    .select('id, member_id, points_awarded, gameweeks(double_bubble, points_applied)')
+    .eq('gameweek_id', gameweek_id)
+    .is('awarded', null)
+
   const { error: updateError } = await adminClient
     .from('bonus_awards')
     .update({
@@ -316,7 +389,61 @@ export async function bulkConfirmBonusAwards(
     return { error: 'Failed to bulk confirm bonus awards. Please try again.' }
   }
 
+  // Approving brings each award's contribution from 0 → points_awarded
+  // (multiplied by 2 if Double Bubble). Rejecting leaves the contribution at
+  // 0, so no delta is needed.
+  if (awarded && pendingBefore && pendingBefore.length > 0) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const gw = (pendingBefore[0] as any).gameweeks as
+      | { double_bubble: boolean | null; points_applied: boolean | null }
+      | null
+    if (gw?.points_applied) {
+      const multiplier = gw.double_bubble ? 2 : 1
+      // Sum deltas per member in case a member had multiple pending awards.
+      const deltaByMember = new Map<string, number>()
+      for (const row of pendingBefore as Array<{
+        member_id: string
+        points_awarded: number | null
+      }>) {
+        const pts = row.points_awarded ?? 0
+        deltaByMember.set(
+          row.member_id,
+          (deltaByMember.get(row.member_id) ?? 0) + pts * multiplier,
+        )
+      }
+      const memberIds = [...deltaByMember.keys()]
+      const { data: mRows } = await adminClient
+        .from('members')
+        .select('id, starting_points')
+        .in('id', memberIds)
+      const startingByMember = new Map<string, number>()
+      for (const m of (mRows ?? []) as Array<{
+        id: string
+        starting_points: number | null
+      }>) {
+        startingByMember.set(m.id, m.starting_points ?? 0)
+      }
+      for (const [memberId, delta] of deltaByMember) {
+        if (delta === 0) continue
+        const next = Math.max(0, (startingByMember.get(memberId) ?? 0) + delta)
+        const { error: spErr } = await adminClient
+          .from('members')
+          .update({ starting_points: next })
+          .eq('id', memberId)
+        if (spErr) {
+          console.error(
+            '[bulkConfirmBonusAwards] starting_points sync error:',
+            spErr.message,
+          )
+        }
+      }
+    }
+  }
+
   revalidatePath('/admin/bonuses')
+  revalidatePath('/admin/tables')
+  revalidatePath('/standings')
+  revalidatePath('/')
 
   return { success: true }
 }
