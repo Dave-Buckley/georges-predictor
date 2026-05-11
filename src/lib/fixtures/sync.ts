@@ -76,6 +76,33 @@ export function detectNewlyFinished(
   })
 }
 
+/**
+ * Filters fixture rows to those that were ALREADY FINISHED but whose score
+ * has changed since the last sync — typically a VAR-driven correction the
+ * football-data feed publishes after the on-field final whistle.
+ *
+ * Without this, prediction_scores stay locked to the original (wrong) score
+ * because recalculateFixture only fires on the first FINISHED transition.
+ *
+ * The caller is responsible for filtering out fixtures whose gameweek has
+ * already been closed — we never silently rewrite history on a closed week.
+ */
+export function detectScoreChanged(
+  fixtureRows: FixtureRow[],
+  prevStatusMap: Map<number, FixtureStatusSnapshot>
+): Array<FixtureRow & { prev_home: number | null; prev_away: number | null }> {
+  const out: Array<FixtureRow & { prev_home: number | null; prev_away: number | null }> = []
+  for (const row of fixtureRows) {
+    const prev = prevStatusMap.get(row.external_id)
+    if (!prev) continue
+    if (prev.status !== 'FINISHED' || row.status !== 'FINISHED') continue
+    if (row.home_score === null || row.away_score === null) continue
+    if (prev.home_score === row.home_score && prev.away_score === row.away_score) continue
+    out.push({ ...row, prev_home: prev.home_score, prev_away: prev.away_score })
+  }
+  return out
+}
+
 // ─── Helper: Detect gameweeks where ALL fixtures are FINISHED ────────────────
 // Given a set of newly-FINISHED external_ids, resolves them to gameweek UUIDs,
 // then returns only those gameweeks where every fixture has status='FINISHED'.
@@ -521,6 +548,104 @@ export async function syncFixtures(): Promise<SyncResult> {
           type: 'scoring_complete',
           title: `Points awarded for ${scored_fixtures} new result${scored_fixtures !== 1 ? 's' : ''}`,
           message: `Everyone's predictions have been scored for: ${fixtureLabelsList}.`,
+        })
+      }
+    }
+
+    // ── 9a. Detect FINISHED-but-score-changed fixtures (VAR corrections) ─────
+    // These fixtures were already FINISHED in a prior sync but the API has now
+    // published a different score (typically a VAR-driven correction). Without
+    // this branch, prediction_scores stays locked to the first score we saw.
+    //
+    // Safety rule: never silently re-score a fixture in a CLOSED gameweek.
+    // Closed weeks have rolled into members.starting_points and may have
+    // bonus awards George has manually confirmed — Dave reviews before any
+    // change.
+    const scoreChanged = detectScoreChanged(fixtureRows, prevStatusMap)
+    if (scoreChanged.length > 0) {
+      const changedExternalIds = scoreChanged.map((r) => r.external_id)
+      const { data: changedDbRows } = await adminClient
+        .from('fixtures')
+        .select(`
+          id, external_id, home_score, away_score,
+          gameweek:gameweeks!gameweek_id(id, number, closed_at)
+        `)
+        .in('external_id', changedExternalIds)
+
+      const fixtureLabelMap = new Map<number, string>()
+      for (const match of matches) {
+        fixtureLabelMap.set(match.id, `${match.homeTeam.shortName} vs ${match.awayTeam.shortName}`)
+      }
+      const prevScoreMap = new Map<number, { h: number | null; a: number | null }>()
+      for (const r of scoreChanged) {
+        prevScoreMap.set(r.external_id, { h: r.prev_home, a: r.prev_away })
+      }
+
+      const openGwRows: Array<{ id: string; external_id: number; home_score: number; away_score: number; gw_number: number }> = []
+      const closedGwRows: Array<{ id: string; external_id: number; home_score: number; away_score: number; gw_number: number }> = []
+
+      for (const row of (changedDbRows ?? []) as unknown as Array<{
+        id: string
+        external_id: number
+        home_score: number | null
+        away_score: number | null
+        gameweek: { id: string; number: number; closed_at: string | null } | null
+      }>) {
+        if (row.home_score === null || row.away_score === null) continue
+        const bucket = row.gameweek?.closed_at ? closedGwRows : openGwRows
+        bucket.push({
+          id: row.id,
+          external_id: row.external_id,
+          home_score: row.home_score,
+          away_score: row.away_score,
+          gw_number: row.gameweek?.number ?? -1,
+        })
+      }
+
+      // Open weeks → recalc + notify
+      if (openGwRows.length > 0) {
+        const recalcResults = await Promise.all(
+          openGwRows.map((r) => recalculateFixture(r.id, r.home_score, r.away_score))
+        )
+        for (const r of recalcResults) {
+          if (r.errors.length > 0) {
+            errors.push(...r.errors.map((e) => `Score-correction recalc error for ${r.fixture_id}: ${e}`))
+          } else {
+            scored_fixtures++
+          }
+        }
+
+        const lines = openGwRows.map((r) => {
+          const label = fixtureLabelMap.get(r.external_id) ?? `external_id:${r.external_id}`
+          const prev = prevScoreMap.get(r.external_id)
+          const prevStr = prev ? `${prev.h ?? '?'}-${prev.a ?? '?'}` : '?'
+          return `${label} (was ${prevStr}, now ${r.home_score}-${r.away_score})`
+        })
+        await adminClient.from('admin_notifications').insert({
+          type: 'scoring_complete',
+          title: `Score correction picked up — ${openGwRows.length} fixture${openGwRows.length !== 1 ? 's' : ''} re-scored`,
+          message:
+            `The football data feed updated the final score on ${openGwRows.length} fixture${openGwRows.length !== 1 ? 's' : ''} that had already finished. ` +
+            `Predictions have been re-scored against the new result: ${lines.join('; ')}. ` +
+            `If anyone had a bonus award manually confirmed on these matches, please re-check whether it still scores correctly.`,
+        })
+      }
+
+      // Closed weeks → notify only, do NOT touch
+      if (closedGwRows.length > 0) {
+        const lines = closedGwRows.map((r) => {
+          const label = fixtureLabelMap.get(r.external_id) ?? `external_id:${r.external_id}`
+          const prev = prevScoreMap.get(r.external_id)
+          const prevStr = prev ? `${prev.h ?? '?'}-${prev.a ?? '?'}` : '?'
+          return `GW${r.gw_number} ${label} (was ${prevStr}, now ${r.home_score}-${r.away_score})`
+        })
+        await adminClient.from('admin_notifications').insert({
+          type: 'sync_failure',
+          title: `Score change on a closed gameweek — Dave needs to check`,
+          message:
+            `The football data feed has changed the final score on a fixture in an already-closed gameweek. ` +
+            `The app has NOT changed any points automatically because the week's totals have already been added to everyone's season tally. ` +
+            `Dave needs to decide whether to re-score the affected predictions: ${lines.join('; ')}.`,
         })
       }
     }

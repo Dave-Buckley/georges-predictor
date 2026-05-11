@@ -8,7 +8,7 @@
  * - Non-FINISHED status transitions (e.g. IN_PLAY) do NOT trigger scoring
  */
 import { describe, it, expect } from 'vitest'
-import { detectNewlyFinished } from '@/lib/fixtures/sync'
+import { detectNewlyFinished, detectScoreChanged } from '@/lib/fixtures/sync'
 import type { FixtureStatusSnapshot, FixtureRow } from '@/lib/fixtures/sync'
 
 const EXTERNAL_ID_1 = 1001
@@ -134,5 +134,90 @@ describe('detectNewlyFinished', () => {
     // prev is undefined, so prev?.status !== 'FINISHED' is true (undefined !== 'FINISHED')
     expect(result).toHaveLength(1)
     expect(result[0].external_id).toBe(EXTERNAL_ID_1)
+  })
+})
+
+describe('detectScoreChanged', () => {
+  it('detects a score change on a fixture that was already FINISHED (VAR correction)', () => {
+    // The exact case that bit George: API said 1-1, then corrected to 0-1.
+    const fixtureRows: FixtureRow[] = [
+      { external_id: EXTERNAL_ID_1, status: 'FINISHED', home_score: 0, away_score: 1 },
+    ]
+    const prevMap = buildPrevMap([
+      { external_id: EXTERNAL_ID_1, status: 'FINISHED', home_score: 1, away_score: 1 },
+    ])
+
+    const result = detectScoreChanged(fixtureRows, prevMap)
+    expect(result).toHaveLength(1)
+    expect(result[0].external_id).toBe(EXTERNAL_ID_1)
+    expect(result[0].prev_home).toBe(1)
+    expect(result[0].prev_away).toBe(1)
+    expect(result[0].home_score).toBe(0)
+    expect(result[0].away_score).toBe(1)
+  })
+
+  it('excludes a fixture whose score is unchanged', () => {
+    const fixtureRows: FixtureRow[] = [
+      { external_id: EXTERNAL_ID_1, status: 'FINISHED', home_score: 2, away_score: 1 },
+    ]
+    const prevMap = buildPrevMap([
+      { external_id: EXTERNAL_ID_1, status: 'FINISHED', home_score: 2, away_score: 1 },
+    ])
+
+    expect(detectScoreChanged(fixtureRows, prevMap)).toHaveLength(0)
+  })
+
+  it('excludes a fixture transitioning into FINISHED for the first time (handled by detectNewlyFinished instead)', () => {
+    const fixtureRows: FixtureRow[] = [
+      { external_id: EXTERNAL_ID_1, status: 'FINISHED', home_score: 2, away_score: 1 },
+    ]
+    const prevMap = buildPrevMap([
+      { external_id: EXTERNAL_ID_1, status: 'IN_PLAY', home_score: null, away_score: null },
+    ])
+
+    expect(detectScoreChanged(fixtureRows, prevMap)).toHaveLength(0)
+  })
+
+  it('excludes a fixture with no prior snapshot — there is no "previous score" to compare to', () => {
+    const fixtureRows: FixtureRow[] = [
+      { external_id: EXTERNAL_ID_1, status: 'FINISHED', home_score: 2, away_score: 1 },
+    ]
+    expect(detectScoreChanged(fixtureRows, new Map())).toHaveLength(0)
+  })
+
+  it('excludes a fixture whose new score is null (data feed glitch — never replace a real score with null)', () => {
+    const fixtureRows: FixtureRow[] = [
+      { external_id: EXTERNAL_ID_1, status: 'FINISHED', home_score: null, away_score: null },
+    ]
+    const prevMap = buildPrevMap([
+      { external_id: EXTERNAL_ID_1, status: 'FINISHED', home_score: 2, away_score: 1 },
+    ])
+
+    expect(detectScoreChanged(fixtureRows, prevMap)).toHaveLength(0)
+  })
+
+  it('separates only-home-changed and only-away-changed fixtures', () => {
+    const fixtureRows: FixtureRow[] = [
+      { external_id: EXTERNAL_ID_1, status: 'FINISHED', home_score: 1, away_score: 1 },
+      { external_id: EXTERNAL_ID_2, status: 'FINISHED', home_score: 2, away_score: 0 },
+    ]
+    const prevMap = buildPrevMap([
+      { external_id: EXTERNAL_ID_1, status: 'FINISHED', home_score: 0, away_score: 1 },
+      { external_id: EXTERNAL_ID_2, status: 'FINISHED', home_score: 2, away_score: 1 },
+    ])
+
+    const result = detectScoreChanged(fixtureRows, prevMap)
+    expect(result).toHaveLength(2)
+    expect(result.map((r) => r.external_id).sort()).toEqual([EXTERNAL_ID_1, EXTERNAL_ID_2])
+  })
+
+  it('excludes a fixture that left FINISHED status (e.g. moved to POSTPONED) — score-change semantics only apply between two FINISHED states', () => {
+    const fixtureRows: FixtureRow[] = [
+      { external_id: EXTERNAL_ID_1, status: 'POSTPONED', home_score: null, away_score: null },
+    ]
+    const prevMap = buildPrevMap([
+      { external_id: EXTERNAL_ID_1, status: 'FINISHED', home_score: 2, away_score: 1 },
+    ])
+    expect(detectScoreChanged(fixtureRows, prevMap)).toHaveLength(0)
   })
 })
