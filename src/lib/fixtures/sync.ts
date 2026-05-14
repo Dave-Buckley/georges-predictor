@@ -103,6 +103,71 @@ export function detectScoreChanged(
   return out
 }
 
+// ─── Helper: Mirror API results onto manual placeholder fixtures ─────────────
+// Used when George inserts a placeholder fixture (e.g. add-mancity-palace-gw36.ts)
+// with a synthetic external_id so the predictor knows the match exists in a
+// gameweek before football-data.org has published the rescheduled match in
+// that matchday. When the API eventually publishes the real fixture, two rows
+// end up coexisting in the DB: the placeholder (no score, manual_gameweek_override=true)
+// and the real one (FINISHED, real external_id, sits in the API's matchday).
+// The placeholder never gets a result without this mirror step because the
+// sync engine matches by external_id and the synthetic id never appears in the
+// API feed.
+//
+// Pure helper kept side-effect-free for testability. Returns the (manual, donor)
+// pairs the caller should mirror.
+
+export interface ManualFixtureNeedingResult {
+  id: string
+  external_id: number
+  home_team_id: string
+  away_team_id: string
+  kickoff_time: string
+  status: string
+  home_score: number | null
+  away_score: number | null
+}
+
+export interface MirrorDonor {
+  id: string
+  external_id: number
+  home_team_id: string
+  away_team_id: string
+  kickoff_time: string
+  status: string
+  home_score: number | null
+  away_score: number | null
+}
+
+// 48h tolerance covers same-day reschedules without crossing the season halfway
+// point where the other leg of the home/away pair sits (typically months away).
+export const MIRROR_KICKOFF_TOLERANCE_MS = 48 * 60 * 60 * 1000
+
+export function findMirrorCandidates(
+  manuals: ManualFixtureNeedingResult[],
+  candidates: MirrorDonor[],
+): Array<{ manual: ManualFixtureNeedingResult; donor: MirrorDonor }> {
+  const pairs: Array<{ manual: ManualFixtureNeedingResult; donor: MirrorDonor }> = []
+  for (const m of manuals) {
+    const mTime = new Date(m.kickoff_time).getTime()
+    let best: { donor: MirrorDonor; gap: number } | null = null
+    for (const d of candidates) {
+      if (d.id === m.id) continue
+      if (d.home_team_id !== m.home_team_id) continue
+      if (d.away_team_id !== m.away_team_id) continue
+      if (d.status !== 'FINISHED') continue
+      if (d.home_score === null || d.away_score === null) continue
+      const gap = Math.abs(new Date(d.kickoff_time).getTime() - mTime)
+      if (gap > MIRROR_KICKOFF_TOLERANCE_MS) continue
+      if (best === null || gap < best.gap) {
+        best = { donor: d, gap }
+      }
+    }
+    if (best) pairs.push({ manual: m, donor: best.donor })
+  }
+  return pairs
+}
+
 // ─── Helper: Detect gameweeks where ALL fixtures are FINISHED ────────────────
 // Given a set of newly-FINISHED external_ids, resolves them to gameweek UUIDs,
 // then returns only those gameweeks where every fixture has status='FINISHED'.
@@ -648,6 +713,117 @@ export async function syncFixtures(): Promise<SyncResult> {
             `Dave needs to decide whether to re-score the affected predictions: ${lines.join('; ')}.`,
         })
       }
+    }
+
+    // ── 9a2. Mirror API results onto manual placeholder fixtures ─────────────
+    // When a manual_gameweek_override=true fixture (synthetic external_id) is
+    // still missing a result, look for a real API fixture covering the same
+    // match (same team pair, kickoff within 48h) that's FINISHED, and mirror
+    // its score onto the placeholder. Then re-score the placeholder's
+    // predictions. See findMirrorCandidates for the matching rules.
+    //
+    // Closed-week safety: never silently rewrite a closed gameweek. If the
+    // placeholder sits in a closed gameweek (points_applied=true), notify Dave
+    // and skip — same rule the score-correction branch uses.
+    try {
+      const { data: overrideRowsRaw, error: overrideReadErr } = await adminClient
+        .from('fixtures')
+        .select(`
+          id, external_id, home_team_id, away_team_id, kickoff_time,
+          status, home_score, away_score,
+          gameweek:gameweeks!gameweek_id(id, number, closed_at, points_applied)
+        `)
+        .eq('manual_gameweek_override', true)
+
+      if (overrideReadErr) {
+        errors.push(`Mirror read error: ${overrideReadErr.message}`)
+      } else {
+        type OverrideRow = ManualFixtureNeedingResult & {
+          gameweek: { id: string; number: number; closed_at: string | null; points_applied: boolean } | null
+        }
+        const overrideRows = (overrideRowsRaw ?? []) as unknown as OverrideRow[]
+        const needsResult = overrideRows.filter(
+          (r) => r.status !== 'FINISHED' || r.home_score === null || r.away_score === null,
+        )
+
+        if (needsResult.length > 0) {
+          // Pull every fixture row that could be a donor — same team pair as any
+          // placeholder needing a result, status FINISHED. Use the OR-by-team-pair
+          // pattern (we don't restrict by external_id since the donor's ID is
+          // exactly what we don't know in advance).
+          const teamPairFilters = needsResult
+            .map((r) => `and(home_team_id.eq.${r.home_team_id},away_team_id.eq.${r.away_team_id})`)
+            .join(',')
+          const { data: donorCandidatesRaw, error: donorErr } = await adminClient
+            .from('fixtures')
+            .select('id, external_id, home_team_id, away_team_id, kickoff_time, status, home_score, away_score')
+            .or(teamPairFilters)
+            .eq('status', 'FINISHED')
+
+          if (donorErr) {
+            errors.push(`Mirror donor read error: ${donorErr.message}`)
+          } else {
+            const pairs = findMirrorCandidates(needsResult, (donorCandidatesRaw ?? []) as MirrorDonor[])
+            const closedPairs: Array<{ manual: OverrideRow; donor: MirrorDonor }> = []
+            const openPairs: Array<{ manual: OverrideRow; donor: MirrorDonor }> = []
+            for (const p of pairs) {
+              const fullManual = overrideRows.find((r) => r.id === p.manual.id)!
+              if (fullManual.gameweek?.closed_at) {
+                closedPairs.push({ manual: fullManual, donor: p.donor })
+              } else {
+                openPairs.push({ manual: fullManual, donor: p.donor })
+              }
+            }
+
+            // Open weeks → mirror + recalc + notify
+            for (const { manual, donor } of openPairs) {
+              const { error: mirrorErr } = await adminClient
+                .from('fixtures')
+                .update({
+                  status: 'FINISHED',
+                  home_score: donor.home_score,
+                  away_score: donor.away_score,
+                  result_source: 'api',
+                })
+                .eq('id', manual.id)
+              if (mirrorErr) {
+                errors.push(`Mirror update error for ${manual.id}: ${mirrorErr.message}`)
+                continue
+              }
+              const recalc = await recalculateFixture(manual.id, donor.home_score!, donor.away_score!)
+              if (recalc.errors.length > 0) {
+                errors.push(...recalc.errors.map((e) => `Mirror recalc error for ${manual.id}: ${e}`))
+              } else {
+                scored_fixtures++
+              }
+              await adminClient.from('admin_notifications').insert({
+                type: 'scoring_complete',
+                title: `Result picked up for a rescheduled fixture in GW${manual.gameweek?.number ?? '?'}`,
+                message:
+                  `A fixture you had bundled into GW${manual.gameweek?.number ?? '?'} (kickoff ${formatFriendlyKickoff(manual.kickoff_time)}) ` +
+                  `has now been published in the football data feed with a final score of ${donor.home_score}-${donor.away_score}. ` +
+                  `Predictions for this fixture have been scored automatically.`,
+              })
+            }
+
+            // Closed weeks → notify only, do NOT touch (mirrors the rule in 9a)
+            for (const { manual, donor } of closedPairs) {
+              await adminClient.from('admin_notifications').insert({
+                type: 'sync_failure',
+                title: `Result arrived after GW${manual.gameweek?.number ?? '?'} was closed — Dave needs to check`,
+                message:
+                  `A rescheduled fixture you bundled into GW${manual.gameweek?.number ?? '?'} (kickoff ${formatFriendlyKickoff(manual.kickoff_time)}) ` +
+                  `has now been published in the football data feed with a final score of ${donor.home_score}-${donor.away_score}, ` +
+                  `but the gameweek is already closed and the weekly totals have been added to everyone's season tally. ` +
+                  `The app has not changed any points automatically. Dave needs to decide whether to re-score this fixture.`,
+              })
+            }
+          }
+        }
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Unknown mirror error'
+      errors.push(`Manual fixture mirror error: ${msg}`)
     }
 
     // ── 9b. LOS round evaluation + H2H tie detection/resolution ──────────────
