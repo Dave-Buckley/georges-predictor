@@ -81,6 +81,10 @@ export default function PredictionForm({
   const losEliminated = losActive && losContext?.memberStatus === 'eliminated'
 
   // ── Initialise local prediction state from server-provided saved scores ──────
+  // Default to 0-0 (not null/null) so the steppers start at "0 vs 0" and members
+  // can just press +/- from there. Previously the inputs read "—" until the
+  // first click which led to people accidentally submitting blank scores when
+  // they meant 0-0.
   const [predictions, setPredictions] = useState<
     Record<string, { home_score: number | null; away_score: number | null }>
   >(() => {
@@ -89,7 +93,7 @@ export default function PredictionForm({
       const saved = existingPredictions[fixture.id]
       init[fixture.id] = saved
         ? { home_score: saved.home_score, away_score: saved.away_score }
-        : { home_score: null, away_score: null }
+        : { home_score: 0, away_score: 0 }
     }
     return init
   })

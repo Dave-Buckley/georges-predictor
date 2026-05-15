@@ -36,9 +36,8 @@ export default function PredictionInputs({
   function handleIncrement(side: 'home' | 'away') {
     const current = side === 'home' ? homeScore : awayScore
     const other = side === 'home' ? awayScore : homeScore
-    // First press of + on an empty score should land on 1, not 0 — otherwise
-    // members have to click + twice to get their first goal recorded.
-    const next = current === null ? 1 : Math.min(20, current + 1)
+    const base = current ?? 0
+    const next = Math.min(20, base + 1)
     if (side === 'home') onChange(fixtureId, next, other)
     else onChange(fixtureId, other, next)
   }
@@ -55,9 +54,11 @@ export default function PredictionInputs({
   function handleInputChange(side: 'home' | 'away', raw: string) {
     const other = side === 'home' ? awayScore : homeScore
     if (raw === '') {
-      // Allow clearing the input back to null
-      if (side === 'home') onChange(fixtureId, null, other)
-      else onChange(fixtureId, other, null)
+      // Clearing the input snaps back to 0, not blank — keeps the "0 vs 0"
+      // default invariant so members can't end up with empty boxes that
+      // silently fail to submit.
+      if (side === 'home') onChange(fixtureId, 0, other)
+      else onChange(fixtureId, other, 0)
       return
     }
     const parsed = parseInt(raw, 10)
@@ -68,8 +69,12 @@ export default function PredictionInputs({
   }
 
   // ── Locked read-only state ──────────────────────────────────────────────────
+  // Use hasSubmitted (not score values) to decide "No prediction". With 0-0
+  // as the live form default, an untouched + locked fixture has scores of 0
+  // but is NOT actually saved — we shouldn't claim the member predicted 0-0
+  // if they never submitted.
   if (disabled) {
-    if (homeScore === null || awayScore === null) {
+    if (!hasSubmitted || homeScore === null || awayScore === null) {
       return (
         <div className="flex items-center justify-center py-1">
           <span className="text-xs text-slate-500 italic">No prediction</span>
