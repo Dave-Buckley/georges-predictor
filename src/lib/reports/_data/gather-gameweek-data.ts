@@ -376,7 +376,8 @@ export async function gatherGameweekData(
     admin
       .from('members')
       .select('id, display_name, starting_points, email_weekly_personal, email_weekly_group')
-      .eq('approval_status', 'approved'),
+      .eq('approval_status', 'approved')
+      .eq('exclude_from_standings', false),
     admin
       .from('point_adjustments')
       .select('member_id, delta')

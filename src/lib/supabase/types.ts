@@ -24,6 +24,8 @@ export interface MemberRow {
   email_weekly_personal: boolean
   /** Added by migration 011 — per-member opt-in for weekly group standings PDF. */
   email_weekly_group: boolean
+  /** Added by migration 022 — when true, hidden from all points tally / standings / weekly-winner views but retains full login + prediction access. */
+  exclude_from_standings: boolean
 }
 
 /** Row shape for the public.admin_security_questions table */

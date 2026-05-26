@@ -56,7 +56,8 @@ export async function getStandingsAtGameweek(
     admin
       .from('members')
       .select('id, display_name, starting_points')
-      .eq('approval_status', 'approved'),
+      .eq('approval_status', 'approved')
+      .eq('exclude_from_standings', false),
     admin
       .from('prediction_scores')
       .select('member_id, fixture_id, points_awarded'),

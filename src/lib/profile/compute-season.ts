@@ -89,7 +89,7 @@ export async function computeStatsForSeason(
       .from('fixtures')
       .select('id, gameweek_id')
       .in('gameweek_id', gwIdList),
-    admin.from('members').select('id, starting_points'),
+    admin.from('members').select('id, starting_points').eq('exclude_from_standings', false),
   ])
 
   const fixturesById = new Map<string, { id: string; gameweek_id: string }>()

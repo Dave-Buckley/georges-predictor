@@ -55,6 +55,7 @@ export default async function ComparePage({
     .from('members')
     .select('id, display_name, approval_status')
     .eq('approval_status', 'approved')
+    .eq('exclude_from_standings', false)
     .order('display_name', { ascending: true })
   const members = ((allMembersRaw ?? []) as Array<{
     id: string

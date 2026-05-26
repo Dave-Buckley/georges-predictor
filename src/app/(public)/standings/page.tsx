@@ -65,6 +65,7 @@ async function getStandingsPageData(): Promise<{
   const { data: membersRaw } = await supabase
     .from('members')
     .select('id, display_name, starting_points')
+    .eq('exclude_from_standings', false)
     .order('starting_points', { ascending: false })
 
   const rawMembers = (membersRaw ?? []) as Array<{
