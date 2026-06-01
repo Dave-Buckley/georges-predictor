@@ -19,6 +19,7 @@ import {
   confirmPreSeasonAwardSchema,
 } from '@/lib/validators/pre-season'
 import { isChampionshipTeam } from '@/lib/teams/championship'
+import { isPremierLeagueTeam } from '@/lib/teams/pl'
 import { calculatePreSeasonPoints } from '@/lib/pre-season/calculate'
 
 type Result = { success: true } | { error: string }
@@ -70,17 +71,11 @@ export async function setPreSeasonPicksForMember(formData: FormData): Promise<Re
 
   // Source-list + duplicate validation (same logic as member action)
   const admin = createAdminClient()
-  const { data: plTeams } = await admin.from('teams').select('name')
-  const plSet = new Set(
-    ((plTeams as Array<{ name: string | null }> | null) ?? []).map((t) =>
-      (t.name ?? '').trim().toLowerCase(),
-    ),
-  )
-  const isPL = (n: string) => plSet.has((n ?? '').trim().toLowerCase())
   const norm = (s: string) => (s ?? '').trim().toLowerCase()
 
   for (const t of [...top4, tenth_place, ...relegated]) {
-    if (!isPL(t)) return { error: `'${t}' is not a Premier League team` }
+    if (!(await isPremierLeagueTeam(t, season)))
+      return { error: `'${t}' is not a Premier League team` }
   }
   for (const t of [...promoted, promoted_playoff_winner]) {
     if (!(await isChampionshipTeam(t, season)))

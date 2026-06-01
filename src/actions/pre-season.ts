@@ -14,9 +14,10 @@
  *     admin-only write RLS (imports own placeholder rows).
  *
  * Source-list validation:
- *   - top4, tenth_place, relegated must be PL teams (from the `teams` table).
+ *   - top4, tenth_place, relegated must be PL teams (from the `pl_teams`
+ *     table for the picks' season — migration 023).
  *   - promoted, promoted_playoff_winner must be Championship teams
- *     (CHAMPIONSHIP_TEAMS_2025_26 constant).
+ *     (from the `championship_teams` table for the picks' season).
  *   - Comparison is case-insensitive + trim.
  */
 
@@ -26,6 +27,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { submitPreSeasonPicksSchema } from '@/lib/validators/pre-season'
 import { getUpcomingSeason } from '@/lib/pre-season/seasons'
 import { isChampionshipTeam } from '@/lib/teams/championship'
+import { isPremierLeagueTeam } from '@/lib/teams/pl'
 
 type Result = { success: true } | { error: string }
 
@@ -75,16 +77,9 @@ export async function submitPreSeasonPicks(formData: FormData): Promise<Result> 
   if (!member) return { error: 'Member profile not found' }
 
   // 6. Source-list validation
-  const { data: plTeams } = await admin.from('teams').select('name')
-  const plSet = new Set(
-    ((plTeams as Array<{ name: string | null }> | null) ?? []).map((t) =>
-      (t.name ?? '').trim().toLowerCase(),
-    ),
-  )
-  const isPL = (n: string) => plSet.has((n ?? '').trim().toLowerCase())
-
   for (const t of [...top4, tenth_place, ...relegated]) {
-    if (!isPL(t)) return { error: `'${t}' is not a Premier League team` }
+    if (!(await isPremierLeagueTeam(t, season)))
+      return { error: `'${t}' is not a Premier League team` }
   }
   for (const t of [...promoted, promoted_playoff_winner]) {
     if (!(await isChampionshipTeam(t, season)))

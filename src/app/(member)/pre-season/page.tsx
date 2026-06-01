@@ -3,7 +3,8 @@ import type { Metadata } from 'next'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getCurrentSeason, getUpcomingSeason } from '@/lib/pre-season/seasons'
-import { CHAMPIONSHIP_TEAMS_2025_26 } from '@/lib/teams/championship-2025-26'
+import { getPlTeamNames } from '@/lib/teams/pl'
+import { getChampionshipTeamNames } from '@/lib/teams/championship'
 import type { PreSeasonPickRow, TeamRow } from '@/lib/supabase/types'
 import PreSeasonForm from './_components/pre-season-form'
 import PreSeasonReadOnly from './_components/pre-season-read-only'
@@ -63,11 +64,9 @@ export default async function PreSeasonPage() {
 
   // Preferred path: upcoming season with open window → submission form
   if (upcoming && new Date(upcoming.gw1_kickoff).getTime() > Date.now()) {
-    const [{ data: plTeamsData }, { data: priorPicksData }] = await Promise.all([
-      adminClient
-        .from('teams')
-        .select('id, external_id, name, short_name, tla, crest_url, updated_at')
-        .order('name'),
+    const [plNames, championshipNames, { data: priorPicksData }] = await Promise.all([
+      getPlTeamNames(upcoming.season),
+      getChampionshipTeamNames(upcoming.season),
       adminClient
         .from('pre_season_picks')
         .select('*')
@@ -76,14 +75,13 @@ export default async function PreSeasonPage() {
         .maybeSingle(),
     ])
 
-    const plTeams = (plTeamsData ?? []) as TeamRow[]
     const priorPicks = (priorPicksData as PreSeasonPickRow | null) ?? null
 
     return (
       <PreSeasonForm
         season={upcoming}
-        plTeams={plTeams.map((t) => ({ name: t.name }))}
-        championship={CHAMPIONSHIP_TEAMS_2025_26}
+        plTeams={plNames.map((name) => ({ name }))}
+        championship={championshipNames}
         initial={priorPicks}
       />
     )

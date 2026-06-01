@@ -5,12 +5,10 @@
  *   - Error access uses `.issues[0]?.message` (NOT `.errors`)
  *
  * Source-list refinement (PL teams vs Championship teams):
- *   - NOT enforced in these schemas because the PL team list is in the DB
- *     (`teams` table) and requires a DB round-trip. Enforced instead inside
- *     the server action after calling `.safeParse()`.
- *   - The Championship list is a static constant (`CHAMPIONSHIP_TEAMS_2025_26`)
- *     and could be enforced here with `.refine()`, but for consistency with
- *     the PL side we keep ALL source-list checks co-located in the action.
+ *   - NOT enforced in these schemas because both lists live in the DB
+ *     (per-season `pl_teams` and `championship_teams` tables — migration 023)
+ *     and require a DB round-trip. Enforced instead inside the server action
+ *     after calling `.safeParse()`.
  *
  * Shape references:
  *   - `importPreSeasonPicksRowSchema` in src/lib/validators/import.ts — parent

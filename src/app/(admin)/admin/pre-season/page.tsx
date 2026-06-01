@@ -16,6 +16,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { getCurrentSeason, getUpcomingSeason } from '@/lib/pre-season/seasons'
 import { getPreSeasonExportRows } from '@/lib/pre-season/export'
 import { getChampionshipTeams } from '@/actions/admin/championship'
+import { getPlTeamNames } from '@/lib/teams/pl'
 import type {
   MemberRow,
   PreSeasonAwardRow,
@@ -61,7 +62,7 @@ export default async function AdminPreSeasonPage() {
   const admin = createAdminClient()
 
   // Load data in parallel (Phase 3 pattern — no waterfalls)
-  const [membersRes, awardsRes, plTeamsRes, exportRows, championshipTeams] =
+  const [membersRes, awardsRes, plTeamNames, exportRows, championshipTeams] =
     await Promise.all([
       admin
         .from('members')
@@ -72,7 +73,7 @@ export default async function AdminPreSeasonPage() {
         .from('pre_season_awards')
         .select('*')
         .eq('season', activeSeason.season),
-      admin.from('teams').select('name').order('name', { ascending: true }),
+      getPlTeamNames(activeSeason.season),
       getPreSeasonExportRows(activeSeason.season),
       getChampionshipTeams(activeSeason.season),
     ])
@@ -80,10 +81,7 @@ export default async function AdminPreSeasonPage() {
   const members =
     (membersRes.data as Pick<MemberRow, 'id' | 'display_name'>[] | null) ?? []
   const awards = (awardsRes.data as PreSeasonAwardRow[] | null) ?? []
-  const plTeams =
-    (plTeamsRes.data as Array<{ name: string | null }> | null)
-      ?.map((t) => ({ name: t.name ?? '' }))
-      .filter((t) => t.name.length > 0) ?? []
+  const plTeams = plTeamNames.map((name) => ({ name }))
 
   const championshipNames: readonly string[] = championshipTeams.map((t) => t.name)
 
