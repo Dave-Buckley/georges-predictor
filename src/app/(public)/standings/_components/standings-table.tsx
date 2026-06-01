@@ -13,6 +13,7 @@
  */
 
 import { useMemo, useState } from 'react'
+import { Crown } from 'lucide-react'
 
 import { MemberLink } from '@/components/shared/member-link'
 
@@ -118,16 +119,26 @@ export function StandingsTable({ rows, weeklyLabel }: StandingsTableProps) {
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-800">
-          {sorted.map((m) => (
-            <tr key={m.id} className={m.rank === 1 ? 'bg-purple-500/10' : ''}>
+          {sorted.map((m) => {
+            const isChampion = sortKey === 'total' && m.rank === 1
+            return (
+            <tr key={m.id} className={isChampion ? 'bg-purple-500/10' : ''}>
               <td className="px-4 py-3 font-medium text-slate-300">
                 {m.rank}
               </td>
               <td className="px-4 py-3 text-white font-medium">
-                <MemberLink
-                  displayName={m.display_name}
-                  className="text-white font-medium"
-                />
+                <span className="inline-flex items-center gap-1.5">
+                  {isChampion && (
+                    <Crown
+                      className="w-4 h-4 text-yellow-400 fill-yellow-400 flex-shrink-0"
+                      aria-label="Season winner"
+                    />
+                  )}
+                  <MemberLink
+                    displayName={m.display_name}
+                    className="text-white font-medium"
+                  />
+                </span>
               </td>
               <td
                 className={`px-4 py-3 text-right tabular-nums ${
@@ -146,7 +157,8 @@ export function StandingsTable({ rows, weeklyLabel }: StandingsTableProps) {
                 {m.starting_points}
               </td>
             </tr>
-          ))}
+            )
+          })}
           {sorted.length === 0 && (
             <tr>
               <td

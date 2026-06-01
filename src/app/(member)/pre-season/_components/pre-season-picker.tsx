@@ -16,7 +16,7 @@
  */
 
 import * as Select from '@radix-ui/react-select'
-import { Check, ChevronDown } from 'lucide-react'
+import { Check, ChevronDown, ChevronUp } from 'lucide-react'
 
 export interface PickerState {
   top4: (string | null)[]        // length 4
@@ -91,11 +91,14 @@ function TeamSelect({
 
       <Select.Portal>
         <Select.Content
-          className="z-[100] bg-slate-900 rounded-xl shadow-2xl border border-slate-700 overflow-hidden"
+          className="z-[100] bg-slate-900 rounded-xl shadow-2xl border border-slate-700 overflow-hidden max-h-[min(70vh,28rem)]"
           position="popper"
           sideOffset={4}
         >
-          <Select.Viewport className="max-h-64 overflow-y-auto p-1">
+          <Select.ScrollUpButton className="flex items-center justify-center h-7 bg-slate-900 text-slate-400 cursor-default">
+            <ChevronUp className="w-4 h-4" />
+          </Select.ScrollUpButton>
+          <Select.Viewport className="p-1">
             {options.map((name) => (
               <Select.Item
                 key={name}
@@ -109,6 +112,9 @@ function TeamSelect({
               </Select.Item>
             ))}
           </Select.Viewport>
+          <Select.ScrollDownButton className="flex items-center justify-center h-7 bg-slate-900 text-slate-400 cursor-default">
+            <ChevronDown className="w-4 h-4" />
+          </Select.ScrollDownButton>
         </Select.Content>
       </Select.Portal>
     </Select.Root>
