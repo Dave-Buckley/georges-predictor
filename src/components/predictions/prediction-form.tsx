@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
-import { Users, AlertTriangle, CheckCircle2, XCircle, Loader2, Lock, Star, Zap, Trophy } from 'lucide-react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+import { Users, AlertTriangle, CheckCircle2, XCircle, Loader2, Lock, Star, Zap, Trophy, Shield } from 'lucide-react'
 import type { FixtureWithTeams, GameweekRow, GameweekStatus } from '@/lib/supabase/types'
 import { submitPredictions } from '@/actions/predictions'
 import { computeDisplayTotal } from '@/lib/scoring/calculate-bonus'
 import GameweekNav from '@/components/fixtures/gameweek-nav'
 import GameweekView from '@/components/fixtures/gameweek-view'
-import LosTeamPicker, { type LosTeamOption } from '@/components/los/los-team-picker'
+import { type LosTeamOption } from '@/components/los/los-team-picker'
 import { WhatsAppCopyButton } from '@/components/predictions/whatsapp-copy-button'
 
 interface ScoreBreakdown {
@@ -157,6 +157,24 @@ export default function PredictionForm({
   const handleBonusToggle = useCallback((fixtureId: string) => {
     setBonusFixtureId((prev) => (prev === fixtureId ? null : fixtureId))
   }, [])
+
+  // ── LOS pick handler — tapping the home/away shield picks that team; tapping
+  //    the already-picked team again clears it (member can change their mind
+  //    right up until they lock/submit). Only one LOS team across the whole GW.
+  const handleLosSelect = useCallback((teamId: string) => {
+    setLosTeamId((prev) => (prev === teamId ? null : teamId))
+  }, [])
+
+  // Set of teams still pickable this cycle — drives which shields are enabled.
+  const losAvailableTeamIds = useMemo(
+    () => new Set((losContext?.availableTeams ?? []).map((t) => t.id)),
+    [losContext],
+  )
+
+  // The team name currently picked (for the summary banner + WhatsApp).
+  const losPickedName = losTeamId
+    ? losContext?.availableTeams.find((t) => t.id === losTeamId)?.name ?? null
+    : null
 
   // ── Save-before-lock callback for the WhatsApp button. Collects current
   // local picks and calls submitPredictions once so the lock never freezes
@@ -445,16 +463,29 @@ export default function PredictionForm({
         </div>
       )}
 
-      {/* 3b. LOS team picker or eliminated banner */}
+      {/* 3b. LOS status banner (pick is made per-fixture via the shields below)
+             or eliminated banner */}
       {losEligible && losContext && (
         <div className="rounded-xl border border-yellow-500/30 bg-gradient-to-br from-slate-800 to-slate-800/60 px-4 py-3">
-          <LosTeamPicker
-            availableTeams={losContext.availableTeams}
-            value={losTeamId}
-            onChange={setLosTeamId}
-            required={true}
-            disabled={isSubmitting}
-          />
+          <div className="flex items-start gap-3">
+            <Shield className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-yellow-300">
+                Last One Standing
+                <span className="ml-1 text-red-400">*</span>
+              </p>
+              {losPickedName ? (
+                <p className="text-xs text-green-400 mt-0.5 font-medium">
+                  Backing {losPickedName} to win this week. Tap another shield to change.
+                </p>
+              ) : (
+                <p className="text-xs text-amber-400 mt-0.5">
+                  Tap the 🛡 shield on a fixture below to back its home or away team.
+                  Each team can only be used once per cycle.
+                </p>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
@@ -496,6 +527,10 @@ export default function PredictionForm({
         bonusActive={bonusRequiresFixture}
         isGoldenGlory={isGoldenGlory}
         allLocked={isLocked}
+        losEligible={losEligible}
+        losSelectedTeamId={losTeamId}
+        losAvailableTeamIds={losAvailableTeamIds}
+        onLosSelect={handleLosSelect}
       />
 
       {/* 5b. Inline WhatsApp copy button — always rendered (not sticky)

@@ -305,11 +305,13 @@ export async function resetCompetitionIfNeeded(
 
   const newCompetitionId = (newComp?.id as string | undefined) ?? ''
 
-  // 4. Enrol every approved member in the new cycle
+  // 4. Enrol every approved member in the new cycle (excluding placeholder
+  //    accounts hidden from standings — they can't log in to pick).
   const { data: approvedMembers } = await adminClient
     .from('members')
     .select('id')
     .eq('approval_status', 'approved')
+    .eq('exclude_from_standings', false)
 
   const memberRows = ((approvedMembers ?? []) as Array<{ id: string }>).map((m) => ({
     competition_id: newCompetitionId,

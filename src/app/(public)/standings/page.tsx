@@ -187,7 +187,7 @@ export default async function StandingsPage() {
       {/* ── Header ────────────────────────────────────────────────────────── */}
       <header className="space-y-2">
         <p className="text-slate-400 text-sm">
-          Premier League predictions season 2025/26.{' '}
+          Premier League predictions season 2026/27.{' '}
           <Link href="/signup" className="text-purple-400 hover:text-purple-300">
             Join the competition
           </Link>
@@ -200,6 +200,11 @@ export default async function StandingsPage() {
             how it works
           </Link>
           .
+        </p>
+        <p className="text-slate-500 text-sm">
+          <Link href="/previous-season" className="text-yellow-400/90 hover:text-yellow-300">
+            🏆 View last season&apos;s final table (2025/26)
+          </Link>
         </p>
       </header>
 

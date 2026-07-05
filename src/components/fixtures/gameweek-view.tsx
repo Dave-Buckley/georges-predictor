@@ -25,6 +25,11 @@ interface GameweekViewProps {
   isGoldenGlory?: boolean
   /** When true, every fixture is shown as locked regardless of kickoff time. */
   allLocked?: boolean
+  // ─── Last One Standing per-fixture pick ────────────────────────────────────
+  losEligible?: boolean
+  losSelectedTeamId?: string | null
+  losAvailableTeamIds?: Set<string> | null
+  onLosSelect?: (teamId: string) => void
 }
 
 /**
@@ -45,6 +50,10 @@ export default function GameweekView({
   bonusActive,
   isGoldenGlory,
   allLocked = false,
+  losEligible = false,
+  losSelectedTeamId = null,
+  losAvailableTeamIds = null,
+  onLosSelect,
 }: GameweekViewProps) {
   if (fixtures.length === 0) {
     return (
@@ -97,6 +106,10 @@ export default function GameweekView({
               onBonusToggle={allLocked ? undefined : onBonusToggle}
               bonusActive={allLocked ? false : bonusActive}
               isGoldenGlory={isGoldenGlory}
+              losEligible={allLocked ? false : losEligible}
+              losSelectedTeamId={losSelectedTeamId}
+              losAvailableTeamIds={losAvailableTeamIds}
+              onLosSelect={allLocked ? undefined : onLosSelect}
             />
           )
         })}

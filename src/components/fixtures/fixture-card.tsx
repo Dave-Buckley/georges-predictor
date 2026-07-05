@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, type CSSProperties } from 'react'
-import { Lock, Star } from 'lucide-react'
+import { Lock, Star, Shield } from 'lucide-react'
 import type { FixtureWithTeams } from '@/lib/supabase/types'
 import { formatKickoffTime, formatKickoffDate, isToday } from '@/lib/fixtures/timezone'
 import TeamBadge from '@/components/fixtures/team-badge'
@@ -29,6 +29,11 @@ interface FixtureCardProps {
   onBonusToggle?: (fixtureId: string) => void         // Callback when star is tapped
   bonusActive?: boolean                               // Whether a bonus is active this GW
   isGoldenGlory?: boolean                             // Golden Glory visual treatment
+  // ─── Last One Standing (LOS) per-fixture pick ──────────────────────────────
+  losEligible?: boolean                               // Member is in LOS and can pick this GW
+  losSelectedTeamId?: string | null                   // The team this member has picked this GW
+  losAvailableTeamIds?: Set<string> | null            // Teams still pickable this cycle (null = all)
+  onLosSelect?: (teamId: string) => void              // Callback when a home/away shield is tapped
 }
 
 /**
@@ -57,6 +62,10 @@ export default function FixtureCard({
   onBonusToggle,
   bonusActive = false,
   isGoldenGlory = false,
+  losEligible = false,
+  losSelectedTeamId = null,
+  losAvailableTeamIds = null,
+  onLosSelect,
 }: FixtureCardProps) {
   const [now, setNow] = useState<Date>(() => new Date())
 
@@ -204,6 +213,18 @@ export default function FixtureCard({
   const isTerminal = isFinished || isPostponed || isCancelled || isLocked || isLive
   const showBonusStar = bonusActive && !!onBonusToggle && !isTerminal
 
+  // ─── LOS home/away selector state ─────────────────────────────────────────────
+  // Show two shields (home / away) so the member can back a team to win this GW.
+  // A team already used earlier in the cycle is not in losAvailableTeamIds and
+  // renders disabled. The currently-selected team is always allowed.
+  const showLosSelector = losEligible && !!onLosSelect && !isTerminal
+  const homeLosSelected = losSelectedTeamId === fixture.home_team_id
+  const awayLosSelected = losSelectedTeamId === fixture.away_team_id
+  const homeLosAvailable =
+    !losAvailableTeamIds || losAvailableTeamIds.has(fixture.home_team_id) || homeLosSelected
+  const awayLosAvailable =
+    !losAvailableTeamIds || losAvailableTeamIds.has(fixture.away_team_id) || awayLosSelected
+
   return (
     <div className={cardClasses} style={cardStyle}>
       {/* Top badges row: Rescheduled + bonus star */}
@@ -255,6 +276,32 @@ export default function FixtureCard({
           <TeamBadge team={fixture.away_team} size="md" />
         </div>
       </div>
+
+      {/* Last One Standing — pick the home or away team to survive this week */}
+      {showLosSelector && (
+        <div className="mt-3 rounded-lg border border-yellow-500/25 bg-yellow-950/20 px-3 py-2.5">
+          <p className="text-[11px] font-semibold text-yellow-300/90 uppercase tracking-wide mb-2 flex items-center gap-1">
+            <Shield className="w-3.5 h-3.5" />
+            Last One Standing — back a team to win
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            <LosSideButton
+              label={fixture.home_team.short_name ?? fixture.home_team.name}
+              sideLabel="Home"
+              selected={homeLosSelected}
+              available={homeLosAvailable}
+              onClick={() => onLosSelect!(fixture.home_team_id)}
+            />
+            <LosSideButton
+              label={fixture.away_team.short_name ?? fixture.away_team.name}
+              sideLabel="Away"
+              selected={awayLosSelected}
+              available={awayLosAvailable}
+              onClick={() => onLosSelect!(fixture.away_team_id)}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Prediction area — populated when inside PredictionForm context */}
       <div className="mt-3 prediction-area" data-fixture-id={fixture.id}>
@@ -319,5 +366,55 @@ export default function FixtureCard({
         ) : null}
       </div>
     </div>
+  )
+}
+
+// ─── LOS side button ───────────────────────────────────────────────────────────
+// One of the two (home / away) shield buttons for a fixture's LOS pick.
+// Disabled + struck through when the team was already used earlier this cycle.
+function LosSideButton({
+  label,
+  sideLabel,
+  selected,
+  available,
+  onClick,
+}: {
+  label: string
+  sideLabel: string
+  selected: boolean
+  available: boolean
+  onClick: () => void
+}) {
+  const disabled = !available && !selected
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-pressed={selected}
+      aria-label={
+        disabled
+          ? `${label} already used this cycle`
+          : selected
+            ? `Remove Last One Standing pick ${label}`
+            : `Pick ${label} for Last One Standing`
+      }
+      className={`flex items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-sm font-medium transition-colors ${
+        selected
+          ? 'bg-yellow-500 text-slate-900 border border-yellow-400'
+          : disabled
+            ? 'bg-slate-800/60 text-slate-600 border border-slate-700/50 line-through cursor-not-allowed'
+            : 'bg-slate-800 text-slate-200 border border-slate-600 hover:border-yellow-500/60 hover:bg-slate-700/60'
+      }`}
+      style={{ minHeight: 44 }}
+    >
+      <Shield
+        className={`w-4 h-4 flex-shrink-0 ${selected ? 'fill-slate-900/20' : ''}`}
+      />
+      <span className="flex flex-col items-start leading-tight min-w-0">
+        <span className="text-[10px] uppercase tracking-wide opacity-70">{sideLabel}</span>
+        <span className="truncate max-w-[7rem]">{label}</span>
+      </span>
+    </button>
   )
 }
