@@ -7,7 +7,7 @@ import AllFixturesClient from './all-fixtures-client'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: "All Fixtures — George's Predictor",
+  title: "All Fixtures — King Predictor",
 }
 
 /**

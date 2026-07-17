@@ -26,7 +26,7 @@ export function getResend(): Resend | null {
  * shared sandbox sender for dev/local testing.
  */
 export const DEFAULT_FROM =
-  process.env.EMAIL_FROM ?? "George's Predictor <onboarding@resend.dev>"
+  process.env.EMAIL_FROM ?? "King Predictor <onboarding@resend.dev>"
 
 /**
  * Test-only hook to reset the memoised client. Not exported from the public

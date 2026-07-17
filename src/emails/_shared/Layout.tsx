@@ -40,7 +40,7 @@ export function EmailLayout({ children, previewText }: Props) {
         >
           <Section>
             <Text style={{ fontSize: 20, fontWeight: 700 }}>
-              George&apos;s Predictor
+              King Predictor 👑
             </Text>
           </Section>
           {children}

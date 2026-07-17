@@ -44,7 +44,7 @@ describe('buildFullExportXlsx', () => {
       header: 1,
       defval: '',
     })
-    expect(readme[0]?.[0]).toBe("George's Predictor — Full Season Export")
+    expect(readme[0]?.[0]).toBe("King Predictor — Full Season Export")
     // Count non-empty content rows (instructions) after the title/metadata.
     const contentRows = readme
       .slice(2)

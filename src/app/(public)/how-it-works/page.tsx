@@ -20,7 +20,7 @@ import { FAQ } from './_components/faq'
 export const dynamic = 'force-dynamic'
 
 export const metadata = {
-  title: "How It Works · George's Predictor",
+  title: "How It Works · King Predictor",
   description:
     'How to play the predictor: scoring, bonuses, Last One Standing, H2H steals, pre-season picks, and prizes. A friendly guide for newcomers.',
 }
@@ -49,7 +49,7 @@ export default function HowItWorksPage() {
             Welcome
           </h2>
           <p className="text-slate-300 leading-relaxed">
-            George&apos;s Predictor is a Premier League prediction competition
+            King Predictor is a Premier League prediction competition
             that&apos;s been running between a group of friends for a decade.
             Each week you predict the score of every PL fixture. You score
             points for getting the result right, more for getting the exact

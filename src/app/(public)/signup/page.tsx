@@ -3,8 +3,8 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import SignupForm from '@/components/auth/signup-form'
 
 export const metadata: Metadata = {
-  title: "Join George's Predictor",
-  description: "Sign up to join George's Premier League prediction competition.",
+  title: "Join King Predictor",
+  description: "Sign up to join the King Predictor Premier League prediction competition.",
 }
 
 /**

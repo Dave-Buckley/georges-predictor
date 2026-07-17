@@ -24,7 +24,7 @@ describe('email templates', () => {
         <p>hello</p>
       </EmailLayout>,
     )
-    expect(html).toContain("George")
+    expect(html).toContain("King Predictor")
     expect(html).toContain('hello')
   })
 

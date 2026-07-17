@@ -76,7 +76,7 @@ export function buildFullExportXlsx(data: FullExportData): Buffer {
 
   // ─── README ────────────────────────────────────────────────────────────────
   const readmeAoa: (string | number)[][] = [
-    ["George's Predictor — Full Season Export"],
+    ["King Predictor — Full Season Export"],
     [`Season ${data.season} • Generated ${data.generatedAtIso}`],
     ['Manual-run instructions:'],
     [

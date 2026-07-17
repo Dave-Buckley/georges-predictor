@@ -8,7 +8,7 @@ import type { FixtureWithTeams, GameweekRow } from '@/lib/supabase/types'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: "All Predictions — George's Predictor Admin",
+  title: "All Predictions — King Predictor Admin",
 }
 
 interface PageProps {

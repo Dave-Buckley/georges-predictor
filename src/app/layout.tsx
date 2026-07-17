@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "George's Predictor",
+  title: "King Predictor",
   description: "The Premier League prediction competition — enter your scores, track the table, and claim the prize.",
 };
 

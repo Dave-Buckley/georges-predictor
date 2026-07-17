@@ -20,7 +20,7 @@ export default async function PublicLayout({ children }: { children: ReactNode }
             href="/"
             className="text-white font-bold text-xl tracking-tight hover:text-purple-400 transition"
           >
-            George&apos;s Predictor
+            King Predictor 👑
           </Link>
           <nav className="flex items-center gap-4 text-sm">
             {isAdmin && (

@@ -38,7 +38,7 @@ export function Footer() {
           </ul>
         </nav>
         <p className="text-slate-500 text-xs">
-          &copy; {year} George&apos;s Predictor. 10 years and counting.
+          &copy; {year} King Predictor. 10 years and counting.
         </p>
       </div>
     </footer>

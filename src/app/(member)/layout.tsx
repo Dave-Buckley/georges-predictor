@@ -84,7 +84,7 @@ export default async function MemberLayout({ children }: MemberLayoutProps) {
             href="/dashboard"
             className="text-white font-bold text-xl tracking-tight hover:text-purple-400 transition"
           >
-            George&apos;s Predictor
+            King Predictor 👑
           </Link>
 
           <div className="flex items-center gap-2">

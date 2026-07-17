@@ -67,7 +67,7 @@ export function WhatsAppCopyButton({
     )
 
     const lines: string[] = []
-    lines.push(`*George's Predictor — GW${gameweekNumber}*`)
+    lines.push(`*King Predictor — GW${gameweekNumber}*`)
     lines.push(`*${memberDisplayName}*`)
     lines.push('')
 

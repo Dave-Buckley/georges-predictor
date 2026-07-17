@@ -129,10 +129,10 @@ export async function rejectMember(
   // Send rejection email (fire-and-forget — don't block on email failure)
   sendEmail({
     to: member.email,
-    subject: "Your registration for George's Predictor",
+    subject: "Your registration for King Predictor",
     html: `
       <p>Hi ${member.display_name},</p>
-      <p>Thanks for signing up for George's Predictor competition.</p>
+      <p>Thanks for signing up for King Predictor competition.</p>
       <p>Unfortunately your registration was not approved at this time.</p>
       <p>If you believe this is an error, please reach out to George directly.</p>
     `,

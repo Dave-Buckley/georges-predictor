@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import LoginForm from '@/components/auth/login-form'
 
 export const metadata: Metadata = {
-  title: "Member Login — George's Predictor",
-  description: "Log in to George's Predictor prediction competition.",
+  title: "Member Login — King Predictor",
+  description: "Log in to King Predictor prediction competition.",
 }
 
 export default async function LoginPage({

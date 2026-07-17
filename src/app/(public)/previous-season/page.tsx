@@ -11,7 +11,7 @@ import { SEASON_2025_26 } from '@/lib/history/season-2025-26'
 import { MemberLink } from '@/components/shared/member-link'
 
 export const metadata: Metadata = {
-  title: `${SEASON_2025_26.label} Final Table — George's Predictor`,
+  title: `${SEASON_2025_26.label} Final Table — King Predictor`,
 }
 
 export default function PreviousSeasonPage() {

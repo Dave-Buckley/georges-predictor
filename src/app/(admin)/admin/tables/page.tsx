@@ -8,7 +8,7 @@ import { GameweekSelector } from './_components/gameweek-selector'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: "Tables — George's Predictor Admin",
+  title: "Tables — King Predictor Admin",
 }
 
 interface PageProps {

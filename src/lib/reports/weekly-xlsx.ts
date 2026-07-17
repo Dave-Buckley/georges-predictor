@@ -22,7 +22,7 @@ export function buildWeeklyAdminXlsx(data: GameweekReportData): Buffer {
 
   // ─── README ────────────────────────────────────────────────────────────────
   const readmeAoa: (string | number)[][] = [
-    ["George's Predictor — Weekly Admin Report"],
+    ["King Predictor — Weekly Admin Report"],
     [`GW ${data.gwNumber} • Season ${data.seasonLabel}`],
     [
       `Generated for admin review${data.closedAtIso ? ` • Closed ${data.closedAtIso}` : ''}`,

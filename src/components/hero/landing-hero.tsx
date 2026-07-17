@@ -18,11 +18,11 @@ export function LandingHero({ showCta = true }: LandingHeroProps) {
   return (
     <section
       className="relative overflow-hidden rounded-b-2xl bg-gradient-to-br from-pl-purple via-pl-purple-light to-pl-purple-dark text-white px-6 py-12 sm:py-20"
-      aria-label="George's Predictor"
+      aria-label="King Predictor"
     >
       <div className="relative z-10 max-w-4xl mx-auto text-center sm:text-left space-y-4">
         <h1 className="text-3xl sm:text-6xl font-extrabold tracking-tight text-white">
-          George&apos;s Predictor
+          King Predictor 👑
         </h1>
         <p className="text-pl-green text-base sm:text-xl font-medium max-w-2xl">
           Weekly Premier League predictions with your mates. 10 years strong.

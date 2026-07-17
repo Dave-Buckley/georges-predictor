@@ -123,7 +123,7 @@ export function AdminSidebar({ adminEmail }: SidebarProps) {
       {/* Brand */}
       <div className="px-6 py-5 border-b border-white/10">
         <h1 className="text-lg font-bold text-white tracking-tight">
-          George&apos;s Predictor
+          King Predictor 👑
         </h1>
         <p className="text-xs text-white/50 mt-0.5">Admin Panel</p>
       </div>

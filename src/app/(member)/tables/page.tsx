@@ -10,7 +10,7 @@ import { StandingsList } from './_components/standings-list'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: "Tables — George's Predictor",
+  title: "Tables — King Predictor",
 }
 
 interface PageProps {

@@ -17,8 +17,8 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { gwNumber } = await params
   const n = parseInt(gwNumber, 10)
-  if (isNaN(n) || n < 1 || n > 38) return { title: "George's Predictor" }
-  return { title: `Gameweek ${n} — George's Predictor` }
+  if (isNaN(n) || n < 1 || n > 38) return { title: "King Predictor" }
+  return { title: `Gameweek ${n} — King Predictor` }
 }
 
 /**

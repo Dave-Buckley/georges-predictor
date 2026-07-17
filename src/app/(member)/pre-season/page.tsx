@@ -12,7 +12,7 @@ import PreSeasonReadOnly from './_components/pre-season-read-only'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: "Pre-Season — George's Predictor",
+  title: "Pre-Season — King Predictor",
 }
 
 export default async function PreSeasonPage() {

@@ -40,7 +40,7 @@ describe('buildWeeklyAdminXlsx', () => {
       header: 1,
       defval: '',
     })
-    expect(readme[0]?.[0]).toBe("George's Predictor — Weekly Admin Report")
+    expect(readme[0]?.[0]).toBe("King Predictor — Weekly Admin Report")
     // Somewhere in the first 10 rows we expect the "double-check" reminder.
     const body = readme.slice(0, 10).map((r) => r.join(' ')).join('\n')
     expect(body).toMatch(/double-check API scores weekly/i)
