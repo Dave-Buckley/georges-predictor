@@ -69,7 +69,7 @@ const html = `
   <h2 style="color:#3D195B;border-bottom:2px solid #00FF87;padding-bottom:4px;">Moving a fixture into a different gameweek</h2>
   <p>Sometimes a match gets rescheduled or you want to bundle a re-run into the "predictor week" you're actually running. Here's how:</p>
   <ol style="line-height:1.7;">
-    <li>Go to <a href="https://georges-predictor.vercel.app/admin/gameweeks">Admin → Gameweeks</a> and open the gameweek the fixture is <em>currently</em> in (e.g. GW34).</li>
+    <li>Go to <a href="https://kingpredictor.vercel.app/admin/gameweeks">Admin → Gameweeks</a> and open the gameweek the fixture is <em>currently</em> in (e.g. GW34).</li>
     <li>Find the fixture in the list. Each fixture row has action buttons on the right.</li>
     <li>Tap <strong>Move</strong>. A dialog opens letting you pick a target gameweek number.</li>
     <li>Choose the target gameweek (e.g. 33) and confirm.</li>
@@ -80,14 +80,14 @@ const html = `
   <h2 style="color:#3D195B;border-bottom:2px solid #00FF87;padding-bottom:4px;">Adding a brand-new fixture</h2>
   <p>If a match is missing from the API feed entirely:</p>
   <ol style="line-height:1.7;">
-    <li>Go to <a href="https://georges-predictor.vercel.app/admin/gameweeks">Admin → Gameweeks</a> and open the gameweek you want to add it to.</li>
+    <li>Go to <a href="https://kingpredictor.vercel.app/admin/gameweeks">Admin → Gameweeks</a> and open the gameweek you want to add it to.</li>
     <li>Top-right of the page — tap the purple <strong>+ Add fixture</strong> button.</li>
     <li>Pick home + away teams, enter kickoff date/time, hit Save. Done.</li>
   </ol>
 
   <h2 style="color:#3D195B;border-bottom:2px solid #00FF87;padding-bottom:4px;">Quick checks weekly</h2>
   <ul style="line-height:1.6;">
-    <li>Check <a href="https://georges-predictor.vercel.app/admin/bonuses">Admin → Bonuses</a> each week to confirm or change the active bonus before Friday.</li>
+    <li>Check <a href="https://kingpredictor.vercel.app/admin/bonuses">Admin → Bonuses</a> each week to confirm or change the active bonus before Friday.</li>
     <li>If a bonus auto-scores wrong (most don't — only Jose Park The Bus and Golden Glory score automatically), you can manually confirm or reject each member's bonus award on that same page.</li>
     <li>After kickoff weekend, peek at the standings to make sure scores look right before sending the weekly PDF pack.</li>
   </ul>

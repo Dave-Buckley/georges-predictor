@@ -19,7 +19,7 @@ import {
 import type { GameweekReportData } from './_data/gather-gameweek-data'
 
 const APP_URL =
-  process.env.NEXT_PUBLIC_APP_URL ?? 'https://georges-predictor.vercel.app'
+  process.env.NEXT_PUBLIC_APP_URL ?? 'https://kingpredictor.vercel.app'
 
 const styles = StyleSheet.create({
   page: { padding: 32, fontSize: 10, fontFamily: 'Helvetica' },

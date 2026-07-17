@@ -32,7 +32,7 @@ export async function GET() {
   const data = await gatherFullExportData()
   const buf = buildFullExportXlsx(data)
 
-  const filename = `georges-predictor-full-export-${new Date()
+  const filename = `kingpredictor-full-export-${new Date()
     .toISOString()
     .slice(0, 10)}.xlsx`
 

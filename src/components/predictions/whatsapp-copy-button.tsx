@@ -106,7 +106,7 @@ export function WhatsAppCopyButton({
     }
 
     lines.push('')
-    lines.push('Submitted via georges-predictor.vercel.app')
+    lines.push('Submitted via kingpredictor.vercel.app')
     return lines.join('\n')
   }
 
