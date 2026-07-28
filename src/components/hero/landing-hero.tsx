@@ -1,13 +1,13 @@
 /**
  * LandingHero — large hero banner for the `/` landing page.
  *
- * Pure inline-SVG + CSS gradient. Wordmark, tagline, and an optional
- * sign-in CTA (rendered when no session is supplied — server component
- * decides whether to pass `showCta`).
- *
- * Zero external assets, zero image hosting.
+ * Leads with the King Predictor logo mark over a CSS gradient + inline-SVG
+ * stadium silhouette, plus the main slogan and an optional sign-in CTA
+ * (rendered when no session is supplied — the server component decides
+ * whether to pass `showCta`).
  */
 import Link from 'next/link'
+import { BrandLogo } from '@/components/brand/brand-logo'
 
 interface LandingHeroProps {
   /** When true, render the "Sign in" CTA button. Default true. */
@@ -20,15 +20,19 @@ export function LandingHero({ showCta = true }: LandingHeroProps) {
       className="relative overflow-hidden rounded-b-2xl bg-gradient-to-br from-pl-purple via-pl-purple-light to-pl-purple-dark text-white px-6 py-12 sm:py-20"
       aria-label="King Predictor"
     >
-      <div className="relative z-10 max-w-4xl mx-auto text-center sm:text-left space-y-4">
-        <h1 className="text-3xl sm:text-6xl font-extrabold tracking-tight text-white">
-          King Predictor 👑
+      <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center text-center space-y-5">
+        <BrandLogo size={168} priority className="drop-shadow-2xl" />
+        <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white">
+          King Predictor
         </h1>
-        <p className="text-pl-green text-base sm:text-xl font-medium max-w-2xl">
-          Weekly Premier League predictions with your mates. 10 years strong.
+        <p className="text-pl-green text-lg sm:text-2xl font-semibold max-w-2xl">
+          Premier League scores with friends. Unpredictable fun.
+        </p>
+        <p className="text-white/70 text-sm sm:text-base max-w-xl">
+          Weekly predictions with your mates — 10 years strong.
         </p>
         {showCta && (
-          <div className="flex flex-wrap justify-center sm:justify-start gap-3 pt-2">
+          <div className="flex flex-wrap justify-center gap-3 pt-2">
             <Link
               href="/signup"
               className="inline-block rounded-xl bg-pl-green px-6 py-3 font-semibold text-pl-purple hover:bg-white transition"

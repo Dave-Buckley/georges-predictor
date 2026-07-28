@@ -73,7 +73,17 @@
       "Bash(git *)",
       "Bash(gh api *)",
       "Bash(sed 's/=.*$/=***/')",
-      "Bash(where vercel *)"
+      "Bash(where vercel *)",
+      "Bash(ls scripts *)",
+      "Bash(ls supabase/seed*)",
+      "Bash(grep -rl \"los_competitions\" --include=*.sql --include=*.ts scripts supabase)",
+      "mcp__claude_ai_Gmail__create_draft",
+      "mcp__plugin_vercel_vercel__get_project",
+      "PowerShell(Start-Process \"https://vercel.com/dave-buckleys-projects/georges-predictor/settings/general\")",
+      "PowerShell(Start-Process \"https://vercel.com/dave-buckleys-projects/kingpredictor/settings/domains\")",
+      "PowerShell(Start-Process \"https://supabase.com/dashboard/project/unpdsomipodadnlnbioq/auth/templates\")",
+      "Bash(cp \"C:/Users/David/Desktop/George/IMG-20260723-WA0000.jpg\" \"public/king-predictor-logo.jpg\")",
+      "Bash(cp \"C:/Users/David/Desktop/George/IMG-20260723-WA0000.jpg\" \"src/app/icon.jpg\")"
     ]
   }
 }

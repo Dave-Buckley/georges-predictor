@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
@@ -121,11 +122,21 @@ export function AdminSidebar({ adminEmail }: SidebarProps) {
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       {/* Brand */}
-      <div className="px-6 py-5 border-b border-white/10">
-        <h1 className="text-lg font-bold text-white tracking-tight">
-          King Predictor 👑
-        </h1>
-        <p className="text-xs text-white/50 mt-0.5">Admin Panel</p>
+      <div className="px-6 py-5 border-b border-white/10 flex items-center gap-3">
+        <Image
+          src="/king-predictor-logo.jpg"
+          alt="King Predictor"
+          width={40}
+          height={40}
+          priority
+          className="rounded-lg ring-1 ring-white/10 flex-shrink-0"
+        />
+        <div>
+          <h1 className="text-lg font-bold text-white tracking-tight leading-tight">
+            King Predictor
+          </h1>
+          <p className="text-xs text-white/50">Admin Panel</p>
+        </div>
       </div>
 
       {/* Navigation */}

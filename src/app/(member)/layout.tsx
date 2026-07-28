@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import type { MemberRow } from '@/lib/supabase/types'
+import { BrandLogo } from '@/components/brand/brand-logo'
 
 // Force dynamic rendering — authenticated page, no caching
 export const dynamic = 'force-dynamic'
@@ -80,12 +81,7 @@ export default async function MemberLayout({ children }: MemberLayoutProps) {
       {/* Header */}
       <header className="border-b border-slate-800 sticky top-0 z-10 bg-slate-950/95 backdrop-blur">
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link
-            href="/dashboard"
-            className="text-white font-bold text-xl tracking-tight hover:text-purple-400 transition"
-          >
-            King Predictor 👑
-          </Link>
+          <BrandLogo href="/dashboard" size={40} showWordmark priority />
 
           <div className="flex items-center gap-2">
             <span className="text-slate-400 text-sm hidden sm:block">

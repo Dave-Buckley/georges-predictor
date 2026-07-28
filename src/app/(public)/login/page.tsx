@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import LoginForm from '@/components/auth/login-form'
+import { BrandLogo } from '@/components/brand/brand-logo'
 
 export const metadata: Metadata = {
   title: "Member Login — King Predictor",
@@ -19,6 +20,9 @@ export default async function LoginPage({
       <div className="w-full max-w-md space-y-8">
         {/* Header */}
         <div className="text-center space-y-3">
+          <div className="flex justify-center">
+            <BrandLogo size={96} priority />
+          </div>
           <h1 className="text-3xl font-bold text-white">
             Welcome back
           </h1>

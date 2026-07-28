@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { BrandLogo } from '@/components/brand/brand-logo'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,12 +17,7 @@ export default async function PublicLayout({ children }: { children: ReactNode }
       {/* Minimal header */}
       <header className="border-b border-slate-800">
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link
-            href="/"
-            className="text-white font-bold text-xl tracking-tight hover:text-purple-400 transition"
-          >
-            King Predictor 👑
-          </Link>
+          <BrandLogo href="/" size={40} showWordmark priority />
           <nav className="flex items-center gap-4 text-sm">
             {isAdmin && (
               <Link
