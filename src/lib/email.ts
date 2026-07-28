@@ -41,6 +41,62 @@ export async function sendEmail({
 }
 
 /**
+ * Sends the branded King Predictor login code to a member via Resend.
+ *
+ * Replaces Supabase's built-in auth email for the login-code flow so the
+ * branding ("King Predictor"), sender name, and digit count are all under our
+ * control — the Supabase hosted template can't be edited without dashboard
+ * access. The code itself is produced by `supabase.auth.admin.generateLink`
+ * in the requestMagicLink action and passed in here verbatim.
+ */
+export async function sendLoginCodeEmail({
+  to,
+  code,
+  actionLink,
+}: {
+  to: string
+  code: string
+  /** Optional one-tap login link (from generateLink's action_link). */
+  actionLink?: string
+}): Promise<{ error?: string }> {
+  const subject = 'Your King Predictor login code'
+  const linkBlock = actionLink
+    ? `
+      <hr style="border:none;border-top:1px solid #2a2a3a;margin:28px 0" />
+      <p style="color:#9aa0b4;font-size:14px;margin:0 0 6px">
+        Or if you prefer, you can tap this link to log in:
+      </p>
+      <p style="margin:0">
+        <a href="${actionLink}" style="color:#a855f7;font-size:16px;font-weight:600">Log me in</a>
+      </p>`
+    : ''
+
+  const html = `
+  <div style="background:#0b0b14;padding:32px 20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
+    <div style="max-width:480px;margin:0 auto">
+      <h1 style="color:#ffffff;font-size:22px;font-weight:800;margin:0 0 16px">
+        Your King Predictor login code 👑
+      </h1>
+      <p style="color:#c7cbd8;font-size:16px;margin:0 0 20px">
+        Hi — your 8-digit login code is:
+      </p>
+      <div style="background:#16161f;border:1px solid #2a2a3a;border-radius:12px;padding:20px;text-align:center;margin:0 0 20px">
+        <span style="color:#ffffff;font-size:38px;font-weight:800;letter-spacing:10px;font-family:'Courier New',monospace">${code}</span>
+      </div>
+      <p style="color:#c7cbd8;font-size:15px;margin:0">
+        Type this into the login screen on King Predictor. The code expires in 1 hour.
+      </p>
+      ${linkBlock}
+      <p style="color:#6b7086;font-size:12px;margin:28px 0 0">
+        Didn't request this? You can safely ignore this email.
+      </p>
+    </div>
+  </div>`
+
+  return sendEmail({ to, subject, html })
+}
+
+/**
  * Notifies both admins (George + Dave) when a new member signs up.
  * Called by the signup server action.
  */

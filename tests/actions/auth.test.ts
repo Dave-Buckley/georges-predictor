@@ -16,6 +16,11 @@ vi.mock('@/lib/supabase/server', () => ({
 
 vi.mock('@/lib/email', () => ({
   sendAdminSignupNotification: vi.fn().mockResolvedValue({}),
+  sendLoginCodeEmail: vi.fn().mockResolvedValue({}),
+}))
+
+vi.mock('@/lib/supabase/admin', () => ({
+  createAdminClient: vi.fn(),
 }))
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -309,61 +314,122 @@ describe('signUpMember', () => {
 })
 
 describe('requestMagicLink', () => {
+  let mockAdmin: {
+    from: ReturnType<typeof vi.fn>
+    auth: { admin: { generateLink: ReturnType<typeof vi.fn> } }
+  }
+
+  // Builds a members-table lookup chain resolving to the given rows.
+  function memberLookup(rows: Array<{ email: string }>) {
+    return vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockResolvedValue({ data: rows, error: null }),
+    })
+  }
+
   beforeEach(async () => {
     vi.resetModules()
+    vi.clearAllMocks() // reset call history between tests (mocks persist across resetModules)
     mockSupabase = createMockSupabaseClient()
     const { createServerSupabaseClient } = await import('@/lib/supabase/server')
     vi.mocked(createServerSupabaseClient).mockResolvedValue(mockSupabase as any)
+
+    // Admin client: member exists + generateLink returns a code by default.
+    mockAdmin = {
+      from: memberLookup([{ email: 'user@example.com' }]),
+      auth: {
+        admin: {
+          generateLink: vi.fn().mockResolvedValue({
+            data: {
+              properties: {
+                email_otp: '12345678',
+                action_link: 'https://example.com/verify',
+              },
+            },
+            error: null,
+          }),
+        },
+      },
+    }
+    const { createAdminClient } = await import('@/lib/supabase/admin')
+    vi.mocked(createAdminClient).mockReturnValue(mockAdmin as any)
+
+    const { sendLoginCodeEmail } = await import('@/lib/email')
+    vi.mocked(sendLoginCodeEmail).mockResolvedValue({})
   })
 
-  it('calls signInWithOtp with shouldCreateUser: false for valid email', async () => {
+  it('generates an 8-digit code and emails it to a known member', async () => {
+    const { requestMagicLink } = await import('@/actions/auth')
+    const { sendLoginCodeEmail } = await import('@/lib/email')
+
+    const result = await requestMagicLink(makeFormData({ email: 'user@example.com' }))
+
+    expect(result).toEqual({ success: true })
+    expect(mockAdmin.auth.admin.generateLink).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'magiclink', email: 'user@example.com' }),
+    )
+    expect(sendLoginCodeEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ to: 'user@example.com', code: '12345678' }),
+    )
+    // Should NOT use Supabase's built-in email on the happy path.
+    expect(mockSupabase.auth.signInWithOtp).not.toHaveBeenCalled()
+  })
+
+  it('returns a helpful error when the email is not a known member', async () => {
+    mockAdmin.from = memberLookup([]) // no matching member
+    const { requestMagicLink } = await import('@/actions/auth')
+    const { sendLoginCodeEmail } = await import('@/lib/email')
+
+    const result = await requestMagicLink(makeFormData({ email: 'stranger@example.com' }))
+
+    expect(result).toEqual({
+      error: 'No account found with this email. Have you signed up?',
+    })
+    expect(mockAdmin.auth.admin.generateLink).not.toHaveBeenCalled()
+    expect(sendLoginCodeEmail).not.toHaveBeenCalled()
+  })
+
+  it('passes a callback redirect to generateLink', async () => {
+    process.env.NEXT_PUBLIC_APP_URL = 'https://example.com'
+    const { requestMagicLink } = await import('@/actions/auth')
+
+    await requestMagicLink(makeFormData({ email: 'user@example.com' }))
+
+    expect(mockAdmin.auth.admin.generateLink).toHaveBeenCalledWith(
+      expect.objectContaining({
+        options: expect.objectContaining({
+          redirectTo: 'https://example.com/auth/callback?next=/dashboard',
+        }),
+      }),
+    )
+  })
+
+  it('falls back to Supabase OTP email when our own send fails', async () => {
+    const { sendLoginCodeEmail } = await import('@/lib/email')
+    vi.mocked(sendLoginCodeEmail).mockResolvedValue({ error: 'Resend down' })
     mockSupabase.auth.signInWithOtp = vi.fn().mockResolvedValue({ data: {}, error: null })
 
     const { requestMagicLink } = await import('@/actions/auth')
 
-    const formData = makeFormData({ email: 'user@example.com' })
-
-    const result = await requestMagicLink(formData)
+    const result = await requestMagicLink(makeFormData({ email: 'user@example.com' }))
 
     expect(result).toEqual({ success: true })
     expect(mockSupabase.auth.signInWithOtp).toHaveBeenCalledWith(
       expect.objectContaining({
         email: 'user@example.com',
-        options: expect.objectContaining({
-          shouldCreateUser: false,
-        }),
-      })
-    )
-  })
-
-  it('includes emailRedirectTo pointing to /auth/callback', async () => {
-    process.env.NEXT_PUBLIC_APP_URL = 'https://example.com'
-    mockSupabase.auth.signInWithOtp = vi.fn().mockResolvedValue({ data: {}, error: null })
-
-    const { requestMagicLink } = await import('@/actions/auth')
-
-    const formData = makeFormData({ email: 'user@example.com' })
-
-    await requestMagicLink(formData)
-
-    expect(mockSupabase.auth.signInWithOtp).toHaveBeenCalledWith(
-      expect.objectContaining({
-        options: expect.objectContaining({
-          emailRedirectTo: 'https://example.com/auth/callback?next=/dashboard',
-        }),
-      })
+        options: expect.objectContaining({ shouldCreateUser: false }),
+      }),
     )
   })
 
   it('returns validation error for invalid email', async () => {
     const { requestMagicLink } = await import('@/actions/auth')
 
-    const formData = makeFormData({ email: 'not-valid' })
-
-    const result = await requestMagicLink(formData)
+    const result = await requestMagicLink(makeFormData({ email: 'not-valid' }))
 
     expect(result).toHaveProperty('error')
-    expect(mockSupabase.auth.signInWithOtp).not.toHaveBeenCalled()
+    expect(mockAdmin.auth.admin.generateLink).not.toHaveBeenCalled()
   })
 })
 

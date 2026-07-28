@@ -8,7 +8,7 @@ import {
   passwordLoginSchema,
   verifyLoginCodeSchema,
 } from '@/lib/validators/auth'
-import { sendAdminSignupNotification } from '@/lib/email'
+import { sendAdminSignupNotification, sendLoginCodeEmail } from '@/lib/email'
 
 function normalizeName(s: string): string {
   return s
@@ -121,9 +121,22 @@ export async function signUpMember(
 // ─── Request Magic Link ───────────────────────────────────────────────────────
 
 /**
- * Sends a magic link to an existing member's email address for login.
- * Uses shouldCreateUser: false — will fail silently if the email isn't registered
- * (Supabase doesn't expose whether the email exists for security).
+ * Sends a login code to an existing member's email address.
+ *
+ * We generate the 8-digit code ourselves via the admin API
+ * (`generateLink` type 'magiclink') and deliver it through our own Resend
+ * email — this keeps the branding ("King Predictor"), sender name, and digit
+ * count fully under our control instead of relying on Supabase's hosted email
+ * template (which can only be edited from the Supabase dashboard).
+ *
+ * Flow:
+ *   1. Confirm the email belongs to a known member (so we don't leak account
+ *      state AND so generateLink — which would otherwise create a user — never
+ *      silently registers someone who hasn't signed up).
+ *   2. Generate the code + one-tap link with the service-role admin client.
+ *   3. Email it via Resend.
+ *   4. If any of that fails, fall back to Supabase's built-in OTP email so a
+ *      member can always get *a* code and log in.
  */
 export async function requestMagicLink(
   formData: FormData
@@ -139,23 +152,73 @@ export async function requestMagicLink(
   }
 
   const { email } = result.data
-
-  const supabase = await createServerSupabaseClient()
-
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
-  const { error: otpError } = await supabase.auth.signInWithOtp({
+  const admin = createAdminClient()
+
+  // 1. Only known members get a code. Email is stored lowercased at signup and
+  //    lowercased again by loginSchema, so an exact match is safe.
+  const { data: memberRows } = await admin
+    .from('members')
+    .select('email')
+    .eq('email', email)
+    .limit(1)
+
+  if (!memberRows || memberRows.length === 0) {
+    return { error: 'No account found with this email. Have you signed up?' }
+  }
+
+  // Fallback to Supabase's built-in OTP email. Used if our own generate+send
+  // path fails for any reason, so login never fully breaks.
+  const sendViaSupabase = async (): Promise<{
+    success?: boolean
+    error?: string
+  }> => {
+    const supabase = await createServerSupabaseClient()
+    const { error: otpError } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        shouldCreateUser: false,
+        emailRedirectTo: `${appUrl}/auth/callback?next=/dashboard`,
+      },
+    })
+    if (otpError) {
+      console.error('[requestMagicLink] Supabase OTP fallback error:', otpError.message)
+      return { error: 'No account found with this email. Have you signed up?' }
+    }
+    return { success: true }
+  }
+
+  // 2. Generate the code + one-tap login link via the admin API.
+  const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
+    type: 'magiclink',
     email,
     options: {
-      shouldCreateUser: false,
-      emailRedirectTo: `${appUrl}/auth/callback?next=/dashboard`,
+      redirectTo: `${appUrl}/auth/callback?next=/dashboard`,
     },
   })
 
-  if (otpError) {
-    console.error('[requestMagicLink] Supabase OTP error:', otpError.message)
-    // Supabase returns a generic error if the email is not registered.
-    // Surface a helpful message to the member.
-    return { error: 'No account found with this email. Have you signed up?' }
+  const code = linkData?.properties?.email_otp
+  if (linkError || !code) {
+    console.error(
+      '[requestMagicLink] generateLink failed, falling back to Supabase email:',
+      linkError?.message,
+    )
+    return sendViaSupabase()
+  }
+
+  // 3. Deliver our own branded email.
+  const { error: emailError } = await sendLoginCodeEmail({
+    to: email,
+    code,
+    actionLink: linkData?.properties?.action_link,
+  })
+
+  if (emailError) {
+    console.error(
+      '[requestMagicLink] Resend send failed, falling back to Supabase email:',
+      emailError,
+    )
+    return sendViaSupabase()
   }
 
   return { success: true }
