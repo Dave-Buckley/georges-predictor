@@ -53,13 +53,15 @@ export const verifyLoginCodeSchema = z.object({
     .string()
     .email('Please enter a valid email address')
     .transform((val) => val.toLowerCase()),
-  // This Supabase project is configured to issue 8-digit OTP codes.
-  // Keep UI + server validation locked to 8 so the digit count in the email
-  // always matches the input length.
+  // This Supabase project currently issues 8-digit OTP codes, but the OTP
+  // length lives in the Supabase dashboard, not in this repo — so it can change
+  // without a deploy. Accept 6–8 digits rather than hard-locking to 8: if the
+  // two ever drift apart again, members can still log in instead of being
+  // rejected before the code even reaches Supabase.
   token: z
     .string()
     .trim()
-    .regex(/^\d{8}$/, 'Enter the 8-digit code from your email'),
+    .regex(/^\d{6,8}$/, 'Enter the code from your email'),
 })
 
 export type VerifyLoginCodeInput = z.infer<typeof verifyLoginCodeSchema>

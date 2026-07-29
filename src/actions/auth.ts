@@ -153,6 +153,24 @@ export async function requestMagicLink(
 
   if (otpError) {
     console.error('[requestMagicLink] Supabase OTP error:', otpError.message)
+
+    // Supabase rate-limits code requests to one per 60 seconds per email.
+    // Members who tap "send code" twice (very common — the first email takes a
+    // few seconds to land) were being told "No account found", which reads as
+    // "you don't exist" and sends them to George in a panic. Tell them the
+    // truth instead: the code is already on its way.
+    const msg = otpError.message.toLowerCase()
+    if (
+      otpError.status === 429 ||
+      msg.includes('rate limit') ||
+      msg.includes('after')
+    ) {
+      return {
+        error:
+          'A code is already on its way — check your inbox (and spam folder). If it still has not arrived, wait a minute and try again.',
+      }
+    }
+
     // Supabase returns a generic error if the email is not registered.
     // Surface a helpful message to the member.
     return { error: 'No account found with this email. Have you signed up?' }
