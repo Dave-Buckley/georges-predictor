@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import * as Select from '@radix-ui/react-select'
 
 interface NamePickerProps {
   importedNames: string[]
@@ -19,6 +18,14 @@ const NEW_MEMBER_VALUE = '__new__'
  * Name picker component for the signup form.
  * Shows imported member names as a dropdown.
  * "I'm new — type my name" option reveals a text input.
+ *
+ * Uses a NATIVE <select> on purpose. This was a Radix Select, but its custom
+ * popup could not be scrolled on some phones — Radix scrolls its own viewport
+ * and its up/down arrows only react to a mouse hover, so members on mobile
+ * (Daddy Dave, July 2026) could only ever see the first screenful of names and
+ * had no way to reach their own. A native select hands the list to the phone's
+ * OS picker, which is always scrollable on every device and needs no JS.
+ * Don't swap this back to a custom dropdown.
  */
 export default function NamePicker({
   importedNames,
@@ -33,7 +40,8 @@ export default function NamePicker({
     isNewMember ? NEW_MEMBER_VALUE : (value || '')
   )
 
-  function handleSelectChange(val: string) {
+  function handleSelectChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const val = e.target.value
     setSelectValue(val)
     if (val === NEW_MEMBER_VALUE) {
       onIsNewMemberChange(true)
@@ -70,74 +78,56 @@ export default function NamePicker({
 
   return (
     <div className="space-y-3">
-      <label className="block text-sm font-medium text-slate-300">
+      <label
+        htmlFor="name-picker"
+        className="block text-sm font-medium text-slate-300"
+      >
         Your name
       </label>
 
-      {/* Radix Select dropdown */}
-      <Select.Root
-        value={selectValue}
-        onValueChange={handleSelectChange}
-        disabled={disabled}
-      >
-        <Select.Trigger
-          className="w-full flex items-center justify-between rounded-xl bg-slate-800 border border-slate-600 px-4 py-4 text-white text-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent data-[disabled]:opacity-50 transition cursor-default"
+      <div className="relative">
+        <select
+          id="name-picker"
+          value={selectValue}
+          onChange={handleSelectChange}
+          disabled={disabled}
           aria-label="Select your name"
+          className="w-full appearance-none rounded-xl bg-slate-800 border border-slate-600 pl-4 pr-12 py-4 text-white text-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50 transition cursor-pointer"
         >
-          <Select.Value placeholder="Pick your name from the list..." />
-          <Select.Icon>
-            <svg
-              className="w-5 h-5 text-slate-400 ml-2 shrink-0"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-            </svg>
-          </Select.Icon>
-        </Select.Trigger>
+          {/* bg/text set explicitly — some desktop browsers render the option
+              list on the OS default (white) background otherwise. */}
+          <option value="" disabled className="bg-slate-800 text-slate-400">
+            Pick your name from the list...
+          </option>
 
-        <Select.Portal>
-          <Select.Content
-            className="z-50 overflow-hidden rounded-2xl bg-slate-800 border border-slate-600 shadow-2xl shadow-black/40"
-            position="popper"
-            sideOffset={8}
-          >
-            <Select.ScrollUpButton className="flex items-center justify-center h-7 bg-slate-800 text-slate-400 cursor-default">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
-              </svg>
-            </Select.ScrollUpButton>
-            <Select.Viewport className="py-1 max-h-[60vh] overflow-y-auto">
-              {importedNames.map((name) => (
-                <Select.Item
-                  key={name}
-                  value={name}
-                  className="flex items-center px-4 py-4 text-white text-lg cursor-default hover:bg-purple-600/20 focus:bg-purple-600/20 focus:outline-none data-[highlighted]:bg-purple-600/20 transition"
-                >
-                  <Select.ItemText>{name}</Select.ItemText>
-                </Select.Item>
-              ))}
+          {importedNames.map((name) => (
+            <option key={name} value={name} className="bg-slate-800 text-white">
+              {name}
+            </option>
+          ))}
 
-              {/* Separator before "I'm new" */}
-              <Select.Separator className="my-1 h-px bg-slate-700" />
+          <option value={NEW_MEMBER_VALUE} className="bg-slate-800 text-purple-300">
+            I&apos;m new — type my name
+          </option>
+        </select>
 
-              <Select.Item
-                value={NEW_MEMBER_VALUE}
-                className="flex items-center px-4 py-4 text-purple-300 text-lg cursor-default hover:bg-purple-600/20 focus:bg-purple-600/20 focus:outline-none data-[highlighted]:bg-purple-600/20 transition font-medium"
-              >
-                <Select.ItemText>I&apos;m new — type my name</Select.ItemText>
-              </Select.Item>
-            </Select.Viewport>
-            <Select.ScrollDownButton className="flex items-center justify-center h-7 bg-slate-800 text-slate-400 cursor-default">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-              </svg>
-            </Select.ScrollDownButton>
-          </Select.Content>
-        </Select.Portal>
-      </Select.Root>
+        {/* Chevron — pointer-events-none so taps fall through to the select */}
+        <svg
+          className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+          aria-hidden="true"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </div>
+
+      <p className="text-slate-500 text-xs">
+        Can&apos;t find your name? Choose &ldquo;I&apos;m new — type my
+        name&rdquo; at the bottom of the list.
+      </p>
 
       {/* Text input revealed when "I'm new" is selected */}
       {isNewMember && (
