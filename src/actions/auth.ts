@@ -287,7 +287,14 @@ export async function loginWithPassword(
   const { error } = await supabase.auth.signInWithPassword({ email, password })
   if (error) {
     console.error('[loginWithPassword] error:', error.message)
-    return { error: 'Email or password is incorrect.' }
+    // Most members never set a password — they signed up with the email code.
+    // Supabase returns the same "invalid credentials" for a wrong password and
+    // for an account that has no password at all, so point at both ways out
+    // rather than just insisting the password is wrong.
+    return {
+      error:
+        'Email or password is incorrect. If you have never set a password, use the "Email code" tab instead.',
+    }
   }
 
   return { success: true }

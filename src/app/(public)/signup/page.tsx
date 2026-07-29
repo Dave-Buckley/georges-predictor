@@ -37,8 +37,9 @@ export default async function SignupPage() {
         <div className="text-center space-y-3">
           <h1 className="text-3xl font-bold text-white">Join the Competition</h1>
           <p className="text-slate-400 text-base leading-relaxed">
-            Select your name from the list below, or choose &ldquo;I&apos;m new&rdquo; if
-            this is your first season with us.
+            Played with us last season? Select your name from the list below to
+            keep your points. If this is your first season, choose &ldquo;I&apos;m
+            new&rdquo; and type your name.
           </p>
         </div>
 
