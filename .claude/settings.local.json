@@ -83,7 +83,14 @@
       "PowerShell(Start-Process \"https://vercel.com/dave-buckleys-projects/kingpredictor/settings/domains\")",
       "PowerShell(Start-Process \"https://supabase.com/dashboard/project/unpdsomipodadnlnbioq/auth/templates\")",
       "Bash(cp \"C:/Users/David/Desktop/George/IMG-20260723-WA0000.jpg\" \"public/king-predictor-logo.jpg\")",
-      "Bash(cp \"C:/Users/David/Desktop/George/IMG-20260723-WA0000.jpg\" \"src/app/icon.jpg\")"
+      "Bash(cp \"C:/Users/David/Desktop/George/IMG-20260723-WA0000.jpg\" \"src/app/icon.jpg\")",
+      "mcp__plugin_vercel_vercel__list_deployments",
+      "mcp__plugin_vercel_vercel__get_runtime_logs",
+      "PowerShell(Get-Process *)",
+      "Bash(python -c ' *)",
+      "Bash(sed -i \"s|/I played last season/|/I am a returning participant/|g; s|'I played last season'|'I am a returning participant'|g\" tests/components/name-picker.test.tsx)",
+      "Bash(sed -i \"s|choose whether you played last season|choose whether you're a returning participant|\" tests/components/name-picker.test.tsx)",
+      "Bash(FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch -f --msg-filter \"sed '/^@$/d'\" 7c62cef..HEAD)"
     ]
   }
 }
