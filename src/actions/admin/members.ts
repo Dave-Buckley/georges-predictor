@@ -230,7 +230,25 @@ export async function addMember(
 
 /**
  * Permanently removes a member from the competition.
- * Deletes the auth user — FK cascade removes the members row.
+ *
+ * Two kinds of member exist and they have to be deleted differently:
+ *
+ *  - **Registered members** have a `user_id`. Deleting the auth user cascades
+ *    down to the members row (members.user_id is ON DELETE CASCADE).
+ *  - **Placeholder members** are the names George typed in himself before the
+ *    season opened — they have NO auth user (`user_id` is NULL). The old code
+ *    called `deleteUser(null)` on these, which always errored. That is why
+ *    George could remove signed-up players but not the names he had added
+ *    manually (Charlie, July 2026). These need the members row deleted directly.
+ *
+ * Either way we first clear the member's `prize_awards` rows. That FK was
+ * declared without an ON DELETE rule, so it defaults to NO ACTION and blocks
+ * the delete outright for anyone who has ever won a prize — including via the
+ * cascade path. Migration 025 fixes the constraint properly; this clean-up
+ * keeps removal working whether or not that migration has been applied yet.
+ *
+ * Removal does NOT add the address to blocked_emails, so a member who leaves
+ * can sign up again later with the same email.
  */
 export async function removeMember(
   memberId: string
@@ -251,13 +269,39 @@ export async function removeMember(
     return { error: 'Member not found' }
   }
 
-  // Delete auth user — cascades to members row
-  const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(
-    member.user_id
-  )
+  // Clear the one FK that would otherwise refuse the delete.
+  const { error: prizeError } = await supabaseAdmin
+    .from('prize_awards')
+    .delete()
+    .eq('member_id', memberId)
 
-  if (deleteError) {
-    console.error('[removeMember] Delete error:', deleteError.message)
+  if (prizeError) {
+    console.error('[removeMember] Failed clearing prize_awards:', prizeError.message)
+    return { error: 'Failed to remove member. Please try again.' }
+  }
+
+  if (member.user_id) {
+    // Registered member — delete the auth user, cascade clears the members row.
+    const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(
+      member.user_id
+    )
+
+    if (deleteError) {
+      console.error('[removeMember] Delete auth user error:', deleteError.message)
+      return { error: 'Failed to remove member. Please try again.' }
+    }
+
+    return { success: true }
+  }
+
+  // Placeholder member — no auth user to delete, so remove the row itself.
+  const { error: rowError } = await supabaseAdmin
+    .from('members')
+    .delete()
+    .eq('id', memberId)
+
+  if (rowError) {
+    console.error('[removeMember] Delete members row error:', rowError.message)
     return { error: 'Failed to remove member. Please try again.' }
   }
 

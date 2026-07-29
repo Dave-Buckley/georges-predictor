@@ -16,6 +16,22 @@ interface MemberActionsProps {
   member: MemberRow
 }
 
+/**
+ * Every dialog below is CONTROLLED by MemberActions rather than owning its own
+ * open state, and is rendered outside the Actions dropdown.
+ *
+ * It used to be the other way round — each dialog held its own state and its
+ * trigger lived inside the dropdown. But the Actions button closes the dropdown
+ * on blur after 200ms, and clicking a menu item blurs it. So the dialog opened,
+ * then 200ms later the dropdown unmounted and took the dialog down with it.
+ * From George's side the Remove button simply did nothing (July 2026).
+ */
+interface DialogProps {
+  member: MemberRow
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}
+
 function useAction() {
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -141,31 +157,20 @@ function RejectButton({ member }: { member: MemberRow }) {
 
 // ─── Remove Dialog ─────────────────────────────────────────────────────────────
 
-function RemoveDialog({ member }: { member: MemberRow }) {
-  const [open, setOpen] = useState(false)
+function RemoveDialog({ member, open, onOpenChange }: DialogProps) {
   const { isPending, error, run } = useAction()
 
   const handleRemove = () => {
     run(() =>
       removeMember(member.id).then((r) => {
-        if (!r.error) setOpen(false)
+        if (!r.error) onOpenChange(false)
         return r
       })
     )
   }
 
   return (
-    <Dialog.Root open={open} onOpenChange={setOpen}>
-      <Dialog.Trigger asChild>
-        <button
-          type="button"
-          className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-        >
-          <Trash2 className="w-4 h-4" />
-          Remove member
-        </button>
-      </Dialog.Trigger>
-
+    <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/50 z-40" />
         <Dialog.Content className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md">
@@ -206,8 +211,7 @@ function RemoveDialog({ member }: { member: MemberRow }) {
 
 // ─── Edit Email Dialog ─────────────────────────────────────────────────────────
 
-function EditEmailDialog({ member }: { member: MemberRow }) {
-  const [open, setOpen] = useState(false)
+function EditEmailDialog({ member, open, onOpenChange }: DialogProps) {
   const [newEmail, setNewEmail] = useState(member.email)
   const { isPending, error, run } = useAction()
 
@@ -215,24 +219,14 @@ function EditEmailDialog({ member }: { member: MemberRow }) {
     e.preventDefault()
     run(() =>
       updateMemberEmail(member.id, newEmail).then((r) => {
-        if (!r.error) setOpen(false)
+        if (!r.error) onOpenChange(false)
         return r
       })
     )
   }
 
   return (
-    <Dialog.Root open={open} onOpenChange={setOpen}>
-      <Dialog.Trigger asChild>
-        <button
-          type="button"
-          className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-        >
-          <Mail className="w-4 h-4" />
-          Edit email
-        </button>
-      </Dialog.Trigger>
-
+    <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/50 z-40" />
         <Dialog.Content className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md">
@@ -288,8 +282,7 @@ function EditEmailDialog({ member }: { member: MemberRow }) {
 
 // ─── Set Starting Points Dialog ────────────────────────────────────────────────
 
-function SetStartingPointsDialog({ member }: { member: MemberRow }) {
-  const [open, setOpen] = useState(false)
+function SetStartingPointsDialog({ member, open, onOpenChange }: DialogProps) {
   const [points, setPoints] = useState(String(member.starting_points))
   const { isPending, error, run } = useAction()
 
@@ -299,24 +292,14 @@ function SetStartingPointsDialog({ member }: { member: MemberRow }) {
     if (isNaN(numPoints) || numPoints < 0) return
     run(() =>
       setMemberStartingPoints(member.id, numPoints).then((r) => {
-        if (!r.error) setOpen(false)
+        if (!r.error) onOpenChange(false)
         return r
       })
     )
   }
 
   return (
-    <Dialog.Root open={open} onOpenChange={setOpen}>
-      <Dialog.Trigger asChild>
-        <button
-          type="button"
-          className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-        >
-          <Hash className="w-4 h-4" />
-          Set starting points
-        </button>
-      </Dialog.Trigger>
-
+    <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/50 z-40" />
         <Dialog.Content className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md">
@@ -373,8 +356,11 @@ function SetStartingPointsDialog({ member }: { member: MemberRow }) {
 
 // ─── Main MemberActions Component ─────────────────────────────────────────────
 
+type ActiveDialog = 'email' | 'points' | 'remove' | null
+
 export function MemberActions({ member }: MemberActionsProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [activeDialog, setActiveDialog] = useState<ActiveDialog>(null)
   const isPending = member.approval_status === 'pending'
 
   if (isPending) {
@@ -384,6 +370,17 @@ export function MemberActions({ member }: MemberActionsProps) {
         <RejectButton member={member} />
       </div>
     )
+  }
+
+  // Close the menu and open the chosen dialog. The dialogs are rendered below,
+  // OUTSIDE the dropdown, so closing the menu cannot unmount them.
+  const openDialog = (which: Exclude<ActiveDialog, null>) => {
+    setDropdownOpen(false)
+    setActiveDialog(which)
+  }
+
+  const closeDialog = (open: boolean) => {
+    if (!open) setActiveDialog(null)
   }
 
   // Approved / other status — show dropdown
@@ -401,12 +398,49 @@ export function MemberActions({ member }: MemberActionsProps) {
 
       {dropdownOpen && (
         <div className="absolute right-0 mt-1 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-10">
-          <EditEmailDialog member={member} />
-          <SetStartingPointsDialog member={member} />
+          <button
+            type="button"
+            onClick={() => openDialog('email')}
+            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <Mail className="w-4 h-4" />
+            Edit email
+          </button>
+          <button
+            type="button"
+            onClick={() => openDialog('points')}
+            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <Hash className="w-4 h-4" />
+            Set starting points
+          </button>
           <div className="my-1 border-t border-gray-100" />
-          <RemoveDialog member={member} />
+          <button
+            type="button"
+            onClick={() => openDialog('remove')}
+            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+          >
+            <Trash2 className="w-4 h-4" />
+            Remove member
+          </button>
         </div>
       )}
+
+      <EditEmailDialog
+        member={member}
+        open={activeDialog === 'email'}
+        onOpenChange={closeDialog}
+      />
+      <SetStartingPointsDialog
+        member={member}
+        open={activeDialog === 'points'}
+        onOpenChange={closeDialog}
+      />
+      <RemoveDialog
+        member={member}
+        open={activeDialog === 'remove'}
+        onOpenChange={closeDialog}
+      />
     </div>
   )
 }

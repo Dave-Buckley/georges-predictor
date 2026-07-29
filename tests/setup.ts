@@ -43,6 +43,11 @@ export function createMockSupabaseClient() {
         deleteUser: vi.fn().mockResolvedValue({ data: null, error: null }),
         inviteUserByEmail: vi.fn().mockResolvedValue({ data: null, error: null }),
         listUsers: vi.fn().mockResolvedValue({ data: { users: [] }, error: null }),
+        // Used by approveMember to mint the welcome login link.
+        generateLink: vi.fn().mockResolvedValue({
+          data: { properties: { email_otp: '12345678', action_link: 'https://example.com/verify' } },
+          error: null,
+        }),
       },
     },
     ...chainable,

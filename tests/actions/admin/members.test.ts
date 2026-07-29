@@ -91,12 +91,20 @@ describe('approveMember', () => {
     })
   })
 
-  it('calls inviteUserByEmail with the member email', async () => {
+  // approveMember uses generateLink, not inviteUserByEmail — inviteUserByEmail
+  // only works for brand-new users and errors once the account exists. This
+  // test still asserted the old call and had been failing silently.
+  it('generates a magic link for the member email', async () => {
     const { approveMember } = await import('@/actions/admin/members')
     await approveMember('member-id')
-    expect(mockAdminClient.auth.admin.inviteUserByEmail).toHaveBeenCalledWith(
-      'newmember@example.com',
-      expect.objectContaining({ redirectTo: expect.stringContaining('/auth/callback') })
+    expect(mockAdminClient.auth.admin.generateLink).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'magiclink',
+        email: 'newmember@example.com',
+        options: expect.objectContaining({
+          redirectTo: expect.stringContaining('/auth/callback'),
+        }),
+      })
     )
   })
 
@@ -362,23 +370,49 @@ describe('addMember post-migration-007 (DATA-05 late joiner)', () => {
 // ─── removeMember ─────────────────────────────────────────────────────────────
 
 describe('removeMember', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    mockAdminUser()
+  // Tracks the .delete().eq() calls made against each table so the tests can
+  // assert which rows were removed.
+  let deletedFrom: Array<{ table: string; column: string; value: string }>
 
-    const memberChain = {
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      single: vi.fn().mockResolvedValue({
-        data: { id: 'member-id', user_id: 'user-id-789' },
-        error: null,
+  /**
+   * Wires up mockAdminClient.from for the removeMember flow.
+   * `userId` null simulates a placeholder member — one of the names George
+   * typed in himself, which has no auth user behind it.
+   */
+  function setupMember(userId: string | null, opts: { prizeDeleteError?: string; rowDeleteError?: string } = {}) {
+    deletedFrom = []
+    mockAdminClient.from = vi.fn().mockImplementation((table: string) => ({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({
+            data: { id: 'member-id', user_id: userId },
+            error: null,
+          }),
+        }),
       }),
-    }
-    mockAdminClient.from = vi.fn().mockReturnValue(memberChain)
+      delete: vi.fn().mockReturnValue({
+        eq: vi.fn().mockImplementation((column: string, value: string) => {
+          deletedFrom.push({ table, column, value })
+          if (table === 'prize_awards' && opts.prizeDeleteError) {
+            return Promise.resolve({ error: { message: opts.prizeDeleteError } })
+          }
+          if (table === 'members' && opts.rowDeleteError) {
+            return Promise.resolve({ error: { message: opts.rowDeleteError } })
+          }
+          return Promise.resolve({ error: null })
+        }),
+      }),
+    }))
     mockAdminClient.auth.admin.deleteUser = vi.fn().mockResolvedValue({
       data: {},
       error: null,
     })
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockAdminUser()
+    setupMember('user-id-789')
   })
 
   it('calls deleteUser with the correct user_id', async () => {
@@ -391,6 +425,49 @@ describe('removeMember', () => {
     const { removeMember } = await import('@/actions/admin/members')
     const result = await removeMember('member-id')
     expect(result).toEqual({ success: true })
+  })
+
+  it('clears the blocking prize_awards rows before deleting', async () => {
+    const { removeMember } = await import('@/actions/admin/members')
+    await removeMember('member-id')
+    expect(deletedFrom).toContainEqual({
+      table: 'prize_awards',
+      column: 'member_id',
+      value: 'member-id',
+    })
+  })
+
+  it('returns an error if prize_awards cannot be cleared', async () => {
+    setupMember('user-id-789', { prizeDeleteError: 'fk violation' })
+    const { removeMember } = await import('@/actions/admin/members')
+    const result = await removeMember('member-id')
+    expect(result).toEqual({ error: expect.any(String) })
+    expect(mockAdminClient.auth.admin.deleteUser).not.toHaveBeenCalled()
+  })
+
+  // ── Placeholder members (no auth user) ──────────────────────────────────────
+  // George's manually-added names. deleteUser(null) always failed on these,
+  // so he could remove signed-up players but not the ones he typed in himself.
+
+  it('deletes the members row directly when the member has no auth user', async () => {
+    setupMember(null)
+    const { removeMember } = await import('@/actions/admin/members')
+    const result = await removeMember('member-id')
+
+    expect(result).toEqual({ success: true })
+    expect(mockAdminClient.auth.admin.deleteUser).not.toHaveBeenCalled()
+    expect(deletedFrom).toContainEqual({
+      table: 'members',
+      column: 'id',
+      value: 'member-id',
+    })
+  })
+
+  it('returns an error if the placeholder members row cannot be deleted', async () => {
+    setupMember(null, { rowDeleteError: 'still referenced' })
+    const { removeMember } = await import('@/actions/admin/members')
+    const result = await removeMember('member-id')
+    expect(result).toEqual({ error: expect.any(String) })
   })
 
   it('returns error if caller is not admin', async () => {
