@@ -132,8 +132,30 @@ describe('setBonusForGameweek', () => {
             }),
           }
         }
+        // setBonusForGameweek resolves the old + new bonus type names to
+        // detect Double Bubble transitions. Both lookups were added to the
+        // action after this mock was written, so it died on
+        // "select(...).eq(...).single is not a function".
+        if (table === 'bonus_types') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi
+                  .fn()
+                  .mockResolvedValue({ data: { name: 'Golden Goal' }, error: null }),
+              }),
+            }),
+          }
+        }
         if (table === 'bonus_schedule') {
           return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                maybeSingle: vi
+                  .fn()
+                  .mockResolvedValue({ data: null, error: null }),
+              }),
+            }),
             upsert: vi.fn().mockImplementation((row: Record<string, unknown>) => {
               capturedUpsertRow = row
               return Promise.resolve({ error: null })
@@ -274,6 +296,25 @@ describe('confirmBonusAward', () => {
       from: vi.fn().mockImplementation((table: string) => {
         if (table === 'bonus_awards') {
           return {
+            // The action now reads the award's "before" state first, so it can
+            // sync members.starting_points when the gameweek is already closed.
+            // This mock only had .update(), hence "from(...).select is not a
+            // function".
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
+                  data: {
+                    member_id: 'member-1',
+                    gameweek_id: 'gw-1',
+                    awarded: null,
+                    points_awarded: 0,
+                    // Gameweek not yet closed → no starting_points sync.
+                    gameweeks: { double_bubble: false, points_applied: false },
+                  },
+                  error: null,
+                }),
+              }),
+            }),
             update: vi.fn().mockImplementation((payload: Record<string, unknown>) => {
               capturedUpdatePayload = payload
               return {
@@ -339,6 +380,14 @@ describe('bulkConfirmBonusAwards', () => {
       from: vi.fn().mockImplementation((table: string) => {
         if (table === 'bonus_awards') {
           const chain = {
+            // Captures the pending awards' before-state so starting_points can
+            // be synced on an already-closed gameweek. Added to the action
+            // after this mock was written.
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                is: vi.fn().mockResolvedValue({ data: [], error: null }),
+              }),
+            }),
             update: vi.fn().mockImplementation((payload: Record<string, unknown>) => {
               capturedUpdatePayload = payload
               return {

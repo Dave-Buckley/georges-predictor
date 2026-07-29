@@ -124,6 +124,19 @@ function mockAdminClientImpl({
 }) {
   const mockClient = {
     from: vi.fn().mockImplementation((table: string) => {
+      // PL roster moved from `teams` to per-season `pl_teams` (migration 023),
+      // so isPremierLeagueTeam/getPlTeamNames filter by season. This branch was
+      // missing, failing every PL check on "select(...).eq is not a function".
+      if (table === 'pl_teams') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({
+              data: plTeams.map((name) => ({ name })),
+              error: null,
+            }),
+          }),
+        }
+      }
       if (table === 'teams') {
         return {
           select: vi

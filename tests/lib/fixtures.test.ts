@@ -8,10 +8,15 @@ import {
   isToday,
 } from '@/lib/fixtures/timezone'
 
+// The clock reading is always real Europe/London local time, but the LABEL is
+// deliberately "GMT" all year — see the note on getLondonTzAbbr in
+// src/lib/fixtures/timezone.ts. These tests assert that decision on purpose;
+// they used to expect "BST" in summer and had been failing ever since.
+
 describe('formatKickoffTime', () => {
-  it('returns "15:00 BST" for UTC summer time (UTC+1)', () => {
-    // 2025-08-16 is summer — BST (UTC+1), so 14:00 UTC = 15:00 BST
-    expect(formatKickoffTime('2025-08-16T14:00:00Z')).toBe('15:00 BST')
+  it('converts to London local time in summer, labelled GMT', () => {
+    // 2025-08-16 is summer, so London is UTC+1: 14:00 UTC = 15:00 local.
+    expect(formatKickoffTime('2025-08-16T14:00:00Z')).toBe('15:00 GMT')
   })
 
   it('returns "14:00 GMT" for UTC winter time (UTC+0)', () => {
@@ -21,8 +26,8 @@ describe('formatKickoffTime', () => {
 })
 
 describe('formatKickoffFull', () => {
-  it('returns "Sat 16 Aug, 15:00 BST" for a summer Saturday fixture', () => {
-    expect(formatKickoffFull('2025-08-16T14:00:00Z')).toBe('Sat 16 Aug, 15:00 BST')
+  it('returns "Sat 16 Aug, 15:00 GMT" for a summer Saturday fixture', () => {
+    expect(formatKickoffFull('2025-08-16T14:00:00Z')).toBe('Sat 16 Aug, 15:00 GMT')
   })
 
   it('returns correct format for a winter fixture', () => {
@@ -96,15 +101,15 @@ describe('BST/GMT transition edge case', () => {
     expect(formatKickoffTime('2025-10-26T14:00:00Z')).toBe('14:00 GMT')
   })
 
-  it('fixture before BST switch on 26 Oct shows BST', () => {
-    // Before 1:00 UTC on 2025-10-26, BST is still active (UTC+1)
-    // 00:30 UTC = 01:30 BST
-    expect(formatKickoffTime('2025-10-26T00:30:00Z')).toBe('01:30 BST')
+  it('still applies the +1 offset before the 26 Oct switch', () => {
+    // Before 1:00 UTC on 2025-10-26 the London offset is still UTC+1,
+    // so 00:30 UTC reads 01:30 local (labelled GMT by design).
+    expect(formatKickoffTime('2025-10-26T00:30:00Z')).toBe('01:30 GMT')
   })
 
-  it('spring forward: fixture on last Sunday of March 2025 after switch shows BST', () => {
-    // 2025-03-30 is spring forward — clocks go forward at 1:00 UTC
-    // 13:00 UTC = 14:00 BST (after the switch)
-    expect(formatKickoffTime('2025-03-30T13:00:00Z')).toBe('14:00 BST')
+  it('applies the +1 offset after the spring-forward switch', () => {
+    // 2025-03-30 is spring forward — clocks go forward at 1:00 UTC,
+    // so 13:00 UTC reads 14:00 local (labelled GMT by design).
+    expect(formatKickoffTime('2025-03-30T13:00:00Z')).toBe('14:00 GMT')
   })
 })

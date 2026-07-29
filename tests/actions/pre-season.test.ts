@@ -152,6 +152,20 @@ function mockAdminFor({
           }),
         }
       }
+      // PL roster moved from the `teams` table to per-season `pl_teams`
+      // (migration 023), so isPremierLeagueTeam/getPlTeamNames now filter by
+      // season. This branch had been missing, which is why every PL validation
+      // test failed on "select(...).eq is not a function".
+      if (table === 'pl_teams') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({
+              data: plTeams.map((name) => ({ name })),
+              error: null,
+            }),
+          }),
+        }
+      }
       if (table === 'teams') {
         return {
           select: vi
@@ -379,6 +393,17 @@ describe('submitPreSeasonPicks', () => {
             select: vi.fn().mockReturnValue({
               eq: vi.fn().mockReturnValue({
                 maybeSingle: vi.fn().mockResolvedValue({ data: { id: MEMBER_ID }, error: null }),
+              }),
+            }),
+          }
+        }
+        // See the note in mockAdminFor — PL roster lives in pl_teams now.
+        if (table === 'pl_teams') {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockResolvedValue({
+                data: PL_TEAMS.map((name) => ({ name })),
+                error: null,
               }),
             }),
           }

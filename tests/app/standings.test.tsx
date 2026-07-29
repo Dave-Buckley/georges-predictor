@@ -13,6 +13,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { ReactElement } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
 
 // ─── Module mocks ─────────────────────────────────────────────────────────────
 
@@ -39,26 +40,45 @@ let topWeeklyData: Array<{
 const mockAdminClient = {
   from: vi.fn((table: string) => {
     if (table === 'members') {
+      // The page filters out placeholder accounts with
+      // .eq('exclude_from_standings', false) (migration 022). The mock had no
+      // .eq, so every test in this file died on "select(...).eq is not a
+      // function" before reaching an assertion.
       return {
         select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
         order: vi.fn().mockResolvedValue({ data: membersData, error: null }),
       }
     }
+    // The page no longer asks for one "latest closed" gameweek via
+    // .limit().maybeSingle(). It lists all gameweeks newest-first and walks
+    // them, picking the first whose fixtures have all reached a terminal
+    // status. The old mock shape never resolved, so latestGw was always null
+    // and the page always rendered the "Awaiting first gameweek" empty state.
     if (table === 'gameweeks') {
       return {
         select: vi.fn().mockReturnThis(),
-        not: vi.fn().mockReturnThis(),
-        order: vi.fn().mockReturnThis(),
-        limit: vi.fn().mockReturnThis(),
-        maybeSingle: vi
-          .fn()
-          .mockResolvedValue({ data: latestGwData, error: null }),
+        order: vi.fn().mockResolvedValue({
+          data: latestGwData ? [latestGwData] : [],
+          error: null,
+        }),
       }
     }
     if (table === 'fixtures') {
       return {
         select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockResolvedValue({ data: fixturesData, error: null }),
+        // .eq() is awaited directly for the fixture list and the "any fixtures"
+        // count, and also chains into .not() for the "still pending" count.
+        eq: vi.fn().mockImplementation(() => {
+          const result = Promise.resolve({
+            data: fixturesData,
+            error: null,
+            count: fixturesData.length,
+          }) as Promise<unknown> & { not: () => Promise<unknown> }
+          // No fixtures left in a non-terminal status → gameweek counts as played.
+          result.not = vi.fn().mockResolvedValue({ count: 0, error: null })
+          return result
+        }),
       }
     }
     return {
@@ -92,45 +112,34 @@ vi.mock('@/lib/reports/_data/gather-gameweek-data', () => ({
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /**
- * Walk a React element tree collecting text nodes. Function components are
- * invoked synchronously — same pattern as Phase 10 Plan 02 PDF tests.
+ * Render the page to markup and return its visible text.
+ *
+ * This used to hand-walk the element tree, invoking each function component
+ * directly. That silently broke once the standings table was extracted into a
+ * `'use client'` component using useState/useMemo for column sorting: calling a
+ * hooks component outside a React render throws, the walker swallowed it, and
+ * every member name vanished from the extracted text. The assertions had been
+ * failing ever since.
+ *
+ * renderToStaticMarkup runs a real render, so hooks work and the table's rows
+ * are actually present.
  */
-function extractText(
-  node: unknown,
-  depth = 0,
-): string {
-  if (depth > 50) return ''
-  if (node == null || typeof node === 'boolean') return ''
-  if (typeof node === 'string' || typeof node === 'number') {
-    return String(node)
-  }
-  if (Array.isArray(node)) {
-    return node.map((n) => extractText(n, depth + 1)).join(' ')
-  }
-  if (typeof node === 'object' && 'type' in (node as object)) {
-    const el = node as ReactElement & {
-      type: unknown
-      props?: { children?: unknown }
-    }
-    const children = el.props?.children
-    if (typeof el.type === 'function') {
-      try {
-        const result = (el.type as (p: unknown) => unknown)(el.props ?? {})
-        return extractText(result, depth + 1)
-      } catch {
-        return extractText(children, depth + 1)
-      }
-    }
-    return extractText(children, depth + 1)
-  }
-  return ''
+function textOf(markup: string): string {
+  return markup
+    .replace(/<[^>]*>/g, ' ')     // strip tags
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&#x27;|&apos;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/\s+/g, ' ')
+    .trim()
 }
 
 async function renderStandings(): Promise<string> {
   // Dynamically import so mocks are applied
   const mod = await import('@/app/(public)/standings/page')
   const jsx = await mod.default()
-  return extractText(jsx)
+  return textOf(renderToStaticMarkup(jsx as ReactElement))
 }
 
 // ─── Tests ────────────────────────────────────────────────────────────────────

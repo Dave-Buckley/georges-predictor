@@ -119,7 +119,7 @@ describe('GET /api/reports/full-export', () => {
     const disposition = res.headers.get('Content-Disposition')
     expect(disposition).toMatch(/^attachment; filename=/)
     expect(disposition).toMatch(
-      /georges-predictor-full-export-\d{4}-\d{2}-\d{2}\.xlsx/,
+      /kingpredictor-full-export-\d{4}-\d{2}-\d{2}\.xlsx/,
     )
   })
 

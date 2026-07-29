@@ -15,7 +15,9 @@ function getLondonTzAbbr(_date: Date): string {
 
 /**
  * Formats a UTC ISO string to a display time in London timezone.
- * Returns "HH:mm zzz" (e.g., "15:00 BST" in summer or "14:00 GMT" in winter).
+ * Returns "HH:mm GMT" — the clock reading is real London local time, but the
+ * label is always "GMT" (see getLondonTzAbbr above). 14:00 UTC in August
+ * renders as "15:00 GMT".
  */
 export function formatKickoffTime(utcString: string): string {
   const date = new Date(utcString)
@@ -26,7 +28,8 @@ export function formatKickoffTime(utcString: string): string {
 
 /**
  * Formats a UTC ISO string to a full display string in London timezone.
- * Returns "EEE d MMM, HH:mm zzz" (e.g., "Sat 16 Aug, 15:00 BST").
+ * Returns "EEE d MMM, HH:mm GMT" (e.g., "Sat 16 Aug, 15:00 GMT" — London local
+ * time, always labelled GMT; see getLondonTzAbbr above).
  */
 export function formatKickoffFull(utcString: string): string {
   const date = new Date(utcString)
