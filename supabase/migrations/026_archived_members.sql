@@ -56,6 +56,9 @@ CREATE INDEX IF NOT EXISTS archived_members_archived_at_idx
 ALTER TABLE public.archived_members ENABLE ROW LEVEL SECURITY;
 
 -- Admin-only. The service-role key used by the server action bypasses RLS.
+-- Dropped first so the whole migration is safe to run more than once.
+DROP POLICY IF EXISTS archived_members_admin_all ON public.archived_members;
+
 CREATE POLICY archived_members_admin_all
   ON public.archived_members FOR ALL
   USING ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin')
