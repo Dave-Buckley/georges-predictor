@@ -12,11 +12,10 @@
  *   - Promoted    (3 slots, Championship teams)
  *   - Playoff winner (1 slot, Championship teams)
  *
- * Mobile-first: single column, full-width Radix Selects.
+ * Mobile-first: single column, full-width native selects (see TeamSelect).
  */
 
-import * as Select from '@radix-ui/react-select'
-import { Check, ChevronDown, ChevronUp } from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
 
 export interface PickerState {
   top4: (string | null)[]        // length 4
@@ -67,6 +66,16 @@ export function toSubmitPayload(state: PickerState, season: number) {
   }
 }
 
+/**
+ * One team dropdown.
+ *
+ * NATIVE <select> on purpose. This was a Radix Select, and the same library
+ * on the signup name list could not be scrolled on phones — members could only
+ * reach the first screenful of options (July 2026). A team list is 20 PL or 24
+ * Championship clubs, so a member who could not scroll could not complete their
+ * picks at all. The native control hands the list to the phone's OS picker,
+ * which scrolls at any length. Don't swap this back to a custom dropdown.
+ */
 function TeamSelect({
   value,
   onChange,
@@ -81,43 +90,34 @@ function TeamSelect({
   disabled?: boolean
 }) {
   return (
-    <Select.Root value={value ?? undefined} onValueChange={onChange} disabled={disabled}>
-      <Select.Trigger className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg border border-slate-700 bg-slate-800 text-sm text-slate-100 hover:border-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-400 disabled:opacity-60 disabled:cursor-not-allowed">
-        <Select.Value placeholder={placeholder} />
-        <Select.Icon>
-          <ChevronDown className="w-4 h-4 text-slate-400" />
-        </Select.Icon>
-      </Select.Trigger>
+    <div className="relative">
+      <select
+        value={value ?? ''}
+        onChange={(e) => onChange(e.target.value)}
+        disabled={disabled}
+        aria-label={placeholder}
+        className={`w-full appearance-none pl-3 pr-10 py-2.5 rounded-lg border border-slate-700 bg-slate-800 text-sm hover:border-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-400 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer ${
+          value ? 'text-slate-100' : 'text-slate-400'
+        }`}
+      >
+        {/* bg/text set explicitly — some desktop browsers render the option
+            list on the OS default (white) background otherwise. */}
+        <option value="" disabled className="bg-slate-900 text-slate-400">
+          {placeholder}
+        </option>
+        {options.map((name) => (
+          <option key={name} value={name} className="bg-slate-900 text-slate-100">
+            {name}
+          </option>
+        ))}
+      </select>
 
-      <Select.Portal>
-        <Select.Content
-          className="z-[100] bg-slate-900 rounded-xl shadow-2xl border border-slate-700 overflow-hidden max-h-[min(70vh,28rem)]"
-          position="popper"
-          sideOffset={4}
-        >
-          <Select.ScrollUpButton className="flex items-center justify-center h-7 bg-slate-900 text-slate-400 cursor-default">
-            <ChevronUp className="w-4 h-4" />
-          </Select.ScrollUpButton>
-          <Select.Viewport className="p-1">
-            {options.map((name) => (
-              <Select.Item
-                key={name}
-                value={name}
-                className="flex items-center gap-2 px-3 py-2.5 text-sm text-slate-100 rounded-lg cursor-pointer hover:bg-purple-600/20 focus:outline-none focus:bg-purple-600/20 select-none data-[highlighted]:bg-purple-600/20"
-              >
-                <Select.ItemIndicator>
-                  <Check className="w-4 h-4 text-purple-400" />
-                </Select.ItemIndicator>
-                <Select.ItemText>{name}</Select.ItemText>
-              </Select.Item>
-            ))}
-          </Select.Viewport>
-          <Select.ScrollDownButton className="flex items-center justify-center h-7 bg-slate-900 text-slate-400 cursor-default">
-            <ChevronDown className="w-4 h-4" />
-          </Select.ScrollDownButton>
-        </Select.Content>
-      </Select.Portal>
-    </Select.Root>
+      {/* pointer-events-none so taps fall through to the select */}
+      <ChevronDown
+        className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
+        aria-hidden="true"
+      />
+    </div>
   )
 }
 
