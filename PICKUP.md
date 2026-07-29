@@ -1,14 +1,10 @@
-# Pickup — 24 April 2026
+# Pickup — 29 July 2026
 
-## ⚠️ ACTION REQUIRED — update Supabase email template
+## ⚠️ ACTION REQUIRED — update the Supabase login email template
 
-The login flow just shipped now uses a **6-digit code** instead of a magic
-link (fixes Barny's login loop — eliminates the whole class of
-prefetch/webview bugs). For this to work, the Supabase "Magic Link" email
-template must include `{{ .Token }}`. The default template only includes
-the link.
-
-**Do this now:**
+**This is the one thing still outstanding.** It fixes the "asks for a 6-digit
+code but sends 8" confusion *and* the old "George's Predictor" branding, at
+zero cost. It takes 2 minutes and needs no deploy.
 
 1. Open https://supabase.com/dashboard/project/unpdsomipodadnlnbioq/auth/templates
 2. Click the **Magic Link** template
@@ -16,68 +12,131 @@ the link.
 4. Save
 
 ```html
-<h2>Your George's Predictor login code</h2>
-
-<p>Hi — your 6-digit login code is:</p>
-
-<p style="font-size: 32px; font-weight: bold; letter-spacing: 8px; font-family: monospace; margin: 24px 0; padding: 16px 24px; background: #f4f4f4; border-radius: 8px; display: inline-block;">
-  {{ .Token }}
-</p>
-
-<p>Type this into the login screen on George's Predictor. The code expires in 1 hour.</p>
-
-<hr style="margin: 32px 0; border: none; border-top: 1px solid #e5e5e5;" />
-
-<p style="color: #666; font-size: 14px;">
-  Or if you prefer, you can click this link to log in:
-  <br />
-  <a href="{{ .ConfirmationURL }}">Log me in</a>
-</p>
-
-<p style="color: #999; font-size: 12px; margin-top: 24px;">
-  Didn't request this? Ignore this email — your account is safe.
-</p>
+<div style="background:#0b0b14;padding:32px 20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
+  <div style="max-width:480px;margin:0 auto">
+    <h1 style="color:#ffffff;font-size:22px;font-weight:800;margin:0 0 16px">
+      Your King Predictor login code 👑
+    </h1>
+    <p style="color:#c7cbd8;font-size:16px;margin:0 0 20px">
+      Hi — here is your login code:
+    </p>
+    <div style="background:#16161f;border:1px solid #2a2a3a;border-radius:12px;padding:20px;text-align:center;margin:0 0 20px">
+      <span style="color:#ffffff;font-size:38px;font-weight:800;letter-spacing:10px;font-family:'Courier New',monospace">{{ .Token }}</span>
+    </div>
+    <p style="color:#c7cbd8;font-size:15px;margin:0">
+      Type this into the login screen on King Predictor. The code expires in 1 hour.
+    </p>
+    <hr style="border:none;border-top:1px solid #2a2a3a;margin:28px 0" />
+    <p style="color:#9aa0b4;font-size:14px;margin:0 0 6px">
+      Or if you prefer, you can tap this link to log in:
+    </p>
+    <p style="margin:0">
+      <a href="{{ .ConfirmationURL }}" style="color:#a855f7;font-size:16px;font-weight:600">Log me in</a>
+    </p>
+    <p style="color:#6b7086;font-size:12px;margin:28px 0 0">
+      Didn't request this? You can safely ignore this email — your account is safe.
+    </p>
+  </div>
+</div>
 ```
 
-After saving, test by logging in fresh. Any existing users requesting a
-code from the old template will just see the link (no code) — they'll
-need to request a new code after the template is updated. No harm done.
+**Note the wording deliberately says "here is your login code" — not
+"6-digit" or "8-digit".** That mismatch is what caused the original bug report:
+the template said 6 while Supabase was configured to issue 8. Leaving the
+number out of the email means the two can never disagree again.
 
-## ⚠️ Also — forward to Barny
+The login *screen* still says "8-digit", which is correct for the current
+Supabase setting. If you ever change the OTP length (Authentication →
+Providers → Email → OTP Length), update `src/components/auth/login-form.tsx`
+to match. The server now accepts anything from 6 to 8 digits either way.
 
-Once the template is updated, tell Barny:
+---
 
-> "Login works differently now — enter your email, check your inbox for
-> a 6-digit code, type it into the app. No more link clicking needed.
-> If you don't see a code in the email, George needs to save the new
-> template (ping Dave if this happens)."
+## What happened yesterday (28 July) and what we did about it
 
-## What shipped this session
+**Yesterday's commit `7c62cef` broke login for every member except Dave.**
+It has been reverted (`d4e695c`). Login is back to the flow that worked for
+months. Do not re-apply it.
 
-Three fixes pushed to master:
+### Why it broke
 
-1. **`9437645`** — fix(admin): close-gameweek dialog shows correct points
-   total. Was displaying 0 because `prediction_scores` query filtered on
-   a non-existent `gameweek_id` column; now filters by fixture IDs.
-   GW33 shows the real ~1,190 point total.
+It moved the login-code email off Supabase's template and onto our own Resend
+email, to fix the branding + digit-count wording. Three things went wrong:
 
-2. **`dbd859e`** — fix(predictions): WhatsApp share button now opens
-   WhatsApp with picks pre-filled instead of only copying to clipboard.
-   George's "nothing happens" report.
+1. **Resend could not deliver to anyone.** The sender is
+   `onboarding@resend.dev`, Resend's shared sandbox address, which is only
+   allowed to send to the Resend account owner (`dave.john.buckley@gmail.com`).
+   Every other member got a `403 validation_error`. Confirmed in the Vercel
+   runtime logs.
+2. **The fallback could not fire either.** On Resend failure the code fell back
+   to Supabase's own OTP email — but `generateLink` one line earlier already
+   counted as a code request for that email, so Supabase refused with
+   *"you can only request this after 59 seconds"*. Members saw
+   **"No account found with this email. Have you signed up?"**
+3. **Codes that did arrive were dead on arrival.** `generateLink` minted a new
+   token on *every* tap of "Email me a login code", and each new token
+   invalidated the previous one — so the code sitting in the member's inbox had
+   usually already been superseded. Hence *"That code is wrong or has expired"*
+   on a code that was two minutes old.
 
-3. **`f935521`** — feat(login): surface `?error=auth` with diagnostic
-   banner on the login page, explaining prefetch/webview issues.
+### Also fixed in the same session
 
-4. **`<this commit>`** — feat(login): switch from magic link flow to
-   6-digit OTP code flow. Members now enter a code instead of clicking
-   a link. Magic link still works as fallback for users whose email
-   clients handle it cleanly.
+- **`5dee817` — rate-limit message.** Supabase allows one code per 60s per
+  email. That error used to surface as "No account found with this email",
+  which reads as *you do not exist* to a member who simply tapped the button
+  twice. It now says the code is already on its way, check spam.
+- **`5dee817` — code length tolerance.** Verify used to demand exactly 8
+  digits. The OTP length lives in the Supabase dashboard, not the repo, so the
+  two could silently drift. Now accepts 6–8.
+- **`5dee817` — signup name list would not scroll on mobile.** The name picker
+  was a Radix Select; it scrolls its own popup and its arrows only respond to a
+  mouse hover, so on a phone you could not drag past the first screenful of
+  names. Daddy Dave could not reach his name to select it. Now a native
+  `<select>`, which uses the phone's own OS picker — always scrollable.
 
-## Tell George (when ready)
+---
 
-> "Two fixes live: (1) Close Gameweek 33 now shows the real points
-> total (was a display bug — click it when you're ready, everyone's
-> season totals will update automatically). (2) WhatsApp share button
-> now opens WhatsApp with your picks pre-filled — tell the group.
-> Also: Barny and anyone else hitting login issues should retry —
-> they'll now get a 6-digit code to type in instead of a link to click."
+## ℹ️ Known limitation — Resend can only email Dave
+
+`onboarding@resend.dev` only delivers to `dave.john.buckley@gmail.com`. This
+affects **every** Resend email the app sends, not just login:
+
+- **New-signup notifications to George are silently failing.** The
+  `admin_notifications` row (from the DB trigger) is still created, so pending
+  approvals are visible at `/admin/members?filter=pending` — George just does
+  not get the email nudge.
+- Login codes are unaffected now — they come from Supabase, not Resend.
+
+To fix properly, Resend requires a **verified domain**; a `.vercel.app`
+subdomain cannot be verified. That means buying a cheap domain (~£10/yr) and
+adding it at resend.com/domains, then setting `EMAIL_FROM` in Vercel. That is
+the only way to send branded mail to other people from Resend — it is a real
+cost, so it is your call. Everything else stays free.
+
+---
+
+## Tell George / the WhatsApp group
+
+> "Login is fixed — sorry about that, it was my end, not yours. Try again now:
+> put your email in, and you'll get a code to type in. If you tap the button
+> twice you'll only get one code, so just use the most recent email. Also, if
+> you're signing up and couldn't scroll the list of names to find yours, that's
+> fixed too — the list now works properly on phones."
+
+---
+
+## Previous pickup — 24 April 2026 (historical, superseded above)
+
+The login flow switched from magic links to a typed code (fixes Barny's login
+loop — eliminates the whole class of prefetch/webview bugs). This required the
+Supabase Magic Link template to include `{{ .Token }}`, which was done at the
+time. That template is the one being replaced above; the `{{ .Token }}`
+placeholder is still required and is present in the new HTML.
+
+Also shipped that session:
+
+1. **`9437645`** — fix(admin): close-gameweek dialog shows correct points total.
+2. **`dbd859e`** — fix(predictions): WhatsApp share button opens WhatsApp with
+   picks pre-filled.
+3. **`f935521`** — feat(login): surface `?error=auth` with a diagnostic banner.
+4. **`<that commit>`** — feat(login): magic link → typed OTP code flow.
