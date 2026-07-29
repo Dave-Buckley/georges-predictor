@@ -229,7 +229,89 @@ export async function addMember(
 // ─── Remove Member ────────────────────────────────────────────────────────────
 
 /**
+ * Every table keyed by members.id. All of it cascades away when a member is
+ * deleted, so all of it has to be snapshotted first.
+ */
+const MEMBER_HISTORY_TABLES = [
+  'predictions',
+  'prediction_scores',
+  'pre_season_picks',
+  'prize_awards',
+  'point_adjustments',
+  'bonus_awards',
+  'los_picks',
+  'los_competition_members',
+  'prediction_locks',
+] as const
+
+/**
+ * Captures everything a member ever did into `archived_members`, so removing
+ * them from the competition doesn't destroy their history.
+ *
+ * Returns an error if ANY part of the snapshot fails — the caller must not
+ * proceed with the delete in that case. Losing the record silently is the one
+ * outcome this is here to prevent.
+ */
+async function archiveMemberHistory(
+  supabaseAdmin: ReturnType<typeof createAdminClient>,
+  memberId: string,
+  archivedBy: string,
+): Promise<{ error?: string }> {
+  const { data: member, error: memberError } = await supabaseAdmin
+    .from('members')
+    .select('*')
+    .eq('id', memberId)
+    .single()
+
+  if (memberError || !member) {
+    return { error: 'Could not read the member record to archive it.' }
+  }
+
+  const snapshot: Record<string, unknown> = { member }
+
+  for (const table of MEMBER_HISTORY_TABLES) {
+    const { data, error } = await supabaseAdmin
+      .from(table)
+      .select('*')
+      .eq('member_id', memberId)
+
+    if (error) {
+      console.error(`[archiveMemberHistory] Failed reading ${table}:`, error.message)
+      return { error: `Could not archive this member's ${table}. Nothing was deleted.` }
+    }
+    snapshot[table] = data ?? []
+  }
+
+  const { error: insertError } = await supabaseAdmin
+    .from('archived_members')
+    .insert({
+      original_member_id: memberId,
+      display_name: member.display_name,
+      email: member.email,
+      starting_points: member.starting_points ?? 0,
+      archived_by: archivedBy,
+      snapshot,
+    })
+
+  if (insertError) {
+    console.error('[archiveMemberHistory] Archive insert failed:', insertError.message)
+    // Most likely cause: migration 026 hasn't been pasted into the Supabase SQL
+    // editor yet. Say so plainly rather than deleting an unarchived member.
+    return {
+      error:
+        "Could not save this member's history, so nothing was removed. Migration 026 (archived_members) may not have been run yet.",
+    }
+  }
+
+  return {}
+}
+
+/**
  * Permanently removes a member from the competition.
+ *
+ * Their full history is snapshotted into `archived_members` first and kept for
+ * at least 10 years — see migration 026. If that snapshot fails for any reason
+ * the removal is abandoned, so a member is never deleted unarchived.
  *
  * Two kinds of member exist and they have to be deleted differently:
  *
@@ -268,6 +350,14 @@ export async function removeMember(
   if (fetchError || !member) {
     return { error: 'Member not found' }
   }
+
+  // Snapshot everything BEFORE any deleting starts. Bails out on failure.
+  const { error: archiveError } = await archiveMemberHistory(
+    supabaseAdmin,
+    memberId,
+    auth.userId,
+  )
+  if (archiveError) return { error: archiveError }
 
   // Clear the one FK that would otherwise refuse the delete.
   const { error: prizeError } = await supabaseAdmin

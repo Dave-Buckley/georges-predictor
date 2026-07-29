@@ -1,5 +1,24 @@
 # Pickup — 29 July 2026
 
+## ⚠️ ACTION REQUIRED — run two migrations in the Supabase SQL editor
+
+Both are DDL, so they have to be pasted in by hand (see the migration workflow).
+Paste the file contents into
+https://supabase.com/dashboard/project/unpdsomipodadnlnbioq/sql
+
+1. **`supabase/migrations/025_prize_awards_member_cascade.sql`**
+   `prize_awards.member_id` has no ON DELETE rule, so the database refuses to
+   delete any member who has ever won a prize. `removeMember` works around this
+   in code, but the constraint should be fixed properly.
+
+2. **`supabase/migrations/026_archived_members.sql`** — **required before George
+   can remove anyone.** Creates the `archived_members` table that removal writes
+   a member's full history into. Until it exists, removal deliberately refuses
+   with *"Could not save this member's history, so nothing was removed"* rather
+   than deleting an unarchived member.
+
+---
+
 ## ⚠️ ACTION REQUIRED — update the Supabase login email template
 
 **This is the one thing still outstanding.** It fixes the "asks for a 6-digit
@@ -93,6 +112,17 @@ email, to fix the branding + digit-count wording. Three things went wrong:
   mouse hover, so on a phone you could not drag past the first screenful of
   names. Daddy Dave could not reach his name to select it. Now a native
   `<select>`, which uses the phone's own OS picker — always scrollable.
+- **Signup is now a two-path chooser** — "I am a returning participant" (pick
+  from the unclaimed names) or "I'm new" (type a name). A single combined list
+  let a brand-new member pick a returning player's name and silently inherit
+  their points. Only one control is mounted at a time, so the unused path can
+  never block signup.
+- **The pre-season picker's 12 team dropdowns are native selects too.** Same
+  Radix scroll risk, 20–24 clubs per list, and picks close 1 August.
+- **Removing a member now archives them first.** Every member-keyed table is
+  snapshotted into `archived_members` and kept at least 10 years, so a removed
+  player's history survives for the hall of fame and for rejoining later. If the
+  snapshot fails, nothing is deleted.
 
 ---
 

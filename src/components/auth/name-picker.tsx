@@ -78,7 +78,7 @@ export default function NamePicker({
       {hasReturningNames && (
         <fieldset disabled={disabled} className="space-y-2 disabled:opacity-50">
           <legend className="block text-sm font-medium text-slate-300 mb-2">
-            Have you played before?
+            Are you returning or new?
           </legend>
 
           <div className="flex flex-col sm:flex-row gap-3">
@@ -94,10 +94,10 @@ export default function NamePicker({
                 className="sr-only"
               />
               <span className="font-semibold text-base">
-                I played last season
+                I am a returning participant
               </span>
               <span className="text-xs text-slate-400">
-                Pick your name to keep your points
+                Pick your name to keep your history
               </span>
             </label>
 
@@ -166,7 +166,8 @@ export default function NamePicker({
           </div>
 
           <p className="text-slate-400 text-xs leading-relaxed">
-            Only players who haven&apos;t signed up yet are listed. If your name
+            These are previous participants who haven&apos;t signed up yet.
+            Picking your name keeps your history and points. If your name
             isn&apos;t here, someone has already claimed it — go back and choose{' '}
             <strong className="text-slate-300">I&apos;m new</strong>, or check
             with George.
@@ -205,7 +206,7 @@ export default function NamePicker({
       {error && (
         <p className="text-red-400 text-sm">
           {path === null
-            ? "Please choose whether you played last season or you're new."
+            ? "Please choose whether you're a returning participant or new."
             : error}
         </p>
       )}

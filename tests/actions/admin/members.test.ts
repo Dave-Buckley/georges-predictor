@@ -374,21 +374,58 @@ describe('removeMember', () => {
   // assert which rows were removed.
   let deletedFrom: Array<{ table: string; column: string; value: string }>
 
+  // Captures what was written to archived_members.
+  let archived: Array<Record<string, unknown>>
+
   /**
    * Wires up mockAdminClient.from for the removeMember flow.
    * `userId` null simulates a placeholder member — one of the names George
    * typed in himself, which has no auth user behind it.
    */
-  function setupMember(userId: string | null, opts: { prizeDeleteError?: string; rowDeleteError?: string } = {}) {
+  function setupMember(
+    userId: string | null,
+    opts: {
+      prizeDeleteError?: string
+      rowDeleteError?: string
+      archiveInsertError?: string
+      historyReadError?: string
+    } = {},
+  ) {
     deletedFrom = []
+    archived = []
+
     mockAdminClient.from = vi.fn().mockImplementation((table: string) => ({
       select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
-            data: { id: 'member-id', user_id: userId },
+        // eq() is awaited directly when reading history rows, and also carries
+        // .single() for the member lookup — so it has to be both.
+        eq: vi.fn().mockImplementation(() => {
+          const failing =
+            opts.historyReadError && table === 'predictions'
+              ? { data: null, error: { message: opts.historyReadError } }
+              : { data: [], error: null }
+          const result = Promise.resolve(failing) as Promise<unknown> & {
+            single: () => Promise<unknown>
+          }
+          result.single = vi.fn().mockResolvedValue({
+            data: {
+              id: 'member-id',
+              user_id: userId,
+              display_name: 'Charlie',
+              email: 'charlie@example.com',
+              starting_points: 120,
+            },
             error: null,
-          }),
+          })
+          return result
         }),
+      }),
+      insert: vi.fn().mockImplementation((row: Record<string, unknown>) => {
+        archived.push(row)
+        return Promise.resolve({
+          error: opts.archiveInsertError
+            ? { message: opts.archiveInsertError }
+            : null,
+        })
       }),
       delete: vi.fn().mockReturnValue({
         eq: vi.fn().mockImplementation((column: string, value: string) => {
@@ -468,6 +505,66 @@ describe('removeMember', () => {
     const { removeMember } = await import('@/actions/admin/members')
     const result = await removeMember('member-id')
     expect(result).toEqual({ error: expect.any(String) })
+  })
+
+  // ── History retention ───────────────────────────────────────────────────────
+  // Removal used to be a hard delete that cascaded a member's entire history
+  // away. Everything is snapshotted into archived_members first and kept for
+  // at least 10 years (migration 026).
+
+  it('archives the member before deleting anything', async () => {
+    const { removeMember } = await import('@/actions/admin/members')
+    await removeMember('member-id')
+
+    expect(archived).toHaveLength(1)
+    expect(archived[0]).toMatchObject({
+      original_member_id: 'member-id',
+      display_name: 'Charlie',
+      email: 'charlie@example.com',
+      starting_points: 120,
+      archived_by: 'admin-user-id',
+    })
+  })
+
+  it('snapshots every member-keyed history table', async () => {
+    const { removeMember } = await import('@/actions/admin/members')
+    await removeMember('member-id')
+
+    const snapshot = archived[0].snapshot as Record<string, unknown>
+    expect(snapshot.member).toBeDefined()
+    for (const table of [
+      'predictions',
+      'prediction_scores',
+      'pre_season_picks',
+      'prize_awards',
+      'point_adjustments',
+      'bonus_awards',
+      'los_picks',
+      'los_competition_members',
+      'prediction_locks',
+    ]) {
+      expect(snapshot[table]).toBeDefined()
+    }
+  })
+
+  it('deletes nothing if the archive write fails', async () => {
+    setupMember('user-id-789', { archiveInsertError: 'relation does not exist' })
+    const { removeMember } = await import('@/actions/admin/members')
+    const result = await removeMember('member-id')
+
+    expect(result.error).toEqual(expect.any(String))
+    expect(mockAdminClient.auth.admin.deleteUser).not.toHaveBeenCalled()
+    expect(deletedFrom).toHaveLength(0)
+  })
+
+  it('deletes nothing if any history table cannot be read', async () => {
+    setupMember('user-id-789', { historyReadError: 'permission denied' })
+    const { removeMember } = await import('@/actions/admin/members')
+    const result = await removeMember('member-id')
+
+    expect(result.error).toEqual(expect.any(String))
+    expect(mockAdminClient.auth.admin.deleteUser).not.toHaveBeenCalled()
+    expect(deletedFrom).toHaveLength(0)
   })
 
   it('returns error if caller is not admin', async () => {

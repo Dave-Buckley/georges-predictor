@@ -196,9 +196,17 @@ function RemoveDialog({ member, open, onOpenChange }: DialogProps) {
           <Dialog.Title className="text-lg font-bold text-gray-900 mb-2">
             Remove {member.display_name}?
           </Dialog.Title>
-          <Dialog.Description className="text-sm text-gray-600 mb-6">
-            This will permanently remove <strong>{member.display_name}</strong> from the competition and delete their account. This cannot be undone.
+          <Dialog.Description className="text-sm text-gray-600 mb-4">
+            This removes <strong>{member.display_name}</strong> from the
+            competition and the league tables, and deletes their account. They
+            can sign up again later with the same email.
           </Dialog.Description>
+
+          <p className="text-sm text-gray-600 mb-6 rounded-lg bg-gray-50 border border-gray-200 px-3 py-2">
+            Their full history — points, predictions, pre-season picks and
+            prizes — is saved to the archive first and kept for at least 10
+            years.
+          </p>
 
           {error && (
             <p className="mb-4 p-3 rounded-lg bg-red-50 text-red-700 text-sm">{error}</p>

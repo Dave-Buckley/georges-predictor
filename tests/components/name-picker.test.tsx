@@ -45,7 +45,7 @@ describe('NamePicker', () => {
 
   it('starts undecided — neither name control is shown', () => {
     setup()
-    expect(screen.getByText('I played last season')).toBeDefined()
+    expect(screen.getByText('I am a returning participant')).toBeDefined()
     expect(screen.getByText("I'm new")).toBeDefined()
     // Neither input is on screen until a path is chosen.
     expect(screen.queryByLabelText('Select your name')).toBeNull()
@@ -56,7 +56,7 @@ describe('NamePicker', () => {
 
   it('shows the name list, and only the name list, for returning players', () => {
     setup()
-    fireEvent.click(screen.getByRole('radio', { name: /I played last season/ }))
+    fireEvent.click(screen.getByRole('radio', { name: /I am a returning participant/ }))
 
     expect(screen.getByLabelText('Select your name')).toBeDefined()
     expect(screen.queryByPlaceholderText(/Type your name/)).toBeNull()
@@ -64,7 +64,7 @@ describe('NamePicker', () => {
 
   it('lists every unclaimed name as a native option so the OS can scroll it', () => {
     setup()
-    fireEvent.click(screen.getByRole('radio', { name: /I played last season/ }))
+    fireEvent.click(screen.getByRole('radio', { name: /I am a returning participant/ }))
 
     const select = screen.getByLabelText('Select your name') as HTMLSelectElement
     expect(select.tagName).toBe('SELECT')
@@ -77,7 +77,7 @@ describe('NamePicker', () => {
 
   it('reports the selected name and marks the member as returning', () => {
     const { onChange, onIsNewMemberChange } = setup()
-    fireEvent.click(screen.getByRole('radio', { name: /I played last season/ }))
+    fireEvent.click(screen.getByRole('radio', { name: /I am a returning participant/ }))
 
     expect(onIsNewMemberChange).toHaveBeenCalledWith(false)
 
@@ -112,7 +112,7 @@ describe('NamePicker', () => {
 
   it('clears the name when switching paths so the wrong one is never submitted', () => {
     const { onChange, onIsNewMemberChange } = setup({ value: 'Hugo' })
-    fireEvent.click(screen.getByRole('radio', { name: /I played last season/ }))
+    fireEvent.click(screen.getByRole('radio', { name: /I am a returning participant/ }))
     onChange.mockClear()
 
     fireEvent.click(screen.getByRole('radio', { name: /I'm new/ }))
@@ -126,7 +126,7 @@ describe('NamePicker', () => {
   it('skips the chooser and goes straight to the text box when no names remain', () => {
     const { onIsNewMemberChange } = setup({ importedNames: [] })
 
-    expect(screen.queryByText('I played last season')).toBeNull()
+    expect(screen.queryByText('I am a returning participant')).toBeNull()
     expect(screen.getByPlaceholderText(/Type your name/)).toBeDefined()
     // Must still flag as new so the server-side duplicate-name guard runs.
     expect(onIsNewMemberChange).toHaveBeenCalledWith(true)
@@ -137,7 +137,7 @@ describe('NamePicker', () => {
   it('names the missing step when nothing has been chosen yet', () => {
     setup({ error: 'Display name is required' })
     expect(
-      screen.getByText(/choose whether you played last season/i),
+      screen.getByText(/choose whether you're a returning participant/i),
     ).toBeDefined()
   })
 
