@@ -206,7 +206,7 @@ export default function LoginForm() {
           <div className="rounded-xl bg-slate-800 border border-slate-700 p-5 text-center space-y-2">
             <p className="text-white font-semibold">Check your email</p>
             <p className="text-slate-300 text-sm">
-              We sent an 8-digit code to{' '}
+              We sent a login code to{' '}
               <span className="text-white font-medium break-all">{email}</span>
             </p>
             <p className="text-slate-500 text-xs">
@@ -219,14 +219,18 @@ export default function LoginForm() {
               htmlFor="code"
               className="block text-sm font-medium text-slate-300"
             >
-              Enter the 8-digit code
+              Enter the code from your email
             </label>
+            {/* Deliberately does NOT state a digit count. The OTP length is a
+                Supabase dashboard setting, so any number hardcoded here can
+                silently disagree with the emailed code — which is exactly the
+                bug members hit in July 2026 (email said 6, app demanded 8). */}
             <input
               id="code"
               type="text"
               inputMode="numeric"
               autoComplete="one-time-code"
-              pattern="\d{8}"
+              pattern="\d{6,8}"
               maxLength={8}
               placeholder="12345678"
               disabled={isSubmitting}
@@ -245,7 +249,7 @@ export default function LoginForm() {
 
           <button
             type="submit"
-            disabled={isSubmitting || code.length !== 8}
+            disabled={isSubmitting || code.length < 6}
             className="w-full rounded-xl bg-purple-600 hover:bg-purple-500 disabled:bg-purple-600/50 disabled:cursor-not-allowed px-6 py-4 text-white font-semibold text-lg transition focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 focus:ring-offset-slate-900"
           >
             {isSubmitting ? 'Verifying...' : 'Log in'}

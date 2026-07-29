@@ -182,7 +182,7 @@ export async function requestMagicLink(
 // ─── Verify Login Code ────────────────────────────────────────────────────────
 
 /**
- * Verifies an 8-digit email OTP code and establishes a session.
+ * Verifies the emailed OTP code and establishes a session.
  * The companion to requestMagicLink: members type the code from their email
  * instead of clicking the link, which sidesteps email prefetchers (Outlook,
  * AOL, Yahoo) that consume magic links before the user taps them.

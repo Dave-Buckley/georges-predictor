@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect, useCallback } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { CheckCircle, XCircle, Trash2, Mail, Hash, ChevronDown } from 'lucide-react'
 import type { MemberRow } from '@/lib/supabase/types'
@@ -52,7 +52,25 @@ function useAction() {
     })
   }
 
-  return { isPending, error, success, run }
+  // The dialogs stay mounted now (see DialogProps), so a failed attempt would
+  // otherwise still be on screen the next time one is opened.
+  const reset = useCallback(() => {
+    setError(null)
+    setSuccess(false)
+  }, [])
+
+  return { isPending, error, success, run, reset }
+}
+
+/**
+ * Clears a dialog's leftover state each time it opens. Needed because these
+ * dialogs are always mounted — they used to be unmounted with the dropdown,
+ * which reset them for free.
+ */
+function useResetOnOpen(open: boolean, reset: () => void) {
+  useEffect(() => {
+    if (open) reset()
+  }, [open, reset])
 }
 
 // ─── Approve Button ────────────────────────────────────────────────────────────
@@ -158,7 +176,8 @@ function RejectButton({ member }: { member: MemberRow }) {
 // ─── Remove Dialog ─────────────────────────────────────────────────────────────
 
 function RemoveDialog({ member, open, onOpenChange }: DialogProps) {
-  const { isPending, error, run } = useAction()
+  const { isPending, error, run, reset } = useAction()
+  useResetOnOpen(open, reset)
 
   const handleRemove = () => {
     run(() =>
@@ -213,7 +232,15 @@ function RemoveDialog({ member, open, onOpenChange }: DialogProps) {
 
 function EditEmailDialog({ member, open, onOpenChange }: DialogProps) {
   const [newEmail, setNewEmail] = useState(member.email)
-  const { isPending, error, run } = useAction()
+  const { isPending, error, run, reset } = useAction()
+
+  // Re-seed the field from the member each time the dialog opens, so an
+  // abandoned edit is not still sitting there next time it is opened.
+  const resetForm = useCallback(() => {
+    reset()
+    setNewEmail(member.email)
+  }, [reset, member.email])
+  useResetOnOpen(open, resetForm)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -284,7 +311,13 @@ function EditEmailDialog({ member, open, onOpenChange }: DialogProps) {
 
 function SetStartingPointsDialog({ member, open, onOpenChange }: DialogProps) {
   const [points, setPoints] = useState(String(member.starting_points))
-  const { isPending, error, run } = useAction()
+  const { isPending, error, run, reset } = useAction()
+
+  const resetForm = useCallback(() => {
+    reset()
+    setPoints(String(member.starting_points))
+  }, [reset, member.starting_points])
+  useResetOnOpen(open, resetForm)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
