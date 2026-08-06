@@ -15,15 +15,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Ping /api/sync-fixtures
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          # The Vercel project was renamed georges-predictor -> kingpredictor;
+          # the old host only 307s here, and curl drops the Authorization
+          # header across a host change, so this must be the canonical host.
+          # Override with the CRON_URL repo variable if it moves again.
+          CRON_URL: ${{ vars.CRON_URL || 'https://kingpredictor.vercel.app/api/sync-fixtures' }}
         run: |
           set -e
           http_status=$(curl -sS -o /tmp/sync-response.json -w "%{http_code}" \
-            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-            "https://georges-predictor.vercel.app/api/sync-fixtures")
+            -H "Authorization: Bearer $CRON_SECRET" \
+            "$CRON_URL")
           echo "HTTP $http_status"
           cat /tmp/sync-response.json || true
           echo
-          if [ "$http_status" -ge 400 ]; then
+          # Strict: anything but 200 is a failure. A bare ">= 400" check let a
+          # 307 redirect pass as green while the sync silently never ran.
+          if [ "$http_status" != "200" ]; then
             echo "::error::sync-fixtures returned $http_status"
             exit 1
           fi
