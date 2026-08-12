@@ -68,7 +68,9 @@ describe('approveMember', () => {
     vi.clearAllMocks()
     mockAdminUser()
 
-    // Mock from('members').select().eq().single() to return a member
+    // Mock from('members').select().eq().single() to return a member.
+    // maybeSingle() resolves null so the LOS enrolment step that now runs
+    // after approval finds no active competition and cleanly no-ops.
     const memberChain = {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
@@ -82,6 +84,7 @@ describe('approveMember', () => {
         },
         error: null,
       }),
+      maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
       update: vi.fn().mockReturnThis(),
     }
     mockAdminClient.from = vi.fn().mockReturnValue(memberChain)
@@ -224,6 +227,9 @@ describe('addMember', () => {
       update: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
       single: vi.fn().mockResolvedValue({ data: {}, error: null }),
+      // addMember now reads the new member id back off the update and enrols
+      // them in the active LOS cycle; null keeps that step a clean no-op.
+      maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
     }
     mockAdminClient.from = vi.fn().mockReturnValue(memberChain)
     mockAdminClient.auth.admin.createUser = vi.fn().mockResolvedValue({
@@ -288,6 +294,9 @@ describe('addMember post-migration-007 (DATA-05 late joiner)', () => {
       update: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
       single: vi.fn().mockResolvedValue({ data: {}, error: null }),
+      // addMember now reads the new member id back off the update and enrols
+      // them in the active LOS cycle; null keeps that step a clean no-op.
+      maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
     }
     mockAdminClient.from = vi.fn().mockReturnValue(memberChain)
     mockAdminClient.auth.admin.createUser = vi.fn().mockResolvedValue({
@@ -302,13 +311,14 @@ describe('addMember post-migration-007 (DATA-05 late joiner)', () => {
 
   it('addMember with starting_points creates member with correct points', async () => {
     const updateMock = vi.fn().mockReturnThis()
-    const eqMock = vi.fn().mockResolvedValue({ data: {}, error: null })
+    const eqMock = vi.fn().mockReturnThis()
 
     mockAdminClient.from = vi.fn().mockReturnValue({
       select: vi.fn().mockReturnThis(),
       update: updateMock,
       eq: eqMock,
       single: vi.fn().mockResolvedValue({ data: {}, error: null }),
+      maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
     })
 
     const formData = new FormData()
@@ -338,13 +348,14 @@ describe('addMember post-migration-007 (DATA-05 late joiner)', () => {
 
   it('addMember creates member that would appear in signup dropdown', async () => {
     const updateMock = vi.fn().mockReturnThis()
-    const eqMock = vi.fn().mockResolvedValue({ data: {}, error: null })
+    const eqMock = vi.fn().mockReturnThis()
 
     mockAdminClient.from = vi.fn().mockReturnValue({
       select: vi.fn().mockReturnThis(),
       update: updateMock,
       eq: eqMock,
       single: vi.fn().mockResolvedValue({ data: {}, error: null }),
+      maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
     })
 
     const formData = new FormData()

@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { addMemberSchema, updateEmailSchema } from '@/lib/validators/admin'
 import { sendEmail } from '@/lib/email'
+import { enrolMemberInActiveLos } from '@/lib/los/enrolment'
 
 // ─── Admin Auth Guard ─────────────────────────────────────────────────────────
 
@@ -82,6 +83,14 @@ export async function approveMember(
   if (updateError) {
     console.error('[approveMember] Update error:', updateError.message)
     return { error: 'Approval recorded but member row update failed.' }
+  }
+
+  // Enrol in the running Last One Standing cycle. Without this the member
+  // gets predictions + bonus but no shield on the gameweek page.
+  // Non-fatal — approval itself has already succeeded.
+  const losResult = await enrolMemberInActiveLos(supabaseAdmin, memberId)
+  if (!losResult.enrolled && losResult.reason === 'error') {
+    console.error('[approveMember] LOS enrolment failed:', losResult.detail)
   }
 
   return { success: true }
@@ -200,7 +209,7 @@ export async function addMember(
   }
 
   // Update members row (created by DB trigger)
-  const { error: updateError } = await supabaseAdmin
+  const { data: updatedMember, error: updateError } = await supabaseAdmin
     .from('members')
     .update({
       approval_status: 'approved',
@@ -210,10 +219,21 @@ export async function addMember(
       approved_by: auth.userId,
     })
     .eq('user_id', userData.user.id)
+    .select('id')
+    .maybeSingle()
 
   if (updateError) {
     console.error('[addMember] Update members error:', updateError.message)
     // Non-fatal — user was created, just members row not fully updated
+  }
+
+  // Enrol in the running LOS cycle so the new member sees the shields too.
+  const newMemberId = (updatedMember as { id?: string } | null)?.id
+  if (newMemberId) {
+    const losResult = await enrolMemberInActiveLos(supabaseAdmin, newMemberId)
+    if (!losResult.enrolled && losResult.reason === 'error') {
+      console.error('[addMember] LOS enrolment failed:', losResult.detail)
+    }
   }
 
   // Send welcome magic link
