@@ -1,4 +1,5 @@
 import { MemberLink } from '@/components/shared/member-link'
+import { ClubBadge } from '@/components/shared/club-badge'
 import type { StandingsRow } from '@/lib/standings/get-standings-at-gameweek'
 
 interface Props {
@@ -36,7 +37,8 @@ export function StandingsList({ rows, viewerMemberId, weeklyLabel }: Props) {
               </span>
               <span className="flex-1 text-sm">
                 {isViewer ? (
-                  <span className="text-white font-medium">
+                  <span className="inline-flex items-center gap-1.5 text-white font-medium">
+                    <ClubBadge club={m.badge} size={16} />
                     {m.displayName}{' '}
                     <span className="text-xs text-pl-green">(you)</span>
                   </span>
@@ -44,6 +46,7 @@ export function StandingsList({ rows, viewerMemberId, weeklyLabel }: Props) {
                   <MemberLink
                     displayName={m.displayName}
                     className="text-slate-200"
+                    badge={m.badge}
                   />
                 )}
               </span>

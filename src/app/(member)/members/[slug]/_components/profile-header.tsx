@@ -3,20 +3,28 @@
  *
  * Member profile header. Admin-only viewers see extra fields (email,
  * registration date, approval history). Regular members see display
- * name and optional favourite-team crest only.
+ * name and optional favourite-club badge only.
+ *
+ * The club comes from `members.favourite_club_id` -> `public.clubs`
+ * (migration 029), which covers the top four English tiers. It replaces the
+ * older `favourite_team_id` -> `teams` link, which only ever offered the 20
+ * current Premier League sides and had no picker UI, so no member ever set one.
  */
-import TeamBadge from '@/components/fixtures/team-badge'
-import type { TeamRow } from '@/lib/supabase/types'
+import { ClubBadge } from '@/components/shared/club-badge'
+
+interface FavouriteClub {
+  name: string
+  badge_url: string | null
+}
 
 interface ProfileHeaderProps {
   member: {
     display_name: string
     email?: string | null
-    favourite_team_id?: string | null
     created_at?: string | null
     approval_status?: string | null
   }
-  favouriteTeam?: TeamRow | null
+  favouriteClub?: FavouriteClub | null
   viewerIsAdmin: boolean
 }
 
@@ -35,7 +43,7 @@ function formatDate(iso: string | null | undefined): string {
 
 export function ProfileHeader({
   member,
-  favouriteTeam,
+  favouriteClub,
   viewerIsAdmin,
 }: ProfileHeaderProps) {
   return (
@@ -44,14 +52,24 @@ export function ProfileHeader({
         <h1 className="text-2xl font-bold text-white">
           {member.display_name}
         </h1>
-        {favouriteTeam ? (
-          <span className="flex items-center gap-2">
-            <span className="text-xs text-slate-500 uppercase tracking-wider">
-              Supports
-            </span>
-            <TeamBadge team={favouriteTeam} size="sm" />
+        <span className="flex items-center gap-2">
+          <span className="text-xs text-slate-500 uppercase tracking-wider">
+            Supports
           </span>
-        ) : null}
+          <span className="inline-flex items-center gap-1.5">
+            <ClubBadge
+              club={
+                favouriteClub
+                  ? { url: favouriteClub.badge_url, name: favouriteClub.name }
+                  : null
+              }
+              size={20}
+            />
+            <span className="text-sm font-medium text-slate-200">
+              {favouriteClub ? favouriteClub.name : 'No club picked yet'}
+            </span>
+          </span>
+        </span>
       </div>
 
       {viewerIsAdmin ? (

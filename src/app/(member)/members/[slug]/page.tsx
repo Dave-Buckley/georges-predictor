@@ -14,12 +14,16 @@ import {
   computeStatsForSeason,
   resolveCurrentSeason,
 } from '@/lib/profile/compute-season'
+import {
+  getRevealedGameweekNumbers,
+  getMemberPredictionsForGameweek,
+} from '@/lib/profile/get-member-predictions'
 import { WeeklyPointsChart } from '@/components/charts/weekly-points-chart'
-import type { TeamRow } from '@/lib/supabase/types'
 
 import { ProfileHeader } from './_components/profile-header'
 import { SeasonStatsPanel } from './_components/season-stats-panel'
 import { AchievementBadges } from './_components/achievement-badges'
+import { MemberPredictions } from './_components/member-predictions'
 import {
   SeasonHistoryTable,
   type SeasonHistoryEntry,
@@ -29,10 +33,17 @@ export const dynamic = 'force-dynamic'
 
 export default async function MemberProfilePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>
+  // Optional: Next always supplies this, but defaulting keeps the page
+  // callable without it (and keeps the existing page tests honest).
+  searchParams?: Promise<{ gw?: string }>
 }) {
   const { slug } = await params
+  const { gw: gwParam } = (searchParams ? await searchParams : {}) as {
+    gw?: string
+  }
   const supabase = await createServerSupabaseClient()
   const {
     data: { user },
@@ -69,7 +80,7 @@ export default async function MemberProfilePage({
     id: string
     display_name: string
     email: string | null
-    favourite_team_id: string | null
+    favourite_club_id: string | null
     created_at: string
     approval_status: string
   }
@@ -81,14 +92,17 @@ export default async function MemberProfilePage({
     currentSeason,
   )
 
-  let favouriteTeam: TeamRow | null = null
-  if (member.favourite_team_id) {
-    const { data: teamRow } = await admin
-      .from('teams')
-      .select('*')
-      .eq('id', member.favourite_team_id)
+  // Fail-soft: null before migration 029 is applied, which renders the
+  // King Predictor logo placeholder rather than breaking the profile.
+  let favouriteClub: { name: string; badge_url: string | null } | null = null
+  if (member.favourite_club_id) {
+    const { data: clubRow } = await admin
+      .from('clubs')
+      .select('name, badge_url')
+      .eq('id', member.favourite_club_id)
       .maybeSingle()
-    favouriteTeam = (teamRow as TeamRow | null) ?? null
+    favouriteClub =
+      (clubRow as { name: string; badge_url: string | null } | null) ?? null
   }
 
   const { data: archivedRaw } = await admin
@@ -132,11 +146,29 @@ export default async function MemberProfilePage({
       ? `/compare?a=${encodeURIComponent(viewerSlug)}&b=${encodeURIComponent(targetSlug)}`
       : `/compare?b=${encodeURIComponent(targetSlug)}`
 
+  // ── Predictions, revealed per fixture at kick-off ───────────────────────
+  // Weeks with at least one kicked-off fixture, so the nav never offers a week
+  // that would render empty. Viewing your own profile also shows fixtures that
+  // have not started, mirroring the predictions_select_member RLS policy.
+  const availableGameweeks = await getRevealedGameweekNumbers(admin)
+  const requestedGw = Number(gwParam)
+  const selectedGw =
+    Number.isFinite(requestedGw) && availableGameweeks.includes(requestedGw)
+      ? requestedGw
+      : (availableGameweeks[availableGameweeks.length - 1] ?? null)
+
+  const predictions =
+    selectedGw !== null
+      ? await getMemberPredictionsForGameweek(admin, member.id, selectedGw, {
+          includeUnplayed: viewerIsTarget,
+        })
+      : null
+
   return (
     <div className="space-y-6">
       <ProfileHeader
         member={member}
-        favouriteTeam={favouriteTeam}
+        favouriteClub={favouriteClub}
         viewerIsAdmin={viewerIsAdmin}
       />
       {!viewerIsTarget ? (
@@ -151,6 +183,13 @@ export default async function MemberProfilePage({
       ) : null}
       <SeasonStatsPanel stats={currentStats} />
       <AchievementBadges achievements={currentStats.achievements} />
+      <MemberPredictions
+        slug={targetSlug}
+        memberDisplayName={member.display_name}
+        viewerIsTarget={viewerIsTarget}
+        available={availableGameweeks}
+        data={predictions}
+      />
       {weeklyBreakdown.length > 0 ? (
         <section className="space-y-3">
           <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">

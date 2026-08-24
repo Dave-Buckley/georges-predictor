@@ -1,0 +1,899 @@
+{
+  "generated_at": "2026-08-24T23:20:25.364Z",
+  "source": "thesportsdb.com free API (searchteams.php)",
+  "count": 99,
+  "with_badge": 99,
+  "clubs": [
+    {
+      "name": "Arsenal",
+      "official_name": "Arsenal",
+      "short_name": "ARS",
+      "league": "English Premier League",
+      "tier": 1,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/uyhbfe1612467038.png",
+      "sportsdb_id": "133604"
+    },
+    {
+      "name": "Aston Villa",
+      "official_name": "Aston Villa",
+      "short_name": "AVL",
+      "league": "English Premier League",
+      "tier": 1,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/cgvxt61785930389.png",
+      "sportsdb_id": "133601"
+    },
+    {
+      "name": "Bournemouth",
+      "official_name": "Bournemouth",
+      "short_name": "BOU",
+      "league": "English Premier League",
+      "tier": 1,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/y08nak1534071116.png",
+      "sportsdb_id": "134301"
+    },
+    {
+      "name": "Brentford",
+      "official_name": "Brentford",
+      "short_name": "BRE",
+      "league": "English Premier League",
+      "tier": 1,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/grv1aw1546453779.png",
+      "sportsdb_id": "134355"
+    },
+    {
+      "name": "Chelsea",
+      "official_name": "Chelsea",
+      "short_name": "CHE",
+      "league": "English Premier League",
+      "tier": 1,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/pbf4ul1782638263.png",
+      "sportsdb_id": "133610"
+    },
+    {
+      "name": "Coventry City",
+      "official_name": "Coventry City",
+      "short_name": "CVC",
+      "league": "English Premier League",
+      "tier": 1,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/uxyqys1424033798.png",
+      "sportsdb_id": "133625"
+    },
+    {
+      "name": "Crystal Palace",
+      "official_name": "Crystal Palace",
+      "short_name": "CRY",
+      "league": "English Premier League",
+      "tier": 1,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/ia6i3m1656014992.png",
+      "sportsdb_id": "133632"
+    },
+    {
+      "name": "Everton",
+      "official_name": "Everton",
+      "short_name": "EVE",
+      "league": "English Premier League",
+      "tier": 1,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/eqayrf1523184794.png",
+      "sportsdb_id": "133615"
+    },
+    {
+      "name": "Fulham",
+      "official_name": "Fulham",
+      "short_name": "FUL",
+      "league": "English Premier League",
+      "tier": 1,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/xwwvyt1448811086.png",
+      "sportsdb_id": "133600"
+    },
+    {
+      "name": "Hull City",
+      "official_name": "Hull City",
+      "short_name": "HUL",
+      "league": "English Premier League",
+      "tier": 1,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/fbqqda1601726113.png",
+      "sportsdb_id": "133617"
+    },
+    {
+      "name": "Ipswich Town",
+      "official_name": "Ipswich Town",
+      "short_name": "IPS",
+      "league": "English Premier League",
+      "tier": 1,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/mdj1ey1634670785.png",
+      "sportsdb_id": "133622"
+    },
+    {
+      "name": "Leeds United",
+      "official_name": "Leeds United",
+      "short_name": "LEE",
+      "league": "English Premier League",
+      "tier": 1,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/jcgrml1756649030.png",
+      "sportsdb_id": "133635"
+    },
+    {
+      "name": "Liverpool",
+      "official_name": "Liverpool",
+      "short_name": "LIV",
+      "league": "English Premier League",
+      "tier": 1,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/kfaher1737969724.png",
+      "sportsdb_id": "133602"
+    },
+    {
+      "name": "Manchester City",
+      "official_name": "Manchester City",
+      "short_name": "MCI",
+      "league": "English Premier League",
+      "tier": 1,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/vwpvry1467462651.png",
+      "sportsdb_id": "133613"
+    },
+    {
+      "name": "Manchester United",
+      "official_name": "Manchester United",
+      "short_name": "MUN",
+      "league": "English Premier League",
+      "tier": 1,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/xzqdr11517660252.png",
+      "sportsdb_id": "133612"
+    },
+    {
+      "name": "Nottingham Forest",
+      "official_name": "Nottingham Forest",
+      "short_name": null,
+      "league": "English Premier League",
+      "tier": 1,
+      "badge_url": "https://crests.football-data.org/351.png",
+      "sportsdb_id": null
+    },
+    {
+      "name": "Sunderland",
+      "official_name": "Sunderland",
+      "short_name": "SUN",
+      "league": "English Premier League",
+      "tier": 1,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/tprtus1448813498.png",
+      "sportsdb_id": "133603"
+    },
+    {
+      "name": "Birmingham City",
+      "official_name": "Birmingham City",
+      "short_name": "BRC",
+      "league": "English League Championship",
+      "tier": 2,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/wufs551672950865.png",
+      "sportsdb_id": "133597"
+    },
+    {
+      "name": "Blackburn Rovers",
+      "official_name": "Blackburn Rovers",
+      "short_name": "BBR",
+      "league": "English League Championship",
+      "tier": 2,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/rvryut1448810814.png",
+      "sportsdb_id": "133598"
+    },
+    {
+      "name": "Bolton Wanderers",
+      "official_name": "Bolton Wanderers",
+      "short_name": "BOL",
+      "league": "English League Championship",
+      "tier": 2,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/yvxxrv1448808301.png",
+      "sportsdb_id": "133606"
+    },
+    {
+      "name": "Bristol City",
+      "official_name": "Bristol City",
+      "short_name": "BSC",
+      "league": "English League Championship",
+      "tier": 2,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/0ejxwz1601721013.png",
+      "sportsdb_id": "133621"
+    },
+    {
+      "name": "Burnley",
+      "official_name": "Burnley",
+      "short_name": "BUR",
+      "league": "English League Championship",
+      "tier": 2,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/ql7nl31686893820.png",
+      "sportsdb_id": "133623"
+    },
+    {
+      "name": "Cardiff City",
+      "official_name": "Cardiff City",
+      "short_name": "CDF",
+      "league": "English League Championship",
+      "tier": 2,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/xtytpt1448808285.png",
+      "sportsdb_id": "133637"
+    },
+    {
+      "name": "Charlton Athletic",
+      "official_name": "Charlton Athletic",
+      "short_name": "CHA",
+      "league": "English League Championship",
+      "tier": 2,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/o08wvi1635872307.png",
+      "sportsdb_id": "133851"
+    },
+    {
+      "name": "Derby County",
+      "official_name": "Derby County",
+      "short_name": "DRB",
+      "league": "English League Championship",
+      "tier": 2,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/jioo4z1557155744.png",
+      "sportsdb_id": "133627"
+    },
+    {
+      "name": "Lincoln City",
+      "official_name": "Lincoln City",
+      "short_name": "LNC",
+      "league": "English League Championship",
+      "tier": 2,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/x46tji1719860130.png",
+      "sportsdb_id": "135900"
+    },
+    {
+      "name": "Middlesbrough",
+      "official_name": "Middlesbrough",
+      "short_name": "MID",
+      "league": "English League Championship",
+      "tier": 2,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/advjg71780068902.png",
+      "sportsdb_id": "133628"
+    },
+    {
+      "name": "Millwall",
+      "official_name": "Millwall",
+      "short_name": "MLW",
+      "league": "English League Championship",
+      "tier": 2,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/5p1z5k1537208888.png",
+      "sportsdb_id": "133634"
+    },
+    {
+      "name": "Norwich City",
+      "official_name": "Norwich City",
+      "short_name": "NOR",
+      "league": "English League Championship",
+      "tier": 2,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/pabczm1679951464.png",
+      "sportsdb_id": "133608"
+    },
+    {
+      "name": "Portsmouth",
+      "official_name": "Portsmouth",
+      "short_name": "PTM",
+      "league": "English League Championship",
+      "tier": 2,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/j13pfe1601726274.png",
+      "sportsdb_id": "133629"
+    },
+    {
+      "name": "Preston North End",
+      "official_name": "Preston North End",
+      "short_name": "PNE",
+      "league": "English League Championship",
+      "tier": 2,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/wqtwvw1448811512.png",
+      "sportsdb_id": "133809"
+    },
+    {
+      "name": "Queens Park Rangers",
+      "official_name": "Queens Park Rangers",
+      "short_name": "QPR",
+      "league": "English League Championship",
+      "tier": 2,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/l4qscx1601721022.png",
+      "sportsdb_id": "133605"
+    },
+    {
+      "name": "Sheffield United",
+      "official_name": "Sheffield United",
+      "short_name": "SHU",
+      "league": "English League Championship",
+      "tier": 2,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/w7f8pj1672950689.png",
+      "sportsdb_id": "133811"
+    },
+    {
+      "name": "Southampton",
+      "official_name": "Southampton",
+      "short_name": "SOU",
+      "league": "English League Championship",
+      "tier": 2,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/ggqtd01621593274.png",
+      "sportsdb_id": "134778"
+    },
+    {
+      "name": "Stoke City",
+      "official_name": "Stoke City",
+      "short_name": "STK",
+      "league": "English League Championship",
+      "tier": 2,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/lz89v21781718914.png",
+      "sportsdb_id": "133609"
+    },
+    {
+      "name": "Swansea City",
+      "official_name": "Swansea City",
+      "short_name": "SWA",
+      "league": "English League Championship",
+      "tier": 2,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/474rco1686920744.png",
+      "sportsdb_id": "133614"
+    },
+    {
+      "name": "Watford",
+      "official_name": "Watford",
+      "short_name": "WAT",
+      "league": "English League Championship",
+      "tier": 2,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/rsuswy1448813519.png",
+      "sportsdb_id": "133624"
+    },
+    {
+      "name": "West Bromwich Albion",
+      "official_name": "West Bromwich Albion",
+      "short_name": "WBA",
+      "league": "English League Championship",
+      "tier": 2,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/rsvuxw1448813527.png",
+      "sportsdb_id": "133611"
+    },
+    {
+      "name": "West Ham United",
+      "official_name": "West Ham United",
+      "short_name": "WHU",
+      "league": "English League Championship",
+      "tier": 2,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/yutyxs1467459956.png",
+      "sportsdb_id": "133636"
+    },
+    {
+      "name": "Wolverhampton Wanderers",
+      "official_name": "Wolverhampton Wanderers",
+      "short_name": "WOL",
+      "league": "English League Championship",
+      "tier": 2,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/u9qr031621593327.png",
+      "sportsdb_id": "133599"
+    },
+    {
+      "name": "Wrexham",
+      "official_name": "Wrexham",
+      "short_name": "WRE",
+      "league": "English League Championship",
+      "tier": 2,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/ezpymt1675092551.png",
+      "sportsdb_id": "134775"
+    },
+    {
+      "name": "AFC Wimbledon",
+      "official_name": "AFC Wimbledon",
+      "short_name": "AWM",
+      "league": "English League 1",
+      "tier": 3,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/md7iqx1684129667.png",
+      "sportsdb_id": "134241"
+    },
+    {
+      "name": "Barnsley",
+      "official_name": "Barnsley",
+      "short_name": "BRS",
+      "league": "English League 1",
+      "tier": 3,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/glbmdm1781719675.png",
+      "sportsdb_id": "133630"
+    },
+    {
+      "name": "Blackpool",
+      "official_name": "Blackpool",
+      "short_name": "BLK",
+      "league": "English League 1",
+      "tier": 3,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/utywru1448754934.png",
+      "sportsdb_id": "133618"
+    },
+    {
+      "name": "Bradford City",
+      "official_name": "Bradford City",
+      "short_name": "BDC",
+      "league": "English League 1",
+      "tier": 3,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/ebl8zx1781737432.png",
+      "sportsdb_id": "134189"
+    },
+    {
+      "name": "Bromley",
+      "official_name": "Bromley",
+      "short_name": "",
+      "league": "English League 1",
+      "tier": 3,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/qq7kzz1661950278.png",
+      "sportsdb_id": "136033"
+    },
+    {
+      "name": "Burton Albion",
+      "official_name": "Burton Albion",
+      "short_name": "BRA",
+      "league": "English League 1",
+      "tier": 3,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/dfjbwe1781738043.png",
+      "sportsdb_id": "134376"
+    },
+    {
+      "name": "Cambridge United",
+      "official_name": "Cambridge United",
+      "short_name": "CMU",
+      "league": "English League 1",
+      "tier": 3,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/ggihm61750279411.png",
+      "sportsdb_id": "134586"
+    },
+    {
+      "name": "Doncaster Rovers",
+      "official_name": "Doncaster Rovers",
+      "short_name": "DNR",
+      "league": "English League 1",
+      "tier": 3,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/ssvpvx1424033260.png",
+      "sportsdb_id": "133620"
+    },
+    {
+      "name": "Huddersfield Town",
+      "official_name": "Huddersfield Town",
+      "short_name": "HDD",
+      "league": "English League 1",
+      "tier": 3,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/y11fin1677527513.png",
+      "sportsdb_id": "133932"
+    },
+    {
+      "name": "Leicester City",
+      "official_name": "Leicester City",
+      "short_name": "LEI",
+      "league": "English League 1",
+      "tier": 3,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/xtxwtu1448813356.png",
+      "sportsdb_id": "133626"
+    },
+    {
+      "name": "Leyton Orient",
+      "official_name": "Leyton Orient",
+      "short_name": "LEY",
+      "league": "English League 1",
+      "tier": 3,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/g4d9bi1688678797.png",
+      "sportsdb_id": "134367"
+    },
+    {
+      "name": "Luton Town",
+      "official_name": "Luton Town",
+      "short_name": "LUT",
+      "league": "English League 1",
+      "tier": 3,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/v977eh1681319466.png",
+      "sportsdb_id": "133888"
+    },
+    {
+      "name": "Mansfield Town",
+      "official_name": "Mansfield Town",
+      "short_name": "MSF",
+      "league": "English League 1",
+      "tier": 3,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/c1fpes1761709071.png",
+      "sportsdb_id": "134381"
+    },
+    {
+      "name": "Milton Keynes Dons",
+      "official_name": "Milton Keynes Dons",
+      "short_name": "MKD",
+      "league": "English League 1",
+      "tier": 3,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/9hx41b1748524969.png",
+      "sportsdb_id": "134371"
+    },
+    {
+      "name": "Notts County",
+      "official_name": "Notts County",
+      "short_name": "NTC",
+      "league": "English League 1",
+      "tier": 3,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/utqwvp1424032678.png",
+      "sportsdb_id": "134373"
+    },
+    {
+      "name": "Oxford United",
+      "official_name": "Oxford United",
+      "short_name": "OXF",
+      "league": "English League 1",
+      "tier": 3,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/hgpm6u1781718489.png",
+      "sportsdb_id": "134361"
+    },
+    {
+      "name": "Peterborough United",
+      "official_name": "Peterborough United",
+      "short_name": "PTU",
+      "league": "English League 1",
+      "tier": 3,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/p14ltc1779778820.png",
+      "sportsdb_id": "133631"
+    },
+    {
+      "name": "Plymouth Argyle",
+      "official_name": "Plymouth Argyle",
+      "short_name": "PLA",
+      "league": "English League 1",
+      "tier": 3,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/wod5cj1689630278.png",
+      "sportsdb_id": "133836"
+    },
+    {
+      "name": "Reading",
+      "official_name": "Reading",
+      "short_name": "RDG",
+      "league": "English League 1",
+      "tier": 3,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/tprvtu1448811527.png",
+      "sportsdb_id": "133633"
+    },
+    {
+      "name": "Sheffield Wednesday",
+      "official_name": "Sheffield Wednesday",
+      "short_name": "SHF",
+      "league": "English League 1",
+      "tier": 3,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/m3km7p1781284189.png",
+      "sportsdb_id": "133837"
+    },
+    {
+      "name": "Stevenage",
+      "official_name": "Stevenage",
+      "short_name": "STV",
+      "league": "English League 1",
+      "tier": 3,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/o4m2ci1596480474.png",
+      "sportsdb_id": "134378"
+    },
+    {
+      "name": "Stockport County",
+      "official_name": "Stockport County",
+      "short_name": "STO",
+      "league": "English League 1",
+      "tier": 3,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/jcsz9k1594450753.png",
+      "sportsdb_id": "134258"
+    },
+    {
+      "name": "Wigan Athletic",
+      "official_name": "Wigan Athletic",
+      "short_name": "WIG",
+      "league": "English League 1",
+      "tier": 3,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/wtxwyw1448759640.png",
+      "sportsdb_id": "133607"
+    },
+    {
+      "name": "Wycombe Wanderers",
+      "official_name": "Wycombe Wanderers",
+      "short_name": "WYC",
+      "league": "English League 1",
+      "tier": 3,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/avi3bu1688678934.png",
+      "sportsdb_id": "134382"
+    },
+    {
+      "name": "Accrington Stanley",
+      "official_name": "Accrington Stanley",
+      "short_name": "ACC",
+      "league": "English League 2",
+      "tier": 4,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/1moddl1770786523.png",
+      "sportsdb_id": "134368"
+    },
+    {
+      "name": "Bristol Rovers",
+      "official_name": "Bristol Rovers",
+      "short_name": "BRR",
+      "league": "English League 2",
+      "tier": 4,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/kkmj4o1689317429.png",
+      "sportsdb_id": "134358"
+    },
+    {
+      "name": "Cheltenham Town",
+      "official_name": "Cheltenham Town",
+      "short_name": "CTT",
+      "league": "English League 2",
+      "tier": 4,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/otewhc1761452845.png",
+      "sportsdb_id": "134362"
+    },
+    {
+      "name": "Chesterfield",
+      "official_name": "Chesterfield",
+      "short_name": "",
+      "league": "English League 2",
+      "tier": 4,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/vwwpry1424032525.png",
+      "sportsdb_id": "134366"
+    },
+    {
+      "name": "Colchester United",
+      "official_name": "Colchester United",
+      "short_name": "CLU",
+      "league": "English League 2",
+      "tier": 4,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/ttvpqt1424033597.png",
+      "sportsdb_id": "133874"
+    },
+    {
+      "name": "Crawley Town",
+      "official_name": "Crawley Town",
+      "short_name": "CRT",
+      "league": "English League 2",
+      "tier": 4,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/a9hv3n1689632800.png",
+      "sportsdb_id": "134363"
+    },
+    {
+      "name": "Crewe Alexandra",
+      "official_name": "Crewe Alexandra",
+      "short_name": "CAX",
+      "league": "English League 2",
+      "tier": 4,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/xurvtu1424033658.png",
+      "sportsdb_id": "134218"
+    },
+    {
+      "name": "Exeter City",
+      "official_name": "Exeter City",
+      "short_name": "EXE",
+      "league": "English League 2",
+      "tier": 4,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/98wt4h1521144923.png",
+      "sportsdb_id": "134365"
+    },
+    {
+      "name": "Fleetwood Town",
+      "official_name": "Fleetwood Town",
+      "short_name": "FLT",
+      "league": "English League 2",
+      "tier": 4,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/txwuwp1424032712.png",
+      "sportsdb_id": "134374"
+    },
+    {
+      "name": "Gillingham",
+      "official_name": "Gillingham",
+      "short_name": "GLG",
+      "league": "English League 2",
+      "tier": 4,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/sqxvpp1424033506.png",
+      "sportsdb_id": "134230"
+    },
+    {
+      "name": "Grimsby Town",
+      "official_name": "Grimsby Town",
+      "short_name": "GBT",
+      "league": "English League 2",
+      "tier": 4,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/fbinsr1781739580.png",
+      "sportsdb_id": "134250"
+    },
+    {
+      "name": "Newport County",
+      "official_name": "Newport County",
+      "short_name": "MPT",
+      "league": "English League 2",
+      "tier": 4,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/ttsryu1448814163.png",
+      "sportsdb_id": "134357"
+    },
+    {
+      "name": "Northampton Town",
+      "official_name": "Northampton Town",
+      "short_name": "NHT",
+      "league": "English League 2",
+      "tier": 4,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/aa42641684131255.png",
+      "sportsdb_id": "134370"
+    },
+    {
+      "name": "Oldham Athletic",
+      "official_name": "Oldham Athletic",
+      "short_name": "",
+      "league": "English League 2",
+      "tier": 4,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/36hve81625514026.png",
+      "sportsdb_id": "134185"
+    },
+    {
+      "name": "Port Vale",
+      "official_name": "Port Vale",
+      "short_name": "PTV",
+      "league": "English League 2",
+      "tier": 4,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/s1ke3v1761710614.png",
+      "sportsdb_id": "134375"
+    },
+    {
+      "name": "Rotherham United",
+      "official_name": "Rotherham United",
+      "short_name": "RTU",
+      "league": "English League 2",
+      "tier": 4,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/yfoiyf1779788861.png",
+      "sportsdb_id": "134231"
+    },
+    {
+      "name": "Salford City",
+      "official_name": "Salford City",
+      "short_name": "SAL",
+      "league": "English League 2",
+      "tier": 4,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/lpi7qa1779778149.png",
+      "sportsdb_id": "135958"
+    },
+    {
+      "name": "Shrewsbury Town",
+      "official_name": "Shrewsbury Town",
+      "short_name": "SHT",
+      "league": "English League 2",
+      "tier": 4,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/9zqhpw1546434997.png",
+      "sportsdb_id": "134377"
+    },
+    {
+      "name": "Swindon Town",
+      "official_name": "Swindon Town",
+      "short_name": "SWI",
+      "league": "English League 2",
+      "tier": 4,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/uwsyup1424033445.png",
+      "sportsdb_id": "134379"
+    },
+    {
+      "name": "Tranmere Rovers",
+      "official_name": "Tranmere Rovers",
+      "short_name": "TRR",
+      "league": "English League 2",
+      "tier": 4,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/ao52xt1626199781.png",
+      "sportsdb_id": "134267"
+    },
+    {
+      "name": "Walsall",
+      "official_name": "Walsall",
+      "short_name": "WSL",
+      "league": "English League 2",
+      "tier": 4,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/ivjidn1689630099.png",
+      "sportsdb_id": "134240"
+    },
+    {
+      "name": "Barrow",
+      "official_name": "Barrow",
+      "short_name": "BRW",
+      "league": "English National League",
+      "tier": null,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/6ubn501512067488.png",
+      "sportsdb_id": "136000"
+    },
+    {
+      "name": "Brighton",
+      "official_name": "Brighton WFC",
+      "short_name": null,
+      "league": "English Womens Super League",
+      "tier": null,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/zn0x7h1605371909.png",
+      "sportsdb_id": "140222"
+    },
+    {
+      "name": "Carlisle United",
+      "official_name": "Carlisle United",
+      "short_name": "CRU",
+      "league": "English National League",
+      "tier": null,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/wqqpuy1423804947.png",
+      "sportsdb_id": "134360"
+    },
+    {
+      "name": "Forest Green Rovers",
+      "official_name": "Forest Green Rovers",
+      "short_name": "FGR",
+      "league": "English National League",
+      "tier": null,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/jbgjqk1505824045.png",
+      "sportsdb_id": "135901"
+    },
+    {
+      "name": "Harrogate Town",
+      "official_name": "Harrogate Town",
+      "short_name": "HAT",
+      "league": "English National League",
+      "tier": null,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/tf6bfs1599297313.png",
+      "sportsdb_id": "137534"
+    },
+    {
+      "name": "Hartlepool United",
+      "official_name": "Hartlepool United",
+      "short_name": "HAR",
+      "league": "English National League",
+      "tier": null,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/eh9d4l1689067886.png",
+      "sportsdb_id": "134372"
+    },
+    {
+      "name": "Morecambe",
+      "official_name": "Morecambe",
+      "short_name": "MRC",
+      "league": "English National League North",
+      "tier": null,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/qaerfb1624973578.png",
+      "sportsdb_id": "134369"
+    },
+    {
+      "name": "Newcastle",
+      "official_name": "Newcastle Jets",
+      "short_name": null,
+      "league": "Australian A-League",
+      "tier": null,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/5jevk91653487832.png",
+      "sportsdb_id": "134474"
+    },
+    {
+      "name": "Scunthorpe United",
+      "official_name": "Scunthorpe United",
+      "short_name": "",
+      "league": "English National League",
+      "tier": null,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/ljf0ce1685771026.png",
+      "sportsdb_id": "133810"
+    },
+    {
+      "name": "Southend United",
+      "official_name": "Southend United",
+      "short_name": "",
+      "league": "English National League",
+      "tier": null,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/oafwr01601809319.png",
+      "sportsdb_id": "134209"
+    },
+    {
+      "name": "Sutton United",
+      "official_name": "Sutton United",
+      "short_name": "SUU",
+      "league": "English National League",
+      "tier": null,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/3xxw321514563737.png",
+      "sportsdb_id": "136003"
+    },
+    {
+      "name": "Tottenham",
+      "official_name": "Tottenham Women",
+      "short_name": null,
+      "league": "English Womens Super League",
+      "tier": null,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/3dhd0j1605371995.png",
+      "sportsdb_id": "140228"
+    },
+    {
+      "name": "Yeovil Town",
+      "official_name": "Yeovil Town",
+      "short_name": "YEO",
+      "league": "English National League",
+      "tier": null,
+      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/gtnmbz1716916577.png",
+      "sportsdb_id": "134300"
+    }
+  ]
+}

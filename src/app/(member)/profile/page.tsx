@@ -12,6 +12,10 @@ import type { MemberRow } from '@/lib/supabase/types'
 
 import { EmailPreferenceToggles } from './_components/email-preference-toggles'
 import { SetPasswordForm } from './_components/set-password-form'
+import {
+  FavouriteClubPicker,
+  type PickerClub,
+} from './_components/favourite-club-picker'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,10 +33,19 @@ export default async function ProfilePage() {
   const { data: memberRaw, error } = await supabase
     .from('members')
     .select(
-      'display_name, email, email_weekly_personal, email_weekly_group',
+      'display_name, email, email_weekly_personal, email_weekly_group, favourite_club_id',
     )
     .eq('user_id', user.id)
     .single()
+
+  // Reference list for the picker. If migration 029 has not been applied yet
+  // this errors, and the section is simply omitted rather than breaking the
+  // whole profile page.
+  const { data: clubsRaw } = await supabase
+    .from('clubs')
+    .select('id, name, tier, badge_url')
+    .order('name')
+  const clubs = (clubsRaw ?? []) as PickerClub[]
 
   if (error || !memberRaw) {
     return (
@@ -47,7 +60,11 @@ export default async function ProfilePage() {
 
   const member = memberRaw as Pick<
     MemberRow,
-    'display_name' | 'email' | 'email_weekly_personal' | 'email_weekly_group'
+    | 'display_name'
+    | 'email'
+    | 'email_weekly_personal'
+    | 'email_weekly_group'
+    | 'favourite_club_id'
   >
 
   return (
@@ -82,6 +99,19 @@ export default async function ProfilePage() {
           To change your display name or email, please contact George.
         </p>
       </section>
+
+      {/* ── Favourite club ──────────────────────────────────────────────── */}
+      {clubs.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
+            Favourite club
+          </h2>
+          <FavouriteClubPicker
+            clubs={clubs}
+            initialClubId={member.favourite_club_id ?? null}
+          />
+        </section>
+      )}
 
       {/* ── Password ────────────────────────────────────────────────────── */}
       <section className="space-y-3">

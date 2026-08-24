@@ -528,6 +528,7 @@ export default function PredictionForm({
         isGoldenGlory={isGoldenGlory}
         allLocked={isLocked}
         losEligible={losEligible}
+        losEliminated={losEliminated}
         losSelectedTeamId={losTeamId}
         losAvailableTeamIds={losAvailableTeamIds}
         onLosSelect={handleLosSelect}

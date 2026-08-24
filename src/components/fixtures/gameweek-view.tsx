@@ -27,6 +27,7 @@ interface GameweekViewProps {
   allLocked?: boolean
   // ─── Last One Standing per-fixture pick ────────────────────────────────────
   losEligible?: boolean
+  losEliminated?: boolean
   losSelectedTeamId?: string | null
   losAvailableTeamIds?: Set<string> | null
   onLosSelect?: (teamId: string) => void
@@ -51,6 +52,7 @@ export default function GameweekView({
   isGoldenGlory,
   allLocked = false,
   losEligible = false,
+  losEliminated = false,
   losSelectedTeamId = null,
   losAvailableTeamIds = null,
   onLosSelect,
@@ -107,6 +109,7 @@ export default function GameweekView({
               bonusActive={allLocked ? false : bonusActive}
               isGoldenGlory={isGoldenGlory}
               losEligible={allLocked ? false : losEligible}
+              losEliminated={allLocked ? false : losEliminated}
               losSelectedTeamId={losSelectedTeamId}
               losAvailableTeamIds={losAvailableTeamIds}
               onLosSelect={allLocked ? undefined : onLosSelect}

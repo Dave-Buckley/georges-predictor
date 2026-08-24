@@ -22,6 +22,11 @@ import { MemberLink } from '@/components/shared/member-link'
 import { StandingsHero } from '@/components/hero/standings-hero'
 import { CurrentGameweekBanner } from '@/components/shared/current-gameweek-banner'
 import { getCurrentGameweek } from '@/lib/gameweeks/current'
+import {
+  getFavouriteBadges,
+  type FavouriteBadge,
+} from '@/lib/members/favourite-clubs'
+
 import { StandingsTable } from './_components/standings-table'
 
 export const dynamic = 'force-dynamic'
@@ -33,6 +38,12 @@ interface StandingRow {
   display_name: string
   starting_points: number
   weekly_points: number
+  /**
+   * Favourite-club badge (migration 029). Club name + image only — nothing
+   * about the member beyond what the table already shows, so this stays
+   * within the column allowlist below.
+   */
+  badge: FavouriteBadge | null
 }
 
 interface FixtureRow {
@@ -162,10 +173,15 @@ async function getStandingsPageData(): Promise<{
     }
   }
 
+  // Favourite-club badges. Fail-soft — an empty map before migration 029 is
+  // applied, which renders names exactly as they did before.
+  const badges = await getFavouriteBadges(supabase)
+
   // The client table handles sort + rank — we just hand it the rows.
   const standings: StandingRow[] = standingsBase.map((m) => ({
     ...m,
     weekly_points: weeklyPointsById.get(m.id) ?? 0,
+    badge: badges.get(m.id) ?? null,
   }))
 
   return { standings, latestGw, fixtures, topWeekly }
@@ -253,12 +269,15 @@ export default async function StandingsPage() {
           Tap a column header to sort.
         </p>
         <StandingsTable
-          rows={standings.map(({ id, display_name, starting_points, weekly_points }) => ({
-            id,
-            display_name,
-            starting_points,
-            weekly_points,
-          }))}
+          rows={standings.map(
+            ({ id, display_name, starting_points, weekly_points, badge }) => ({
+              id,
+              display_name,
+              starting_points,
+              weekly_points,
+              badge,
+            }),
+          )}
           weeklyLabel={latestGw ? `GW${latestGw.number}` : 'This Week'}
         />
       </section>

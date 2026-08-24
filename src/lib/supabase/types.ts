@@ -26,6 +26,29 @@ export interface MemberRow {
   email_weekly_group: boolean
   /** Added by migration 022 — when true, hidden from all points tally / standings / weekly-winner views but retains full login + prediction access. */
   exclude_from_standings: boolean
+  /** Added by migration 029 — optional favourite club, shown as a badge beside the member's name. Cosmetic only. */
+  favourite_club_id: string | null
+}
+
+/**
+ * Row shape for the public.clubs table (migration 029).
+ *
+ * Stable reference list of English clubs across the top four tiers, used only
+ * by the favourite-club picker. Deliberately separate from `teams`, which is
+ * fixture-scoped and pruned at each season reset.
+ */
+export interface ClubRow {
+  id: string
+  name: string
+  official_name: string | null
+  short_name: string | null
+  /** 1 = Premier League, 2 = Championship, 3 = League One, 4 = League Two, null = unplaced. */
+  tier: number | null
+  league: string | null
+  badge_url: string | null
+  sportsdb_id: string | null
+  created_at: string
+  updated_at: string
 }
 
 /** Row shape for the public.admin_security_questions table */

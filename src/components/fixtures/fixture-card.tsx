@@ -31,6 +31,7 @@ interface FixtureCardProps {
   isGoldenGlory?: boolean                             // Golden Glory visual treatment
   // ─── Last One Standing (LOS) per-fixture pick ──────────────────────────────
   losEligible?: boolean                               // Member is in LOS and can pick this GW
+  losEliminated?: boolean                             // Member is knocked out — shields shown but locked
   losSelectedTeamId?: string | null                   // The team this member has picked this GW
   losAvailableTeamIds?: Set<string> | null            // Teams still pickable this cycle (null = all)
   onLosSelect?: (teamId: string) => void              // Callback when a home/away shield is tapped
@@ -63,6 +64,7 @@ export default function FixtureCard({
   bonusActive = false,
   isGoldenGlory = false,
   losEligible = false,
+  losEliminated = false,
   losSelectedTeamId = null,
   losAvailableTeamIds = null,
   onLosSelect,
@@ -217,7 +219,11 @@ export default function FixtureCard({
   // Show two shields (home / away) so the member can back a team to win this GW.
   // A team already used earlier in the cycle is not in losAvailableTeamIds and
   // renders disabled. The currently-selected team is always allowed.
-  const showLosSelector = losEligible && !!onLosSelect && !isTerminal
+  // Eliminated members still SEE the shields, greyed and unclickable, rather
+  // than the whole panel vanishing. A feature that silently disappears reads as
+  // a bug; a locked one reads as a rule.
+  const showLosSelector =
+    ((losEligible && !!onLosSelect) || losEliminated) && !isTerminal
   const homeLosSelected = losSelectedTeamId === fixture.home_team_id
   const awayLosSelected = losSelectedTeamId === fixture.away_team_id
   const homeLosAvailable =
@@ -279,10 +285,23 @@ export default function FixtureCard({
 
       {/* Last One Standing — pick the home or away team to survive this week */}
       {showLosSelector && (
-        <div className="mt-3 rounded-lg border border-yellow-500/25 bg-yellow-950/20 px-3 py-2.5">
-          <p className="text-[11px] font-semibold text-yellow-300/90 uppercase tracking-wide mb-2 flex items-center gap-1">
+        <div
+          className={`mt-3 rounded-lg border px-3 py-2.5 ${
+            losEliminated
+              ? 'border-slate-700/60 bg-slate-900/40 opacity-60'
+              : 'border-yellow-500/25 bg-yellow-950/20'
+          }`}
+          aria-disabled={losEliminated || undefined}
+        >
+          <p
+            className={`text-[11px] font-semibold uppercase tracking-wide mb-2 flex items-center gap-1 ${
+              losEliminated ? 'text-slate-500' : 'text-yellow-300/90'
+            }`}
+          >
             <Shield className="w-3.5 h-3.5" />
-            Last One Standing — back a team to win
+            {losEliminated
+              ? 'Last One Standing — you’re out this cycle'
+              : 'Last One Standing — back a team to win'}
           </p>
           <div className="grid grid-cols-2 gap-2">
             <LosSideButton
@@ -290,16 +309,23 @@ export default function FixtureCard({
               sideLabel="Home"
               selected={homeLosSelected}
               available={homeLosAvailable}
-              onClick={() => onLosSelect!(fixture.home_team_id)}
+              locked={losEliminated}
+              onClick={() => onLosSelect?.(fixture.home_team_id)}
             />
             <LosSideButton
               label={fixture.away_team.short_name ?? fixture.away_team.name}
               sideLabel="Away"
               selected={awayLosSelected}
               available={awayLosAvailable}
-              onClick={() => onLosSelect!(fixture.away_team_id)}
+              locked={losEliminated}
+              onClick={() => onLosSelect?.(fixture.away_team_id)}
             />
           </div>
+          {losEliminated && (
+            <p className="mt-2 text-[11px] text-slate-500">
+              You can pick again when the next competition starts.
+            </p>
+          )}
         </div>
       )}
 
@@ -372,44 +398,62 @@ export default function FixtureCard({
 // ─── LOS side button ───────────────────────────────────────────────────────────
 // One of the two (home / away) shield buttons for a fixture's LOS pick.
 // Disabled + struck through when the team was already used earlier this cycle.
+/**
+ * One side of the LOS shield pair.
+ *
+ * Two distinct disabled reasons, deliberately styled differently:
+ *   `locked`    — the member is out of the competition. Everything is greyed
+ *                 and unclickable, including a team they had selected.
+ *   `!available` — team already used this cycle. Struck through, as before.
+ */
 function LosSideButton({
   label,
   sideLabel,
   selected,
   available,
+  locked = false,
   onClick,
 }: {
   label: string
   sideLabel: string
   selected: boolean
   available: boolean
+  locked?: boolean
   onClick: () => void
 }) {
-  const disabled = !available && !selected
+  const usedUp = !available && !selected
+  const disabled = locked || usedUp
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
-      aria-pressed={selected}
+      aria-pressed={locked ? undefined : selected}
+      title={
+        locked ? 'You are out of this Last One Standing cycle' : undefined
+      }
       aria-label={
-        disabled
-          ? `${label} already used this cycle`
-          : selected
-            ? `Remove Last One Standing pick ${label}`
-            : `Pick ${label} for Last One Standing`
+        locked
+          ? `Last One Standing locked — you are out of this cycle`
+          : usedUp
+            ? `${label} already used this cycle`
+            : selected
+              ? `Remove Last One Standing pick ${label}`
+              : `Pick ${label} for Last One Standing`
       }
       className={`flex items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-sm font-medium transition-colors ${
-        selected
-          ? 'bg-yellow-500 text-slate-900 border border-yellow-400'
-          : disabled
-            ? 'bg-slate-800/60 text-slate-600 border border-slate-700/50 line-through cursor-not-allowed'
-            : 'bg-slate-800 text-slate-200 border border-slate-600 hover:border-yellow-500/60 hover:bg-slate-700/60'
+        locked
+          ? 'bg-slate-800/40 text-slate-600 border border-slate-700/40 cursor-not-allowed'
+          : selected
+            ? 'bg-yellow-500 text-slate-900 border border-yellow-400'
+            : usedUp
+              ? 'bg-slate-800/60 text-slate-600 border border-slate-700/50 line-through cursor-not-allowed'
+              : 'bg-slate-800 text-slate-200 border border-slate-600 hover:border-yellow-500/60 hover:bg-slate-700/60'
       }`}
       style={{ minHeight: 44 }}
     >
       <Shield
-        className={`w-4 h-4 flex-shrink-0 ${selected ? 'fill-slate-900/20' : ''}`}
+        className={`w-4 h-4 flex-shrink-0 ${selected && !locked ? 'fill-slate-900/20' : ''}`}
       />
       <span className="flex flex-col items-start leading-tight min-w-0">
         <span className="text-[10px] uppercase tracking-wide opacity-70">{sideLabel}</span>

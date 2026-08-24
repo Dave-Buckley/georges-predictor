@@ -12,6 +12,10 @@
  * `gatherGameweekData`.
  */
 import { createAdminClient } from '@/lib/supabase/admin'
+import {
+  getFavouriteBadges,
+  type FavouriteBadge,
+} from '@/lib/members/favourite-clubs'
 
 export interface StandingsRow {
   memberId: string
@@ -19,6 +23,11 @@ export interface StandingsRow {
   rank: number
   weeklyPoints: number
   totalPoints: number
+  /**
+   * Favourite-club badge (migration 029). Null when the member has not picked
+   * one, and null for everyone until that migration is applied.
+   */
+  badge: FavouriteBadge | null
 }
 
 export interface StandingsAtGameweek {
@@ -145,6 +154,9 @@ export async function getStandingsAtGameweek(
     starting_points: number | null
   }>
 
+  // Fail-soft: empty before migration 029, which renders names as before.
+  const favouriteBadges = await getFavouriteBadges(admin)
+
   const rowsRaw = members.map((m) => {
     const startingNow = m.starting_points ?? 0
     let cumulative = startingNow
@@ -164,6 +176,7 @@ export async function getStandingsAtGameweek(
       displayName: m.display_name,
       weeklyPoints: weeklyForMemberGw(m.id, target.id),
       totalPoints: cumulative,
+      badge: favouriteBadges.get(m.id) ?? null,
     }
   })
 

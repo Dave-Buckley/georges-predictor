@@ -9,6 +9,9 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'crests.football-data.org', pathname: '/**' },
+      // Club badges for the favourite-club picker (migration 029). Covers the
+      // English tiers football-data.org does not, i.e. League One and Two.
+      { protocol: 'https', hostname: 'r2.thesportsdb.com', pathname: '/**' },
     ],
   },
 };

@@ -15,13 +15,15 @@
 import { useMemo, useState } from 'react'
 import { Crown } from 'lucide-react'
 
-import { MemberLink } from '@/components/shared/member-link'
+import { MemberLink, type MemberBadge } from '@/components/shared/member-link'
 
 export interface StandingsRow {
   id: string
   display_name: string
   starting_points: number
   weekly_points: number
+  /** Favourite-club badge, shown before the name. Null renders as before. */
+  badge?: MemberBadge | null
 }
 
 interface StandingsTableProps {
@@ -137,6 +139,7 @@ export function StandingsTable({ rows, weeklyLabel }: StandingsTableProps) {
                   <MemberLink
                     displayName={m.display_name}
                     className="text-white font-medium"
+                    badge={m.badge ?? null}
                   />
                 </span>
               </td>
