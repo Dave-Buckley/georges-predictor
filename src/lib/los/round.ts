@@ -8,9 +8,9 @@
  * Responsibilities:
  *   - Look up the active competition
  *   - Guard: only evaluate when ALL gameweek fixtures have status='FINISHED'
- *   - Load active members + un-evaluated picks, build pure-input rows
+ *   - Load active members + ALL picks for the round, build pure-input rows
  *   - Call pure evaluateLosRound
- *   - Persist per-pick outcomes (only where outcome IS NULL — idempotent)
+ *   - Persist per-pick outcomes (only those that were unevaluated — idempotent)
  *   - Mark eliminated members + missed-submission members
  *   - If sole survivor: reset competition, insert new cycle, fire notifications
  *
@@ -40,8 +40,14 @@ export interface ResetCompetitionResult {
 /**
  * Evaluate the LOS round for a gameweek.
  *
- * Safe to call multiple times — the `outcome IS NULL` filter on los_picks
- * ensures already-evaluated picks are not re-processed.
+ * Safe to call multiple times. Every pick for the round is loaded and
+ * re-evaluated (deterministic — same fixture, same score, same outcome), but
+ * only picks that had no outcome when read are written back.
+ *
+ * Do NOT reintroduce a `.is('outcome', null)` filter on the pick query. The
+ * missed-submission sweep derives "who missed" from who is absent from that
+ * list, so filtering settled picks out makes a re-run eliminate every
+ * surviving member at once. See tests/lib/los-round-rerun.test.ts.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function runLosRound(
@@ -106,13 +112,27 @@ export async function runLosRound(
 
   if (active_member_ids.length === 0) return empty
 
-  // 5. Load un-evaluated picks for this gameweek+competition
+  // 5. Load EVERY pick for this gameweek+competition — not just un-evaluated
+  //    ones.
+  //
+  //    This previously filtered on `outcome IS NULL`, which broke the
+  //    missed-submission sweep in step 9. evaluateLosRound derives "who
+  //    missed" as active_member_ids minus members present in `picks`, so on a
+  //    re-run of an already-resolved gameweek every pick was filtered out,
+  //    `picks` came back empty, and every remaining active member was marked
+  //    'missed' and eliminated. One re-sync of a finished fixture would have
+  //    wiped the competition.
+  //
+  //    The evaluator's contract is "every pick submitted for this round", so
+  //    the fix is to honour it. Re-evaluating a settled pick is deterministic
+  //    — same fixture, same score, same outcome — and step 7 below only writes
+  //    the ones that were previously unevaluated, so evaluated_at is not
+  //    churned.
   const { data: pickRows } = await adminClient
     .from('los_picks')
     .select('id, member_id, team_id, fixture_id, outcome')
     .eq('competition_id', activeCompetition.id)
     .eq('gameweek_id', gameweekId)
-    .is('outcome', null)
 
   const picks = ((pickRows ?? []) as Array<{
     id: string
@@ -121,6 +141,11 @@ export async function runLosRound(
     fixture_id: string
     outcome: string | null
   }>)
+
+  // Pick ids that had no outcome when we read them — the only ones step 7 writes.
+  const previouslyUnevaluated = new Set(
+    picks.filter((p) => p.outcome === null).map((p) => p.id),
+  )
 
   // Join picks with fixtures via local map
   const fixtureById = new Map<string, typeof fixtures[number]>()
@@ -161,6 +186,10 @@ export async function runLosRound(
   // 7. Persist pick outcomes (upsert) — only the un-evaluated picks
   const nowIso = new Date().toISOString()
   for (const ev of evaluation.evaluations) {
+    // Only write picks that were unevaluated when we read them. Already-settled
+    // picks are re-evaluated above purely so the missed-submission sweep sees
+    // them; rewriting them would churn evaluated_at for no reason.
+    if (!previouslyUnevaluated.has(ev.pick_id)) continue
     const matchingPick = picks.find((p) => p.id === ev.pick_id)
     if (!matchingPick) continue
     const { error } = await adminClient
@@ -236,7 +265,11 @@ export async function runLosRound(
   }
 
   return {
-    evaluatedPickCount: evaluation.evaluations.length,
+    // Picks actually written this run, not every pick re-checked. On a re-run
+    // of a settled gameweek this is 0, which is the honest answer.
+    evaluatedPickCount: evaluation.evaluations.filter((ev) =>
+      previouslyUnevaluated.has(ev.pick_id),
+    ).length,
     eliminatedMemberIds: eliminatedByPick,
     missedMemberIds: evaluation.missed_submission_member_ids,
     winnerId: evaluation.winner_id,
