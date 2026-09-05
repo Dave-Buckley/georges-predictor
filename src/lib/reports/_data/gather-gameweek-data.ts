@@ -15,6 +15,7 @@
  */
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { fetchAllRowsIn } from '@/lib/supabase/fetch-all'
 
 // ─── Public types ────────────────────────────────────────────────────────────
 
@@ -331,11 +332,21 @@ export async function gatherGameweekData(
 ): Promise<GameweekReportData> {
   const admin = createAdminClient()
 
+  // Fixtures come first: predictions and prediction_scores are then filtered
+  // to this gameweek in SQL. They used to be read unfiltered, which silently
+  // stopped at PostgREST's 1000-row cap once the season passed ~GW3 and left
+  // members missing from the weekly report.
+  const { data: fixtures } = await admin
+    .from('fixtures')
+    .select('*, home_team:teams!fixtures_home_team_id_fkey(id, name), away_team:teams!fixtures_away_team_id_fkey(id, name)')
+    .eq('gameweek_id', gwId)
+
+  const gwFixtureIds = ((fixtures ?? []) as Array<{ id: string }>).map((f) => f.id)
+
   const [
     { data: gameweek },
-    { data: fixtures },
-    { data: predictions },
-    { data: predictionScores },
+    predictions,
+    predictionScores,
     { data: bonusAwards },
     { data: losPicks },
     { data: losMembers },
@@ -348,16 +359,29 @@ export async function gatherGameweekData(
       .select('*')
       .eq('id', gwId)
       .single(),
-    admin
-      .from('fixtures')
-      .select('*, home_team:teams!fixtures_home_team_id_fkey(id, name), away_team:teams!fixtures_away_team_id_fkey(id, name)')
-      .eq('gameweek_id', gwId),
-    admin
-      .from('predictions')
-      .select('id, member_id, fixture_id, home_score, away_score'),
-    admin
-      .from('prediction_scores')
-      .select('prediction_id, fixture_id, member_id, points_awarded'),
+    fetchAllRowsIn<{
+      id: string
+      member_id: string
+      fixture_id: string
+      home_score: number
+      away_score: number
+    }>(gwFixtureIds, (ids) =>
+      admin
+        .from('predictions')
+        .select('id, member_id, fixture_id, home_score, away_score')
+        .in('fixture_id', ids),
+    ),
+    fetchAllRowsIn<{
+      prediction_id: string
+      fixture_id: string
+      member_id: string
+      points_awarded: number
+    }>(gwFixtureIds, (ids) =>
+      admin
+        .from('prediction_scores')
+        .select('prediction_id, fixture_id, member_id, points_awarded')
+        .in('fixture_id', ids),
+    ),
     admin
       .from('bonus_awards')
       .select('gameweek_id, member_id, fixture_id, awarded, points_awarded, bonus_type:bonus_types(id, name)')

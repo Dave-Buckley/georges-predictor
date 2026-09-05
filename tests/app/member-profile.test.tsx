@@ -62,6 +62,8 @@ function buildFetchResolver(table: string) {
     not: vi.fn().mockReturnThis(),
     order: vi.fn().mockReturnThis(),
     limit: vi.fn().mockReturnThis(),
+    // Paged reads (fetchAllRows) call .order(...).range(from, to).
+    range: vi.fn().mockResolvedValue({ data: [], error: null }),
     single: vi.fn().mockResolvedValue({ data: null, error: null }),
     maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
     filter: vi.fn().mockReturnThis(),

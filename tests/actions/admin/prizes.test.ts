@@ -398,6 +398,11 @@ describe('checkDatePrizes', () => {
       if (table === 'prediction_scores') {
         return {
           select: vi.fn().mockReturnThis(),
+          in: vi.fn().mockReturnThis(),
+          order: vi.fn().mockReturnThis(),
+          limit: vi.fn().mockReturnThis(),
+          range: vi.fn().mockResolvedValue({ data: [], error: null }),
+          maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
           then: vi.fn().mockImplementation((cb: (v: unknown) => unknown) =>
             cb({ data: [], error: null })
           ),
@@ -413,6 +418,11 @@ describe('checkDatePrizes', () => {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         insert: vi.fn().mockReturnThis(),
+        in: vi.fn().mockReturnThis(),
+        order: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockReturnThis(),
+        range: vi.fn().mockResolvedValue({ data: [], error: null }),
+        maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
         then: vi.fn().mockImplementation((cb: (v: unknown) => unknown) => cb({ error: null })),
       }
     })
@@ -456,6 +466,10 @@ describe('checkDatePrizes', () => {
         eq: vi.fn().mockReturnThis(),
         maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
         insert: vi.fn().mockReturnThis(),
+        in: vi.fn().mockReturnThis(),
+        order: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockReturnThis(),
+        range: vi.fn().mockResolvedValue({ data: [], error: null }),
         then: vi.fn().mockImplementation((cb: (v: unknown) => unknown) => cb({ error: null })),
       }
     })
@@ -505,6 +519,11 @@ describe('checkDatePrizes', () => {
       return {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
+        in: vi.fn().mockReturnThis(),
+        order: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockReturnThis(),
+        range: vi.fn().mockResolvedValue({ data: [], error: null }),
+        maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
         then: vi.fn().mockImplementation((cb: (v: unknown) => unknown) => cb({ error: null })),
       }
     })

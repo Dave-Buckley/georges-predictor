@@ -7,9 +7,18 @@
  *
  * Idempotency is the caller's job: check `gameweeks.points_applied` before
  * invoking apply(), and only call reverse() when it's currently true.
+ *
+ * Every read here is filtered to this gameweek in SQL and paged via
+ * `fetchAllRows*`. That matters more here than anywhere else: this function
+ * writes its result into members.starting_points permanently, so a read that
+ * silently stopped at PostgREST's 1000-row cap would bank a too-low total
+ * that no later recalculation would notice. `prediction_scores` passes 1000
+ * rows around GW3 and keeps growing for the life of the league.
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+
+import { fetchAllRows, fetchAllRowsIn } from '@/lib/supabase/fetch-all'
 
 interface GameweekRow {
   id: string
@@ -46,48 +55,49 @@ async function computeWeeklyByMember(
   supabase: SupabaseClient,
   gwId: string,
 ): Promise<Map<string, number>> {
-  const [
-    { data: gw },
-    { data: fixtures },
-    { data: scores },
-    { data: bonuses },
-    { data: adjustments },
-  ] = await Promise.all([
+  const [{ data: gw }, fixtures] = await Promise.all([
     supabase
       .from('gameweeks')
       .select('id, double_bubble')
       .eq('id', gwId)
       .single<GameweekRow>(),
-    supabase
-      .from('fixtures')
-      .select('id')
-      .eq('gameweek_id', gwId)
-      .returns<FixtureIdRow[]>(),
-    supabase
-      .from('prediction_scores')
-      .select('member_id, fixture_id, points_awarded')
-      .returns<ScoreRow[]>(),
-    supabase
-      .from('bonus_awards')
-      .select('member_id, points_awarded, awarded')
-      .eq('gameweek_id', gwId)
-      .eq('awarded', true)
-      .returns<BonusRow[]>(),
-    supabase
-      .from('point_adjustments')
-      .select('member_id, delta')
-      .eq('gameweek_id', gwId)
-      .returns<AdjustmentRow[]>(),
+    fetchAllRows<FixtureIdRow>(() =>
+      supabase.from('fixtures').select('id').eq('gameweek_id', gwId),
+    ),
   ])
 
-  const fixtureIds = new Set((fixtures ?? []).map((f) => f.id))
+  const fixtureIds = fixtures.map((f) => f.id)
+
+  const [scores, bonuses, adjustments] = await Promise.all([
+    // Filtered to this gameweek's fixtures in SQL. Reading the whole table and
+    // filtering here is what silently dropped rows past the 1000-row cap.
+    fetchAllRowsIn<ScoreRow>(fixtureIds, (ids) =>
+      supabase
+        .from('prediction_scores')
+        .select('member_id, fixture_id, points_awarded')
+        .in('fixture_id', ids),
+    ),
+    fetchAllRows<BonusRow>(() =>
+      supabase
+        .from('bonus_awards')
+        .select('member_id, points_awarded, awarded')
+        .eq('gameweek_id', gwId)
+        .eq('awarded', true),
+    ),
+    fetchAllRows<AdjustmentRow>(() =>
+      supabase
+        .from('point_adjustments')
+        .select('member_id, delta')
+        .eq('gameweek_id', gwId),
+    ),
+  ])
+
   const weekly = new Map<string, number>()
 
-  for (const s of scores ?? []) {
-    if (!fixtureIds.has(s.fixture_id)) continue
+  for (const s of scores) {
     weekly.set(s.member_id, (weekly.get(s.member_id) ?? 0) + (s.points_awarded ?? 0))
   }
-  for (const b of bonuses ?? []) {
+  for (const b of bonuses) {
     weekly.set(b.member_id, (weekly.get(b.member_id) ?? 0) + (b.points_awarded ?? 0))
   }
 
@@ -97,7 +107,7 @@ async function computeWeeklyByMember(
 
   // Manual admin adjustments are stored as final (post-Double-Bubble) deltas,
   // so they layer on AFTER the ×2 above.
-  for (const a of adjustments ?? []) {
+  for (const a of adjustments) {
     weekly.set(a.member_id, (weekly.get(a.member_id) ?? 0) + (a.delta ?? 0))
   }
 
@@ -168,14 +178,13 @@ async function adjustStartingPoints(
   if (weekly.size === 0) return 0
 
   const memberIds = [...weekly.keys()]
-  const { data: rows } = await supabase
-    .from('members')
-    .select('id, starting_points')
-    .in('id', memberIds)
-    .returns<Array<{ id: string; starting_points: number | null }>>()
+  const rows = await fetchAllRowsIn<{ id: string; starting_points: number | null }>(
+    memberIds,
+    (ids) => supabase.from('members').select('id, starting_points').in('id', ids),
+  )
 
   let changed = 0
-  for (const m of rows ?? []) {
+  for (const m of rows) {
     const delta = (weekly.get(m.id) ?? 0) * sign
     if (delta === 0) continue
     const next = Math.max(0, (m.starting_points ?? 0) + delta)

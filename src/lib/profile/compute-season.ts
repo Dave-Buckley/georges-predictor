@@ -6,6 +6,7 @@
 import 'server-only'
 
 import { aggregateSeasonStats, type SeasonStats } from '@/lib/profile/stats'
+import { fetchAllRowsIn } from '@/lib/supabase/fetch-all'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -44,8 +45,18 @@ export async function computeStatsForSeason(
   const gwIds = gameweeks.map((g) => g.id)
   const gwIdList = gwIds.length > 0 ? gwIds : ['00000000-0000-0000-0000-000000000000']
 
+  // prediction_scores is read for EVERY member (the weekly-winner leaderboard
+  // needs the whole field), so it must be scoped to this season's fixtures —
+  // unscoped it would grow without bound as seasons accumulate, and it was
+  // already silently truncating at PostgREST's 1000-row cap.
+  const seasonFixtures = await fetchAllRowsIn<{ id: string; gameweek_id: string }>(
+    gwIdList,
+    (ids) => admin.from('fixtures').select('id, gameweek_id').in('gameweek_id', ids),
+  )
+  const seasonFixtureIds = seasonFixtures.map((f) => f.id)
+
   const [
-    psRes,
+    predictionScoresRows,
     baRes,
     paRes,
     psaRes,
@@ -53,14 +64,22 @@ export async function computeStatsForSeason(
     lcRes,
     lcmRes,
     hsRes,
-    fixturesRes,
     membersRes,
   ] = await Promise.all([
-    admin
-      .from('prediction_scores')
-      .select(
-        'id, member_id, fixture_id, predicted_home, predicted_away, actual_home, actual_away, result_correct, score_correct, points_awarded',
-      ),
+    fetchAllRowsIn<{
+      member_id: string
+      fixture_id: string
+      result_correct: boolean
+      score_correct: boolean
+      points_awarded: number
+    }>(seasonFixtureIds, (ids) =>
+      admin
+        .from('prediction_scores')
+        .select(
+          'id, member_id, fixture_id, predicted_home, predicted_away, actual_home, actual_away, result_correct, score_correct, points_awarded',
+        )
+        .in('fixture_id', ids),
+    ),
     admin
       .from('bonus_awards')
       .select(
@@ -85,29 +104,15 @@ export async function computeStatsForSeason(
       .from('h2h_steals')
       .select('*')
       .in('detected_in_gw_id', gwIdList),
-    admin
-      .from('fixtures')
-      .select('id, gameweek_id')
-      .in('gameweek_id', gwIdList),
     admin.from('members').select('id, starting_points').eq('exclude_from_standings', false),
   ])
 
   const fixturesById = new Map<string, { id: string; gameweek_id: string }>()
-  for (const f of (fixturesRes.data ?? []) as Array<{
-    id: string
-    gameweek_id: string
-  }>) {
+  for (const f of seasonFixtures) {
     fixturesById.set(f.id, f)
   }
 
-  const predictionScoresRaw = (psRes.data ?? []) as Array<{
-    member_id: string
-    fixture_id: string
-    result_correct: boolean
-    score_correct: boolean
-    points_awarded: number
-  }>
-  const predictionScores = predictionScoresRaw
+  const predictionScores = predictionScoresRows
     .map((p) => {
       const fx = fixturesById.get(p.fixture_id)
       if (!fx) return null

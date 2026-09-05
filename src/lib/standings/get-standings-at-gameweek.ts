@@ -10,8 +10,16 @@
  * Weekly score per gw = Σ prediction_scores + Σ awarded bonuses, doubled
  * if double_bubble, then + point_adjustments — matches the math used by
  * `gatherGameweekData`.
+ *
+ * Scope: only the gameweeks whose weekly total actually changes the answer
+ * are read — the target gw, plus the handful the formula above adds or
+ * subtracts. Everything else is already baked into starting_points. That
+ * keeps this page's cost flat as seasons accumulate instead of growing with
+ * every year the league has ever played, and it goes through
+ * `fetchAllRows*`, which pages past PostgREST's silent 1000-row cap.
  */
 import { createAdminClient } from '@/lib/supabase/admin'
+import { fetchAllRows, fetchAllRowsIn } from '@/lib/supabase/fetch-all'
 import {
   getFavouriteBadges,
   type FavouriteBadge,
@@ -52,44 +60,96 @@ export async function getStandingsAtGameweek(
   const admin = createAdminClient()
 
   const [
-    { data: gameweeksRaw },
-    { data: membersRaw },
-    { data: scoresRaw },
-    { data: bonusesRaw },
-    { data: adjustmentsRaw },
+    gameweeksRaw,
+    membersRaw,
   ] = await Promise.all([
-    admin
-      .from('gameweeks')
-      .select('id, number, status, double_bubble, points_applied')
-      .order('number'),
-    admin
-      .from('members')
-      .select('id, display_name, starting_points')
-      .eq('approval_status', 'approved')
-      .eq('exclude_from_standings', false),
-    admin
-      .from('prediction_scores')
-      .select('member_id, fixture_id, points_awarded'),
-    admin
-      .from('bonus_awards')
-      .select('gameweek_id, member_id, awarded, points_awarded'),
-    admin
-      .from('point_adjustments')
-      .select('gameweek_id, member_id, delta'),
+    // Gameweek numbers repeat every season, so read one season's worth and
+    // resolve `gwNumber` inside it. `latestSeason` is the season currently
+    // being played; older seasons live on untouched for member history.
+    (async () => {
+      const { data: seasonRow } = await admin
+        .from('gameweeks')
+        .select('season')
+        .order('season', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      const season = (seasonRow as { season: number } | null)?.season
+      if (season === undefined) return [] as GameweekMeta[]
+      return fetchAllRows<GameweekMeta>(() =>
+        admin
+          .from('gameweeks')
+          .select('id, number, status, double_bubble, points_applied')
+          .eq('season', season),
+      )
+    })(),
+    fetchAllRows<{ id: string; display_name: string; starting_points: number | null }>(() =>
+      admin
+        .from('members')
+        .select('id, display_name, starting_points')
+        .eq('approval_status', 'approved')
+        .eq('exclude_from_standings', false),
+    ),
   ])
 
   const gameweeks = (gameweeksRaw ?? []) as GameweekMeta[]
   const target = gameweeks.find((g) => g.number === gwNumber)
   if (!target) return null
 
+  // The only gameweeks that move the total: the target itself (shown as this
+  // week's points), those at or before it not yet rolled into starting_points,
+  // and those after it that already were. Typically one or two.
+  const neededGws = gameweeks.filter(
+    (gw) =>
+      gw.id === target.id ||
+      (gw.number <= target.number && !gw.points_applied) ||
+      (gw.number > target.number && gw.points_applied),
+  )
+  const neededGwIds = neededGws.map((gw) => gw.id)
+
   // Map fixture_id → gameweek_id so prediction_scores can be bucketed by gw.
-  const { data: fixturesRaw } = await admin
-    .from('fixtures')
-    .select('id, gameweek_id')
+  const fixturesRaw = await fetchAllRowsIn<{ id: string; gameweek_id: string }>(
+    neededGwIds,
+    (ids) => admin.from('fixtures').select('id, gameweek_id').in('gameweek_id', ids),
+  )
   const fixtureToGw = new Map<string, string>()
-  for (const f of (fixturesRaw ?? []) as Array<{ id: string; gameweek_id: string }>) {
+  for (const f of fixturesRaw) {
     fixtureToGw.set(f.id, f.gameweek_id)
   }
+  const fixtureIds = fixturesRaw.map((f) => f.id)
+
+  const [scoresRaw, bonusesRaw, adjustmentsRaw] = await Promise.all([
+    fetchAllRowsIn<{
+      member_id: string
+      fixture_id: string
+      points_awarded: number | null
+    }>(fixtureIds, (ids) =>
+      admin
+        .from('prediction_scores')
+        .select('member_id, fixture_id, points_awarded')
+        .in('fixture_id', ids),
+    ),
+    fetchAllRowsIn<{
+      gameweek_id: string
+      member_id: string
+      awarded: boolean | null
+      points_awarded: number | null
+    }>(neededGwIds, (ids) =>
+      admin
+        .from('bonus_awards')
+        .select('gameweek_id, member_id, awarded, points_awarded')
+        .in('gameweek_id', ids),
+    ),
+    fetchAllRowsIn<{
+      gameweek_id: string
+      member_id: string
+      delta: number | null
+    }>(neededGwIds, (ids) =>
+      admin
+        .from('point_adjustments')
+        .select('gameweek_id, member_id, delta')
+        .in('gameweek_id', ids),
+    ),
+  ])
 
   // weekly[memberId][gwId] = pre-double-bubble base from prediction_scores +
   // awarded bonuses. We multiply once per gw (uniform ×2) then add
@@ -104,31 +164,18 @@ export async function getStandingsAtGameweek(
     m.set(gwId, (m.get(gwId) ?? 0) + delta)
   }
 
-  for (const s of (scoresRaw ?? []) as Array<{
-    member_id: string
-    fixture_id: string
-    points_awarded: number | null
-  }>) {
+  for (const s of scoresRaw) {
     const gwId = fixtureToGw.get(s.fixture_id)
     if (!gwId) continue
     addBase(s.member_id, gwId, s.points_awarded ?? 0)
   }
-  for (const b of (bonusesRaw ?? []) as Array<{
-    gameweek_id: string
-    member_id: string
-    awarded: boolean | null
-    points_awarded: number | null
-  }>) {
+  for (const b of bonusesRaw) {
     if (b.awarded !== true) continue
     addBase(b.member_id, b.gameweek_id, b.points_awarded ?? 0)
   }
 
   const adjByMemberGw = new Map<string, Map<string, number>>()
-  for (const a of (adjustmentsRaw ?? []) as Array<{
-    gameweek_id: string
-    member_id: string
-    delta: number | null
-  }>) {
+  for (const a of adjustmentsRaw) {
     let m = adjByMemberGw.get(a.member_id)
     if (!m) {
       m = new Map()
@@ -148,11 +195,7 @@ export async function getStandingsAtGameweek(
     return base * mult + adj
   }
 
-  const members = (membersRaw ?? []) as Array<{
-    id: string
-    display_name: string
-    starting_points: number | null
-  }>
+  const members = membersRaw
 
   // Fail-soft: empty before migration 029, which renders names as before.
   const favouriteBadges = await getFavouriteBadges(admin)

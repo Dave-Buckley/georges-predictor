@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { fetchAllRows, fetchAllRowsIn } from '@/lib/supabase/fetch-all'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { confirmPrizeSchema, createPrizeSchema } from '@/lib/validators/prizes'
 
@@ -218,6 +219,30 @@ export async function checkDatePrizes(): Promise<{ triggered: string[] }> {
 
   const triggered: string[] = []
 
+  // Fixture ids for the season currently being played. Prize snapshots are a
+  // this-season standing, so scoping here keeps the read flat as the league
+  // accumulates years of history.
+  const { data: seasonRow } = await adminClient
+    .from('gameweeks')
+    .select('season')
+    .order('season', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  const currentSeason = (seasonRow as { season: number } | null)?.season
+  const seasonGwIds =
+    currentSeason === undefined
+      ? []
+      : (
+          await fetchAllRows<{ id: string }>(() =>
+            adminClient.from('gameweeks').select('id').eq('season', currentSeason),
+          )
+        ).map((g) => g.id)
+  const seasonFixtureIds = (
+    await fetchAllRowsIn<{ id: string }>(seasonGwIds, (ids) =>
+      adminClient.from('fixtures').select('id').in('gameweek_id', ids),
+    )
+  ).map((f) => f.id)
+
   for (const prize of prizes) {
     const config = prize.trigger_config as { month?: number; day?: number } | null
     if (!config || config.month === undefined || config.day === undefined) continue
@@ -239,20 +264,23 @@ export async function checkDatePrizes(): Promise<{ triggered: string[] }> {
       continue
     }
 
-    // Snapshot current standings: sum points_awarded per member
-    const { data: scores } = await adminClient
-      .from('prediction_scores')
-      .select('member_id, points_awarded')
-      .then(({ data, error: scoresError }) => {
-        if (scoresError) console.error('[checkDatePrizes] Scores error:', scoresError.message)
-        return { data: data ?? [] }
-      })
+    // Snapshot current standings: sum points_awarded per member.
+    // Scoped to this season's fixtures and paged — an unfiltered read stopped
+    // at PostgREST's 1000-row cap and would snapshot a truncated table.
+    const scores = await fetchAllRowsIn<{
+      member_id: string
+      points_awarded: number | null
+    }>(seasonFixtureIds, (ids) =>
+      adminClient
+        .from('prediction_scores')
+        .select('member_id, points_awarded')
+        .in('fixture_id', ids),
+    )
 
     // Aggregate totals per member
     const totalsMap: Record<string, number> = {}
-    for (const row of scores ?? []) {
-      const mid = row.member_id as string
-      totalsMap[mid] = (totalsMap[mid] ?? 0) + (row.points_awarded as number)
+    for (const row of scores) {
+      totalsMap[row.member_id] = (totalsMap[row.member_id] ?? 0) + (row.points_awarded ?? 0)
     }
 
     const snapshotData = {

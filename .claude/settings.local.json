@@ -147,7 +147,9 @@
       "Bash(nslookup 13uxz.com)",
       "Bash(nslookup www.13uxz.com)",
       "PowerShell(foreach \\($n in @\\('13uxz.com','www.13uxz.com'\\)\\) { \"=== $n ===\"; foreach \\($t in @\\('A','CNAME','CAA'\\)\\) { try { Resolve-DnsName -Name $n -Type $t -Server 1.1.1.1 -ErrorAction Stop | Select-Object Name,Type,NameHost,IPAddress,@{n='CAA';e={$_.ToString\\(\\)}} | Format-Table -AutoSize | Out-String } catch { \"$t : none/error\" } } })",
-      "mcp__plugin_vercel_vercel__get_runtime_errors"
+      "mcp__plugin_vercel_vercel__get_runtime_errors",
+      "Artifact",
+      "Bash(python *)"
     ]
   }
 }

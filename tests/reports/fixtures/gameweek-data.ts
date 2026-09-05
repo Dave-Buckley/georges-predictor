@@ -207,6 +207,10 @@ export function mockSupabaseFrom(tables: TableDataMap) {
         or: vi.fn().mockReturnThis(),
         order: vi.fn().mockReturnThis(),
         limit: vi.fn().mockReturnThis(),
+        // Paged reads (fetchAllRows) call .order(...).range(from, to). The
+        // stub returns the whole payload as page one; fixtures are far below
+        // the 1000-row page size, so the pager stops after a single call.
+        range: vi.fn().mockResolvedValue(resolved),
         single: vi.fn().mockResolvedValue(resolved),
         maybeSingle: vi.fn().mockResolvedValue(resolved),
         // Awaitable directly (used by list fetches without .single())
