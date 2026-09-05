@@ -23,6 +23,8 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 
+import { fetchAllRows } from '@/lib/supabase/fetch-all'
+
 export interface MemberPredictionRow {
   fixtureId: string
   kickoffTime: string
@@ -61,12 +63,13 @@ export async function getRevealedGameweekNumbers(
   nowIso: string = new Date().toISOString(),
 ): Promise<number[]> {
   try {
-    const { data: fixtures, error } = await admin
-      .from('fixtures')
-      .select('gameweek_id, kickoff_time')
-      .lte('kickoff_time', nowIso)
+    // Paged: narrowed by kickoff, but "every fixture already played" keeps
+    // growing for as long as the league runs.
+    const fixtures = await fetchAllRows<{ gameweek_id: string }>(() =>
+      admin.from('fixtures').select('gameweek_id, kickoff_time').lte('kickoff_time', nowIso),
+    )
 
-    if (error || !Array.isArray(fixtures)) return []
+    if (!Array.isArray(fixtures)) return []
 
     const gwIds = new Set(
       (fixtures as Array<{ gameweek_id: string }>).map((f) => f.gameweek_id),

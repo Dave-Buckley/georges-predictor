@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin'
+import { fetchAllRows } from '@/lib/supabase/fetch-all'
 import type { AdditionalPrizeRow, PrizeAwardWithDetails } from '@/lib/supabase/types'
 import { ConfirmPrizeDialog } from '@/components/admin/confirm-prize-dialog'
 import { createPrize } from '@/actions/admin/prizes'
@@ -18,19 +19,24 @@ async function getPrizesData(): Promise<{
         .from('additional_prizes')
         .select('*')
         .order('name'),
-      supabase
-        .from('prize_awards')
-        .select(`
+      // Paged by id, then sorted for display — prize_awards grows for the
+      // life of the league.
+      fetchAllRows<Record<string, unknown>>(() =>
+        supabase.from('prize_awards').select(`
           *,
           prize:additional_prizes!prize_id(*),
           member:members!member_id(id, display_name)
-        `)
-        .order('triggered_at', { ascending: false }),
+        `),
+      ).then((rows) =>
+        rows.sort((a, b) =>
+          String(b.triggered_at ?? '').localeCompare(String(a.triggered_at ?? '')),
+        ),
+      ),
     ])
 
     return {
       prizes: (prizesResult.data ?? []) as AdditionalPrizeRow[],
-      awards: (awardsResult.data ?? []) as PrizeAwardWithDetails[],
+      awards: awardsResult as unknown as PrizeAwardWithDetails[],
     }
   } catch {
     return { prizes: [], awards: [] }

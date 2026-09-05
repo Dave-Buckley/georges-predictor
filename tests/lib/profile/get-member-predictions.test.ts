@@ -69,9 +69,15 @@ function makeAdmin() {
         return {
           select: vi.fn().mockReturnThis(),
           eq: vi.fn().mockReturnThis(),
-          lte: vi
-            .fn()
-            .mockResolvedValue({ data: [{ gameweek_id: GW_ID }], error: null }),
+          // getRevealedGameweekNumbers pages this read, so the chain
+          // continues .order(...).range(...) after .lte(...).
+          lte: vi.fn(() => ({
+            order: vi.fn(() => ({
+              range: vi
+                .fn()
+                .mockResolvedValue({ data: [{ gameweek_id: GW_ID }], error: null }),
+            })),
+          })),
           order: vi.fn().mockResolvedValue({
             data: [KICKED_OFF, NOT_STARTED],
             error: null,

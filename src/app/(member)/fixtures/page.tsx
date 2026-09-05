@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { fetchAllRows } from '@/lib/supabase/fetch-all'
 import type { TeamRow, FixtureWithTeams } from '@/lib/supabase/types'
 import AllFixturesClient from './all-fixtures-client'
 
@@ -26,12 +27,17 @@ export default async function AllFixturesPage() {
   const teams = (teamsData ?? []) as TeamRow[]
 
   // Fetch all fixtures with joined team and gameweek data, ordered by kickoff
-  const { data: fixturesData } = await supabase
-    .from('fixtures')
-    .select('*, home_team:teams!home_team_id(*), away_team:teams!away_team_id(*), gameweek:gameweeks!gameweek_id(*)')
-    .order('kickoff_time')
+  // Paged by id, then ordered for display. Kickoff times are not unique, so
+  // paging on them could repeat or skip rows across a page boundary.
+  const fixturesData = await fetchAllRows<FixtureWithTeams>(() =>
+    supabase
+      .from('fixtures')
+      .select('*, home_team:teams!home_team_id(*), away_team:teams!away_team_id(*), gameweek:gameweeks!gameweek_id(*)'),
+  )
 
-  const fixtures = (fixturesData ?? []) as FixtureWithTeams[]
+  const fixtures = [...fixturesData].sort((a, b) =>
+    String(a.kickoff_time ?? '').localeCompare(String(b.kickoff_time ?? '')),
+  )
 
   return (
     <div className="space-y-6">

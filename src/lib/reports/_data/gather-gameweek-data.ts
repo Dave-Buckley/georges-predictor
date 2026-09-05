@@ -16,6 +16,7 @@
 
 import { createAdminClient } from '@/lib/supabase/admin'
 import { fetchAllRowsIn } from '@/lib/supabase/fetch-all'
+import { fetchAllRows } from '@/lib/supabase/fetch-all'
 
 // ─── Public types ────────────────────────────────────────────────────────────
 
@@ -349,7 +350,7 @@ export async function gatherGameweekData(
     predictionScores,
     { data: bonusAwards },
     { data: losPicks },
-    { data: losMembers },
+    losMembers,
     { data: h2hSteals },
     { data: members },
     { data: pointAdjustments },
@@ -390,9 +391,9 @@ export async function gatherGameweekData(
       .from('los_picks')
       .select('member_id, gameweek_id, fixture_id, outcome, team:teams(id, name)')
       .eq('gameweek_id', gwId),
-    admin
-      .from('los_competition_members')
-      .select('member_id, status, eliminated_at_gw'),
+    fetchAllRows<{ member_id: string; status: string; eliminated_at_gw: number | null }>(
+      () => admin.from('los_competition_members').select('member_id, status, eliminated_at_gw'),
+    ),
     admin
       .from('h2h_steals')
       .select('detected_in_gw_id, resolves_in_gw_id, position, tied_member_ids, winner_ids, resolved_at')
@@ -425,7 +426,7 @@ export async function gatherGameweekData(
     predictionScores: filteredScores,
     bonusAwards: bonusAwards ?? [],
     losPicks: losPicks ?? [],
-    losMembers: losMembers ?? [],
+    losMembers,
     h2hSteals: h2hSteals ?? [],
     members: members ?? [],
     pointAdjustments: pointAdjustments ?? [],

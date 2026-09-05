@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin'
+import { fetchAllRows } from '@/lib/supabase/fetch-all'
 import { Star, Zap, CheckCircle, Clock, PlusCircle } from 'lucide-react'
 import { SetBonusDialog } from '@/components/admin/set-bonus-dialog'
 import { ConfirmBonusAwards } from '@/components/admin/confirm-bonus-awards'
@@ -72,7 +73,12 @@ export default async function BonusesPage({ searchParams }: PageProps) {
       .select('*, bonus_type:bonus_types(*)')
       .order('created_at'),
     supabase.from('gameweeks').select('*').order('number'),
-    supabase.from('bonus_awards').select('gameweek_id, awarded'),
+    // Paged: bonus_awards accumulates ~1,900 rows a season and is never
+    // truncated between them, so an unpaged read would start losing rows and
+    // silently under-report the pending count George works from.
+    fetchAllRows<{ gameweek_id: string; awarded: boolean | null }>(() =>
+      supabase.from('bonus_awards').select('gameweek_id, awarded'),
+    ),
   ])
 
   const bonusTypes = (bonusTypesResult.data ?? []) as BonusTypeRow[]
@@ -81,10 +87,7 @@ export default async function BonusesPage({ searchParams }: PageProps) {
 
   const pendingByGwId = new Map<string, number>()
   const anyByGwId = new Map<string, number>()
-  for (const row of (awardCountsResult.data ?? []) as Array<{
-    gameweek_id: string
-    awarded: boolean | null
-  }>) {
+  for (const row of awardCountsResult) {
     anyByGwId.set(row.gameweek_id, (anyByGwId.get(row.gameweek_id) ?? 0) + 1)
     if (row.awarded === null) {
       pendingByGwId.set(

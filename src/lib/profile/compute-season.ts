@@ -6,7 +6,7 @@
 import 'server-only'
 
 import { aggregateSeasonStats, type SeasonStats } from '@/lib/profile/stats'
-import { fetchAllRowsIn } from '@/lib/supabase/fetch-all'
+import { fetchAllRows, fetchAllRowsIn } from '@/lib/supabase/fetch-all'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -99,7 +99,9 @@ export async function computeStatsForSeason(
       .maybeSingle(),
     admin.from('los_picks').select('*').eq('member_id', memberId),
     admin.from('los_competitions').select('*').eq('season', season),
-    admin.from('los_competition_members').select('*'),
+    fetchAllRows<Record<string, unknown>>(() =>
+      admin.from('los_competition_members').select('*'),
+    ),
     admin
       .from('h2h_steals')
       .select('*')
@@ -218,7 +220,7 @@ export async function computeStatsForSeason(
       status: 'active' | 'complete'
       ended_at_gw?: number | null
     }>,
-    losCompetitionMembers: (lcmRes.data ?? []) as Array<{
+    losCompetitionMembers: lcmRes as unknown as Array<{
       competition_id: string
       member_id: string
       status: 'active' | 'eliminated'
