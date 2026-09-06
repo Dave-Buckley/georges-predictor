@@ -45,7 +45,8 @@ interface FixtureCardProps {
  *   - Closing soon (within 30min of kickoff): amber left border
  *   - Countdown (today + showCountdown=true): live countdown timer
  *   - Locked (kickoff passed, not in play): greyed + lock icon
- *   - LIVE / PAUSED: pulsing red dot + "LIVE" badge
+ *   - LIVE / PAUSED, score fresh: pulsing red dot + "LIVE" badge
+ *   - LIVE / PAUSED, score stale: "In play" badge + "Score at HH:mm" caption
  *   - FINISHED: final score + "FT" badge, greyed
  *   - POSTPONED / SUSPENDED / CANCELLED / AWARDED: status badge, greyed
  *
@@ -95,6 +96,28 @@ export default function FixtureCard({
   const msToKickoff = kickoff.getTime() - now.getTime()
   const withinWarningWindow = isScheduled && !pastKickoff && msToKickoff <= 30 * 60 * 1000
 
+  // ─── Is the in-play score still believable? ──────────────────────────────────
+  // fixture.home_score is not a live feed — it is whatever the score was at the
+  // last fixture sync, and the sync only runs every couple of hours. Between the
+  // final whistle and the next run the card would otherwise show a stale score
+  // pulsing "LIVE" as though it were current. (6 Sep 2026: Arsenal vs Chelsea
+  // sat on the 45th-minute 1-1 for over an hour after finishing 2-1, and members
+  // reasonably read that as the app getting the result wrong.)
+  //
+  // Every sync upserts all 380 fixtures, so fixtures.updated_at is effectively
+  // "when we last checked". Past the window below we keep showing the score —
+  // it is still the best we have — but stop dressing it up as live and caption
+  // it with the time it was taken.
+  const LIVE_SCORE_FRESH_MS = 20 * 60 * 1000
+  const scoreCheckedAt = fixture.updated_at ? new Date(fixture.updated_at) : null
+  const hasLiveScore = fixture.home_score !== null && fixture.away_score !== null
+  const liveScoreIsStale =
+    isLive &&
+    hasLiveScore &&
+    scoreCheckedAt !== null &&
+    !Number.isNaN(scoreCheckedAt.getTime()) &&
+    now.getTime() - scoreCheckedAt.getTime() > LIVE_SCORE_FRESH_MS
+
   // isLocked from prop takes precedence; fallback to internal calculation
   const isLocked = isLockedProp !== undefined ? isLockedProp : (isScheduled && pastKickoff)
   const isGrey = isLocked || isLive || isFinished || isPostponed || isCancelled
@@ -103,7 +126,11 @@ export default function FixtureCard({
 
   let cardClasses = 'rounded-xl border p-4 transition-colors '
   if (isLive) {
-    cardClasses += 'border-red-500/50 bg-slate-800/80 '
+    // The red "something is happening right now" border only earns its place
+    // while the score is fresh.
+    cardClasses += liveScoreIsStale
+      ? 'border-slate-700 bg-slate-800/80 '
+      : 'border-red-500/50 bg-slate-800/80 '
   } else if (isBonusPick && isGoldenGlory) {
     cardClasses += 'border-l-4 border-l-yellow-400 border-yellow-400/50 bg-slate-800/80 '
   } else if (isBonusPick) {
@@ -156,17 +183,33 @@ export default function FixtureCard({
     }
 
     if (isLive) {
+      // Stale scores keep the number but lose the pulse — see liveScoreIsStale.
+      // A score captioned with the time it was taken is honest; the same score
+      // flashing "LIVE" is not.
       return (
         <div className="flex flex-col items-center gap-1">
-          {(fixture.home_score !== null && fixture.away_score !== null) && (
-            <div className="text-xl font-bold text-white">
+          {hasLiveScore && (
+            <div
+              className={`text-xl font-bold ${liveScoreIsStale ? 'text-slate-300' : 'text-white'}`}
+            >
               {fixture.home_score} &ndash; {fixture.away_score}
             </div>
           )}
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-600/90 text-white text-xs font-bold animate-pulse">
-            <span className="w-1.5 h-1.5 rounded-full bg-white" />
-            LIVE
-          </span>
+          {liveScoreIsStale ? (
+            <>
+              <span className="px-2 py-0.5 rounded-full bg-slate-600 text-slate-200 text-xs font-semibold">
+                In play
+              </span>
+              <span className="text-[11px] text-slate-500 text-center leading-tight">
+                Score at {formatKickoffTime(fixture.updated_at)}
+              </span>
+            </>
+          ) : (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-600/90 text-white text-xs font-bold animate-pulse">
+              <span className="w-1.5 h-1.5 rounded-full bg-white" />
+              LIVE
+            </span>
+          )}
         </div>
       )
     }
