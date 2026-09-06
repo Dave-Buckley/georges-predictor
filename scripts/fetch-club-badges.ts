@@ -26,11 +26,14 @@ import * as fs from 'node:fs'
 import * as path from 'node:path'
 
 const CLUB_NAMES: string[] = [
-  'Arsenal', 'Aston Villa', 'Bournemouth', 'Brentford', 'Brighton', 'Burnley',
+  'Arsenal', 'Aston Villa', 'Bournemouth', 'Brentford',
+  'Brighton & Hove Albion', 'Burnley',
   'Chelsea', 'Crystal Palace', 'Everton', 'Fulham', 'Ipswich Town',
   'Leeds United', 'Leicester City', 'Liverpool', 'Luton Town',
-  'Manchester City', 'Manchester United', 'Newcastle', 'Nottingham Forest',
-  'Sheffield United', 'Southampton', 'Sunderland', 'Tottenham', 'Watford',
+  'Manchester City', 'Manchester United', 'Newcastle United',
+  'Nottingham Forest',
+  'Sheffield United', 'Southampton', 'Sunderland', 'Tottenham Hotspur',
+  'Watford',
   'West Bromwich Albion', 'West Ham United', 'Wolverhampton Wanderers',
   'Norwich City', 'Middlesbrough', 'Coventry City', 'Hull City',
   'Bristol City', 'Cardiff City', 'Swansea City', 'Preston North End',
@@ -70,10 +73,36 @@ const TIER_BY_LEAGUE: Record<string, number> = {
  * already refuses non-soccer results, which left Forest with no badge — this
  * fills it from crests.football-data.org, the same source as the crests in our
  * own `teams` table, and a host next.config.ts already allows.
+ *
+ * Brighton / Newcastle / Tottenham: the first build of this list searched the
+ * short names "Brighton", "Newcastle" and "Tottenham". TheSportsDB resolved
+ * them to Brighton WFC, Newcastle Jets (Australian A-League) and Tottenham
+ * Women respectively — all real soccer clubs, so the lookup accepted them, but
+ * none in TIER_BY_LEAGUE. That left the three of them at tier null, which
+ * dropped them out of the picker's "Premier League" group and into "Other" at
+ * the very bottom, wearing the wrong crest. Members reported not being able to
+ * find Newcastle or Spurs at all. CLUB_NAMES now carries the full club names,
+ * and these overrides pin the right crest and tier regardless of what the
+ * search returns. Repaired in the DB by scripts/fix-club-picker-teams.ts.
  */
 const BADGE_OVERRIDES: Record<string, { badge_url: string; league: string; tier: number }> = {
   'Nottingham Forest': {
     badge_url: 'https://crests.football-data.org/351.png',
+    league: 'English Premier League',
+    tier: 1,
+  },
+  'Brighton & Hove Albion': {
+    badge_url: 'https://crests.football-data.org/397.png',
+    league: 'English Premier League',
+    tier: 1,
+  },
+  'Newcastle United': {
+    badge_url: 'https://crests.football-data.org/67.png',
+    league: 'English Premier League',
+    tier: 1,
+  },
+  'Tottenham Hotspur': {
+    badge_url: 'https://crests.football-data.org/73.png',
     league: 'English Premier League',
     tier: 1,
   },

@@ -41,6 +41,15 @@
       "sportsdb_id": "134355"
     },
     {
+      "name": "Brighton & Hove Albion",
+      "official_name": "Brighton & Hove Albion",
+      "short_name": "BHA",
+      "league": "English Premier League",
+      "tier": 1,
+      "badge_url": "https://crests.football-data.org/397.png",
+      "sportsdb_id": null
+    },
+    {
       "name": "Chelsea",
       "official_name": "Chelsea",
       "short_name": "CHE",
@@ -140,6 +149,15 @@
       "sportsdb_id": "133612"
     },
     {
+      "name": "Newcastle United",
+      "official_name": "Newcastle United",
+      "short_name": "NEW",
+      "league": "English Premier League",
+      "tier": 1,
+      "badge_url": "https://crests.football-data.org/67.png",
+      "sportsdb_id": null
+    },
+    {
       "name": "Nottingham Forest",
       "official_name": "Nottingham Forest",
       "short_name": null,
@@ -156,6 +174,15 @@
       "tier": 1,
       "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/tprtus1448813498.png",
       "sportsdb_id": "133603"
+    },
+    {
+      "name": "Tottenham Hotspur",
+      "official_name": "Tottenham Hotspur",
+      "short_name": "TOT",
+      "league": "English Premier League",
+      "tier": 1,
+      "badge_url": "https://crests.football-data.org/73.png",
+      "sportsdb_id": null
     },
     {
       "name": "Birmingham City",
@@ -788,15 +815,6 @@
       "sportsdb_id": "136000"
     },
     {
-      "name": "Brighton",
-      "official_name": "Brighton WFC",
-      "short_name": null,
-      "league": "English Womens Super League",
-      "tier": null,
-      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/zn0x7h1605371909.png",
-      "sportsdb_id": "140222"
-    },
-    {
       "name": "Carlisle United",
       "official_name": "Carlisle United",
       "short_name": "CRU",
@@ -842,15 +860,6 @@
       "sportsdb_id": "134369"
     },
     {
-      "name": "Newcastle",
-      "official_name": "Newcastle Jets",
-      "short_name": null,
-      "league": "Australian A-League",
-      "tier": null,
-      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/5jevk91653487832.png",
-      "sportsdb_id": "134474"
-    },
-    {
       "name": "Scunthorpe United",
       "official_name": "Scunthorpe United",
       "short_name": "",
@@ -876,15 +885,6 @@
       "tier": null,
       "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/3xxw321514563737.png",
       "sportsdb_id": "136003"
-    },
-    {
-      "name": "Tottenham",
-      "official_name": "Tottenham Women",
-      "short_name": null,
-      "league": "English Womens Super League",
-      "tier": null,
-      "badge_url": "https://r2.thesportsdb.com/images/media/team/badge/3dhd0j1605371995.png",
-      "sportsdb_id": "140228"
     },
     {
       "name": "Yeovil Town",
