@@ -25,6 +25,7 @@ export default function LoginForm() {
   const [result, setResult] = useState<{
     success?: boolean
     error?: string
+    sendFailed?: boolean
   } | null>(null)
 
   async function handleRequestCode(e: React.FormEvent) {
@@ -163,6 +164,33 @@ export default function LoginForm() {
             </div>
           )}
 
+          {/* A real member whose code email failed — show the other ways in
+              rather than leaving them stuck (Stu, Sep 2026). */}
+          {result?.sendFailed && (
+            <div className="rounded-xl bg-slate-800 border border-slate-700 px-4 py-3 space-y-2 text-sm text-slate-300">
+              <p className="font-semibold text-white">Other ways to get in</p>
+              <ul className="list-disc pl-5 space-y-1">
+                <li>
+                  If you&apos;ve set a password,{' '}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode('password')
+                      setResult(null)
+                    }}
+                    className="text-purple-400 hover:text-purple-300 font-medium underline"
+                  >
+                    log in with your password
+                  </button>
+                  .
+                </li>
+                <li>
+                  Or message George — he can send you a login link on WhatsApp.
+                </li>
+              </ul>
+            </div>
+          )}
+
           <button
             type="submit"
             disabled={isSubmitting}
@@ -211,6 +239,10 @@ export default function LoginForm() {
             </p>
             <p className="text-slate-500 text-xs">
               If you also see a login link in the email, that still works too.
+            </p>
+            <p className="text-slate-500 text-xs">
+              No code after a few minutes? Check your spam folder, or ask George
+              to send you a login link on WhatsApp.
             </p>
           </div>
 

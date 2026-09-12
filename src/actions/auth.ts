@@ -120,14 +120,48 @@ export async function signUpMember(
 
 // ─── Request Magic Link ───────────────────────────────────────────────────────
 
+/** Escapes LIKE wildcards so an email containing `_` or `%` matches literally. */
+function escapeLike(s: string): string {
+  return s.replace(/[\\%_]/g, '\\$&')
+}
+
 /**
- * Sends a magic link to an existing member's email address for login.
- * Uses shouldCreateUser: false — will fail silently if the email isn't registered
- * (Supabase doesn't expose whether the email exists for security).
+ * Is this email on the members list? Returns null when the lookup itself
+ * fails, so the caller falls back to just trying to send the code rather than
+ * wrongly telling a real member they don't exist.
+ */
+async function memberExistsForEmail(email: string): Promise<boolean | null> {
+  try {
+    const admin = createAdminClient()
+    const { data, error } = await admin
+      .from('members')
+      .select('id')
+      .ilike('email', escapeLike(email))
+      .limit(1)
+      .maybeSingle()
+    if (error) {
+      console.error('[requestMagicLink] member lookup error:', error.message)
+      return null
+    }
+    return !!data
+  } catch (err) {
+    console.error('[requestMagicLink] member lookup threw:', err)
+    return null
+  }
+}
+
+/**
+ * Emails a login code to an existing member.
+ *
+ * "No account found" is ONLY shown when the email genuinely isn't on the
+ * members list. It used to be shown for every Supabase send failure, so a real
+ * member whose code email failed (Stu, 12 Sep 2026) was told he didn't exist.
+ * A failed send now says so and returns `sendFailed`, so the form can offer the
+ * other ways in (password, or a login link from George).
  */
 export async function requestMagicLink(
   formData: FormData
-): Promise<{ success?: boolean; error?: string }> {
+): Promise<{ success?: boolean; error?: string; sendFailed?: boolean }> {
   const raw = {
     email: formData.get('email'),
   }
@@ -139,6 +173,13 @@ export async function requestMagicLink(
   }
 
   const { email } = result.data
+
+  if ((await memberExistsForEmail(email)) === false) {
+    return {
+      error:
+        'No account found with this email. Check it is spelt correctly — or join the competition below.',
+    }
+  }
 
   const supabase = await createServerSupabaseClient()
 
@@ -171,9 +212,12 @@ export async function requestMagicLink(
       }
     }
 
-    // Supabase returns a generic error if the email is not registered.
-    // Surface a helpful message to the member.
-    return { error: 'No account found with this email. Have you signed up?' }
+    // The email is a real member (checked above) — the send itself failed.
+    return {
+      error:
+        "We couldn't send your login code just now. Please wait a minute and try again.",
+      sendFailed: true,
+    }
   }
 
   return { success: true }
@@ -216,6 +260,42 @@ export async function verifyLoginCode(
   if (error) {
     console.error('[verifyLoginCode] verify error:', error.message)
     return { error: 'That code is wrong or has expired. Request a new one.' }
+  }
+
+  return { success: true }
+}
+
+// ─── Log In With Link From George ─────────────────────────────────────────────
+
+/**
+ * Logs a member in from a one-time login link George created in the admin
+ * panel (createMemberLoginLink) and sent them on WhatsApp. The fallback for
+ * when login-code emails don't arrive.
+ *
+ * Called from a button on /login-link rather than on page load: WhatsApp
+ * fetches links to build a preview, and verifying on GET would use the link up
+ * before the member ever tapped it.
+ */
+export async function loginWithLinkToken(
+  formData: FormData,
+): Promise<{ success?: boolean; error?: string }> {
+  const tokenHash = formData.get('token_hash')
+  if (typeof tokenHash !== 'string' || !tokenHash.trim()) {
+    return { error: 'This login link is incomplete. Ask George to send you a new one.' }
+  }
+
+  const supabase = await createServerSupabaseClient()
+  const { error } = await supabase.auth.verifyOtp({
+    token_hash: tokenHash.trim(),
+    type: 'magiclink',
+  })
+
+  if (error) {
+    console.error('[loginWithLinkToken] verify error:', error.message)
+    return {
+      error:
+        'This login link has already been used or has run out. Ask George to send you a new one.',
+    }
   }
 
   return { success: true }

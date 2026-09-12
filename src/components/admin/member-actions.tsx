@@ -2,7 +2,17 @@
 
 import { useState, useTransition, useEffect, useCallback } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
-import { CheckCircle, XCircle, Trash2, Mail, Hash, ChevronDown } from 'lucide-react'
+import {
+  CheckCircle,
+  XCircle,
+  Trash2,
+  Mail,
+  Hash,
+  ChevronDown,
+  KeyRound,
+  Copy,
+  MessageCircle,
+} from 'lucide-react'
 import type { MemberRow } from '@/lib/supabase/types'
 import {
   approveMember,
@@ -10,6 +20,7 @@ import {
   removeMember,
   updateMemberEmail,
   setMemberStartingPoints,
+  createMemberLoginLink,
 } from '@/actions/admin/members'
 
 interface MemberActionsProps {
@@ -395,9 +406,129 @@ function SetStartingPointsDialog({ member, open, onOpenChange }: DialogProps) {
   )
 }
 
+// ─── Login Link Dialog ─────────────────────────────────────────────────────────
+
+/**
+ * For members whose login-code emails aren't arriving: creates a one-time
+ * login link George can send them on WhatsApp. No email is sent.
+ */
+function LoginLinkDialog({ member, open, onOpenChange }: DialogProps) {
+  const [isPending, startTransition] = useTransition()
+  const [link, setLink] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
+
+  // A link only works once, so never show a leftover one when reopened.
+  const reset = useCallback(() => {
+    setLink(null)
+    setError(null)
+    setCopied(false)
+  }, [])
+  useResetOnOpen(open, reset)
+
+  const handleCreate = () => {
+    setError(null)
+    startTransition(async () => {
+      const r = await createMemberLoginLink(member.id)
+      if (r.error || !r.link) {
+        setError(r.error ?? 'Could not create a login link. Please try again.')
+      } else {
+        setLink(r.link)
+      }
+    })
+  }
+
+  const handleCopy = async () => {
+    if (!link) return
+    try {
+      await navigator.clipboard.writeText(link)
+      setCopied(true)
+    } catch {
+      setError('Could not copy — press and hold the link to copy it.')
+    }
+  }
+
+  const whatsappText = link
+    ? `Hi ${member.display_name}, here's your King Predictor login link. Tap it, then tap "Log me in":\n\n${link}\n\nIt only works once and runs out after about an hour.`
+    : ''
+
+  return (
+    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 bg-black/50 z-40" />
+        <Dialog.Content className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl p-6 w-[90vw] max-w-md">
+          <Dialog.Title className="text-lg font-bold text-gray-900 mb-1">
+            Login link — {member.display_name}
+          </Dialog.Title>
+          <Dialog.Description className="text-sm text-gray-500 mb-5">
+            Use this when {member.display_name}&apos;s login code emails
+            aren&apos;t arriving. Send them the link on WhatsApp — they tap it,
+            then tap &quot;Log me in&quot;. It works once and runs out after
+            about an hour.
+          </Dialog.Description>
+
+          {!link && (
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={handleCreate}
+              className="w-full px-4 py-2.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold disabled:opacity-60 flex items-center justify-center gap-2"
+            >
+              <KeyRound className="w-4 h-4" />
+              {isPending ? 'Creating link…' : 'Create login link'}
+            </button>
+          )}
+
+          {link && (
+            <div className="space-y-3">
+              <p className="text-xs text-gray-700 bg-gray-50 border border-gray-200 rounded-lg p-3 break-all select-all">
+                {link}
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <a
+                  href={`https://wa.me/?text=${encodeURIComponent(whatsappText)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 px-4 py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-semibold flex items-center justify-center gap-2"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  Send on WhatsApp
+                </a>
+                <button
+                  type="button"
+                  onClick={handleCopy}
+                  className="flex-1 px-4 py-2.5 rounded-lg border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-50 flex items-center justify-center gap-2"
+                >
+                  <Copy className="w-4 h-4" />
+                  {copied ? 'Copied' : 'Copy link'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {error && (
+            <p className="mt-4 p-3 rounded-lg bg-red-50 text-red-700 text-sm">{error}</p>
+          )}
+
+          <div className="flex justify-end pt-5">
+            <Dialog.Close asChild>
+              <button
+                type="button"
+                className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-50"
+              >
+                Close
+              </button>
+            </Dialog.Close>
+          </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+  )
+}
+
 // ─── Main MemberActions Component ─────────────────────────────────────────────
 
-type ActiveDialog = 'email' | 'points' | 'remove' | null
+type ActiveDialog = 'email' | 'points' | 'login-link' | 'remove' | null
 
 export function MemberActions({ member }: MemberActionsProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false)
@@ -455,6 +586,14 @@ export function MemberActions({ member }: MemberActionsProps) {
             <Hash className="w-4 h-4" />
             Set starting points
           </button>
+          <button
+            type="button"
+            onClick={() => openDialog('login-link')}
+            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <KeyRound className="w-4 h-4" />
+            Login link
+          </button>
           <div className="my-1 border-t border-gray-100" />
           <button
             type="button"
@@ -475,6 +614,11 @@ export function MemberActions({ member }: MemberActionsProps) {
       <SetStartingPointsDialog
         member={member}
         open={activeDialog === 'points'}
+        onOpenChange={closeDialog}
+      />
+      <LoginLinkDialog
+        member={member}
+        open={activeDialog === 'login-link'}
         onOpenChange={closeDialog}
       />
       <RemoveDialog

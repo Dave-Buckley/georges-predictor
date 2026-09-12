@@ -309,11 +309,62 @@ describe('signUpMember', () => {
 })
 
 describe('requestMagicLink', () => {
+  // What the admin-client members lookup returns. Default: the email is a member.
+  let memberLookup: { data: unknown; error: unknown }
+
   beforeEach(async () => {
     vi.resetModules()
     mockSupabase = createMockSupabaseClient()
     const { createServerSupabaseClient } = await import('@/lib/supabase/server')
     vi.mocked(createServerSupabaseClient).mockResolvedValue(mockSupabase as any)
+
+    process.env.NEXT_PUBLIC_SUPABASE_URL ??= 'https://example.supabase.co'
+    process.env.SUPABASE_SERVICE_ROLE_KEY ??= 'test-service-role'
+    memberLookup = { data: { id: 'member-1' }, error: null }
+    const mockAdmin = createMockSupabaseClient()
+    const chain = mockAdmin.from('members') as unknown as {
+      maybeSingle: ReturnType<typeof vi.fn>
+    }
+    chain.maybeSingle.mockImplementation(async () => memberLookup)
+    const { createClient } = await import('@supabase/supabase-js')
+    vi.mocked(createClient).mockReturnValue(mockAdmin as any)
+  })
+
+  it('says "No account found" when the email is not a member, without sending', async () => {
+    memberLookup = { data: null, error: null }
+
+    const { requestMagicLink } = await import('@/actions/auth')
+
+    const result = await requestMagicLink(makeFormData({ email: 'nobody@example.com' }))
+
+    expect(result.error).toMatch(/no account found/i)
+    expect(mockSupabase.auth.signInWithOtp).not.toHaveBeenCalled()
+  })
+
+  it('never tells a real member "No account found" when the send fails', async () => {
+    mockSupabase.auth.signInWithOtp = vi.fn().mockResolvedValue({
+      data: null,
+      error: { message: 'Error sending magic link email', status: 500 },
+    })
+
+    const { requestMagicLink } = await import('@/actions/auth')
+
+    const result = await requestMagicLink(makeFormData({ email: 'stu@example.com' }))
+
+    expect(result.error).toBeDefined()
+    expect(result.error).not.toMatch(/no account/i)
+    expect(result.sendFailed).toBe(true)
+  })
+
+  it('still tries to send when the member lookup itself fails', async () => {
+    memberLookup = { data: null, error: { message: 'db unavailable' } }
+    mockSupabase.auth.signInWithOtp = vi.fn().mockResolvedValue({ data: {}, error: null })
+
+    const { requestMagicLink } = await import('@/actions/auth')
+
+    const result = await requestMagicLink(makeFormData({ email: 'user@example.com' }))
+
+    expect(result).toEqual({ success: true })
   })
 
   it('calls signInWithOtp with shouldCreateUser: false for valid email', async () => {
@@ -421,6 +472,55 @@ describe('verifyLoginCode', () => {
 
     expect(result).toHaveProperty('error')
     expect((result as { error: string }).error).toMatch(/expired/i)
+  })
+})
+
+describe('loginWithLinkToken', () => {
+  beforeEach(async () => {
+    vi.resetModules()
+    mockSupabase = createMockSupabaseClient()
+    const { createServerSupabaseClient } = await import('@/lib/supabase/server')
+    vi.mocked(createServerSupabaseClient).mockResolvedValue(mockSupabase as any)
+  })
+
+  it('verifies the token hash as a magic link and returns success', async () => {
+    mockSupabase.auth.verifyOtp = vi
+      .fn()
+      .mockResolvedValue({ data: { session: {} }, error: null })
+
+    const { loginWithLinkToken } = await import('@/actions/auth')
+
+    const result = await loginWithLinkToken(makeFormData({ token_hash: 'abc123' }))
+
+    expect(result).toEqual({ success: true })
+    expect(mockSupabase.auth.verifyOtp).toHaveBeenCalledWith({
+      token_hash: 'abc123',
+      type: 'magiclink',
+    })
+  })
+
+  it('points the member back to George when the link is used or expired', async () => {
+    mockSupabase.auth.verifyOtp = vi.fn().mockResolvedValue({
+      data: null,
+      error: { message: 'Email link is invalid or has expired' },
+    })
+
+    const { loginWithLinkToken } = await import('@/actions/auth')
+
+    const result = await loginWithLinkToken(makeFormData({ token_hash: 'abc123' }))
+
+    expect(result.error).toMatch(/George/)
+  })
+
+  it('rejects a missing token without calling Supabase', async () => {
+    mockSupabase.auth.verifyOtp = vi.fn()
+
+    const { loginWithLinkToken } = await import('@/actions/auth')
+
+    const result = await loginWithLinkToken(new FormData())
+
+    expect(result).toHaveProperty('error')
+    expect(mockSupabase.auth.verifyOtp).not.toHaveBeenCalled()
   })
 })
 

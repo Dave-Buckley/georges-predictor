@@ -1,5 +1,6 @@
 'use server'
 
+import { headers } from 'next/headers'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { addMemberSchema, updateEmailSchema } from '@/lib/validators/admin'
@@ -94,6 +95,68 @@ export async function approveMember(
   }
 
   return { success: true }
+}
+
+// ─── Create Login Link ────────────────────────────────────────────────────────
+
+/**
+ * Creates a one-time login link for a member WITHOUT sending any email, so
+ * George can send it on WhatsApp when a member's login-code emails aren't
+ * arriving.
+ *
+ * The link points at /login-link, which only logs in when the member taps
+ * "Log me in" (see loginWithLinkToken) — so WhatsApp's link preview can't use
+ * it up. It works once and expires after the Supabase OTP expiry (about an hour).
+ */
+export async function createMemberLoginLink(
+  memberId: string,
+): Promise<{ success?: boolean; error?: string; link?: string }> {
+  const auth = await requireAdmin()
+  if ('error' in auth) return auth
+
+  const supabaseAdmin = createAdminClient()
+
+  const { data: member, error: fetchError } = await supabaseAdmin
+    .from('members')
+    .select('user_id, email, display_name')
+    .eq('id', memberId)
+    .single()
+
+  if (fetchError || !member) {
+    return { error: 'Member not found' }
+  }
+
+  if (!member.user_id || !member.email) {
+    return {
+      error: `${member.display_name} hasn't signed up yet, so there's no account to log in to. Ask them to join first.`,
+    }
+  }
+
+  const { data, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+    type: 'magiclink',
+    email: member.email,
+  })
+  const tokenHash = data?.properties?.hashed_token
+
+  if (linkError || !tokenHash) {
+    console.error('[createMemberLoginLink] generateLink error:', linkError?.message)
+    return { error: 'Could not create a login link. Please try again.' }
+  }
+
+  // This link is pasted into WhatsApp, so it must be absolute. Fall back to the
+  // host George is using if NEXT_PUBLIC_APP_URL isn't set in this environment.
+  let appUrl = process.env.NEXT_PUBLIC_APP_URL
+  if (!appUrl) {
+    const h = await headers()
+    const host = h.get('x-forwarded-host') ?? h.get('host')
+    const proto = h.get('x-forwarded-proto') ?? 'https'
+    appUrl = host ? `${proto}://${host}` : 'https://kingpredictor.vercel.app'
+  }
+
+  return {
+    success: true,
+    link: `${appUrl.replace(/\/$/, '')}/login-link?token_hash=${encodeURIComponent(tokenHash)}`,
+  }
 }
 
 // ─── Reject Member ────────────────────────────────────────────────────────────
