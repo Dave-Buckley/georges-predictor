@@ -32,10 +32,16 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // Validate user server-side (getUser validates JWT with Supabase Auth server)
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  // Validate user server-side (getUser validates JWT with Supabase Auth server).
+  // Capped at 5s: if Supabase Auth hangs, treat the visitor as logged out so
+  // public pages still load instead of every request freezing (Oct 2026 outage).
+  const user = await Promise.race([
+    supabase.auth
+      .getUser()
+      .then(({ data }) => data.user)
+      .catch(() => null),
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000)),
+  ])
 
   const pathname = request.nextUrl.pathname
 
