@@ -65,18 +65,18 @@ const mockAdminClient = {
       }
     }
     if (table === 'fixtures') {
+      // .select('gameweek_id, status') is awaited directly for the one-shot
+      // status read that picks the latest played gameweek; .select(...).eq()
+      // is awaited for that gameweek's fixture list.
       return {
-        select: vi.fn().mockReturnThis(),
-        // .eq() is awaited directly for the fixture list and the "any fixtures"
-        // count, and also chains into .not() for the "still pending" count.
-        eq: vi.fn().mockImplementation(() => {
+        select: vi.fn().mockImplementation(() => {
+          const gwId = (latestGwData as { id?: string } | null)?.id
           const result = Promise.resolve({
-            data: fixturesData,
+            // Every fixture FINISHED → gameweek counts as played.
+            data: gwId ? fixturesData.map(() => ({ gameweek_id: gwId, status: 'FINISHED' })) : [],
             error: null,
-            count: fixturesData.length,
-          }) as Promise<unknown> & { not: () => Promise<unknown> }
-          // No fixtures left in a non-terminal status → gameweek counts as played.
-          result.not = vi.fn().mockResolvedValue({ count: 0, error: null })
+          }) as Promise<unknown> & { eq: () => Promise<unknown> }
+          result.eq = vi.fn().mockResolvedValue({ data: fixturesData, error: null })
           return result
         }),
       }

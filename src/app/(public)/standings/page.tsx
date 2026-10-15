@@ -100,23 +100,26 @@ async function getStandingsPageData(): Promise<{
     .select('id, number, closed_at')
     .order('number', { ascending: false })
 
+  // One read of every fixture's status (380 rows/season, under the 1000-row
+  // cap) instead of two count queries per gameweek walking down from GW38 —
+  // early in the season that loop made ~60 sequential round-trips (~13s).
+  const { data: fixtureStatuses } = await supabase
+    .from('fixtures')
+    .select('gameweek_id, status')
+  const TERMINAL = new Set(['FINISHED', 'CANCELLED', 'POSTPONED'])
+  const fixtureCount = new Map<string, number>()
+  const pendingGwIds = new Set<string>()
+  for (const f of (fixtureStatuses ?? []) as Array<{ gameweek_id: string; status: string }>) {
+    fixtureCount.set(f.gameweek_id, (fixtureCount.get(f.gameweek_id) ?? 0) + 1)
+    if (!TERMINAL.has(f.status)) pendingGwIds.add(f.gameweek_id)
+  }
+
   let latestGw: LatestGw | null = null
   for (const gw of (allGws ?? []) as LatestGw[]) {
-    const { count: pendingCount } = await supabase
-      .from('fixtures')
-      .select('id', { count: 'exact', head: true })
-      .eq('gameweek_id', gw.id)
-      .not('status', 'in', '(FINISHED,CANCELLED,POSTPONED)')
-    if ((pendingCount ?? 0) === 0) {
-      // every fixture has reached a terminal state
-      const { count: anyCount } = await supabase
-        .from('fixtures')
-        .select('id', { count: 'exact', head: true })
-        .eq('gameweek_id', gw.id)
-      if ((anyCount ?? 0) > 0) {
-        latestGw = gw
-        break
-      }
+    // every fixture has reached a terminal state, and the gameweek has fixtures
+    if (!pendingGwIds.has(gw.id) && (fixtureCount.get(gw.id) ?? 0) > 0) {
+      latestGw = gw
+      break
     }
   }
 
